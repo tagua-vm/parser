@@ -1,0 +1,47 @@
+[package]
+name        = "tagua-vm-parser"
+version     = "0.0.1"
+authors     = ["Ivan Enderlin <ivan.enderlin@hoa-project.net>"]
+repository  = "https://github.com/tagua-vm/parser"
+description = "Safe, fast and memory efficient PHP parser (lexical and syntactic analysers)."
+readme      = "README.md"
+keywords    = ["php", "virtual machine", "parser", "lexical", "syntactic", "analyser"]
+license     = "BSD-3-Clause"
+
+[lib]
+name    = "taguavm_parser"
+path    = "source/lib.rs"
+test    = true
+doctest = true
+bench   = true
+doc     = true
+harness = true
+
+[profile.dev]
+opt-level        = 0
+debug            = true
+rpath            = false
+lto              = false
+debug-assertions = true
+codegen-units    = 1
+
+[profile.release]
+opt-level        = 3
+debug            = false
+rpath            = false
+lto              = true
+debug-assertions = false
+codegen-units    = 1
+
+[profile.test]
+opt-level        = 0
+debug            = true
+rpath            = false
+lto              = false
+debug-assertions = true
+codegen-units    = 1
+
+[dependencies]
+lazy_static = "~0.1"
+nom = {git = "https://github.com/Geal/nom", rev = "master", "features" = ["regexp", "regexp_macros"]}
+regex = "~0.1"
