@@ -37,7 +37,7 @@ $ cargo test
 to run all the test suites (unit test suites, integration test suites and
 documentation test suites).
 
-### カンバン
+### カンバン ( Kanban in Japanese )
 
 In order to get an overview of what need to be done, what is in progress and
 what has been recently done, [a kanban board is
