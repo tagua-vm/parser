@@ -39,7 +39,7 @@ documentation test suites).
 
 ### カンバン
 
-In order to get an overview of what need to be done, what is in progress and
+In order to get an overview of what needs to be done, what is in progress and
 what has been recently done, [a kanban board is
 available](https://waffle.io/tagua-vm/parser).
 
