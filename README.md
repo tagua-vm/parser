@@ -25,6 +25,30 @@ To build a development version:
 $ cargo build
 ```
 
+### Using Docker
+
+If installing Rust and LLVM on your machine is too much, Docker might be an
+alternative: It provides everything needed to build, test and run Tagua VM.
+
+First, build the Docker image:
+
+```sh
+$ docker build -t tagua-vm-parser-dev
+```
+
+Now, it is possible to run a container from this image:
+
+```sh
+$ docker run --rm -it -v $(pwd):/source tagua-vm-parser-dev
+```
+
+If this command succeeds, you are inside a fresh container. To see if
+everything is fine, you can start the test suite:
+
+```sh
+$ cargo test
+```
+
 ## Contributing
 
 Do whatever you want. Just respect the license and the other contributors. Your
