@@ -77,6 +77,6 @@ pub mod tokens;
 /// let expression = b"1+2";
 /// parser::parse(&expression[..]);
 /// ```
-pub fn parse(input: &[u8]) -> ast::Addition {
+pub fn parse(input: &[u8]) -> ast::Expression {
     rules::root(input)
 }

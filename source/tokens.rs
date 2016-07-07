@@ -114,6 +114,10 @@ token!(
     "The `DIE` token.\n\nRepresent the termination operator, e.g. `die(42);`."
 );
 token!(
+    DIVIDE: "/";
+    "The `DIVIDE` token.\n\nRepresent the division operator, used for instance in an arithmetic operation, e.g. `1 / 2`."
+);
+token!(
     DO: "do";
     "The `DO` token.\n\nRepresent the body of a `do`/`while` loop, e.g. `do { … } while (…);`."
 );
@@ -242,6 +246,14 @@ token!(
     "The `LIST` token.\n\nRepresent the destructuring operator, e.g. `list($x, $y) = $a`."
 );
 token!(
+    MODULO: "%";
+    "The `MODULO` token.\n\nRepresent the remainder of a division operation, used for instance in an arithmetic operation, e.g. `3 % 2`."
+);
+token!(
+    MULTIPLY: "*";
+    "The `MULTIPLY` token.\n\nRepresent the multiplication operator, used for instance in an arithmetic operation, e.g. `1 * 2`."
+);
+token!(
     NAMESPACE: "namespace";
     "The `NAMESPACE` token.\n\nRepresent the namespace declaration operator, e.g. `namespace N;`."
 );
@@ -292,6 +304,10 @@ token!(
 token!(
     STATIC: "static";
     "The `STATIC` token.\n\nRepresent the stack declaration operator, e.g. `static $x`."
+);
+token!(
+    SUBTRACT: "-";
+    "The `SUBTRACT` token.\n\nRepresent the subtraction operator, used for instance in an arithmetic operation, e.g. `1 - 2`."
 );
 token!(
     SWITCH: "switch";

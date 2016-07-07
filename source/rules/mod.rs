@@ -40,7 +40,7 @@ pub mod literals;
 use super::ast;
 use nom::IResult::Done;
 
-pub fn root(input: &[u8]) -> ast::Addition {
+pub fn root(input: &[u8]) -> ast::Expression {
     match expressions::expr(input) {
         Done(_, ast) => ast,
         _ => panic!("Youhouuu")
@@ -55,12 +55,52 @@ mod tests {
     use super::super::ast;
 
     #[test]
-    fn case_expr() {
-        assert_eq!(
-            expr(b"1+2"),
-            Done(
-                &b""[..], ast::Addition { a: ast::Term { t: 1 }, b: ast::Term { t: 2 } }
-            )
+    fn case_expr_multiplication() {
+        let input = b"1*2";
+        let output = Done(
+            &b""[..], ast::Expression::Multiplication { a: ast::Term { t: 1 }, b: ast::Term { t: 2 } }
         );
+
+        assert_eq!(expr(input), output);
+    }
+
+    #[test]
+    fn case_expr_division() {
+        let input = b"1/2";
+        let output = Done(
+            &b""[..], ast::Expression::Division { a: ast::Term { t: 1 }, b: ast::Term { t: 2 } }
+        );
+
+        assert_eq!(expr(input), output);
+    }
+
+    #[test]
+    fn case_expr_modulo() {
+        let input = b"3%2";
+        let output = Done(
+            &b""[..], ast::Expression::Modulo { a: ast::Term { t: 3 }, b: ast::Term { t: 2 } }
+        );
+
+        assert_eq!(expr(input), output);
+    }
+
+    #[test]
+    fn case_expr_addition() {
+        let input = b"1+2";
+        let output = Done(
+            &b""[..], ast::Expression::Addition { a: ast::Term { t: 1 }, b: ast::Term { t: 2 } }
+        );
+
+        assert_eq!(expr(input), output);
+    }
+
+    #[test]
+    fn case_expr_subtraction() {
+        let input = b"1-2";
+        let output = Done(
+            &b""[..], ast::Expression::Subtraction { a: ast::Term { t: 1 }, b: ast::Term { t: 2 } }
+        );
+
+        assert_eq!(expr(input), output);
     }
 }

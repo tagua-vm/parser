@@ -43,15 +43,15 @@ pub struct Term {
 pub struct Binding {
     ///
     pub variable: String,
-    /// 
+    ///
     pub expression: Term
 }
 
-/// An addition of two terms.
 #[derive(Debug, PartialEq)]
-pub struct Addition {
-    /// The left-hand side of the addition.
-    pub a: Term,
-    /// The right-hand side of the addition.
-    pub b: Term
+pub enum Expression {
+    Multiplication { a: Term, b: Term },
+    Division { a: Term, b: Term },
+    Modulo  { a: Term, b: Term },
+    Addition  { a: Term, b: Term },
+    Subtraction  { a: Term, b: Term },
 }
