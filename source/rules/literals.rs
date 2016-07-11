@@ -185,14 +185,14 @@ fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
             if let Some((next_index, next_item)) = iterator.next() {
                 if *next_item == '\'' as u8 ||
                    *next_item == '\\' as u8 {
-                    output.extend_from_slice(&input[offset..index + 1]);
+                    output.extend(&input[offset..index + 1]);
                     offset = next_index + 1;
                 }
             } else {
                 return IResult::Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
             }
         } else if *item == '\'' as u8 {
-            output.extend_from_slice(&input[offset..index + 1]);
+            output.extend(&input[offset..index + 1]);
 
             return IResult::Done(&input[index + 2..], output);
         }
@@ -246,7 +246,7 @@ fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
             }
 
             if input[lookahead_offset] == '\n' as u8 {
-                output.extend_from_slice(&input[padding + name.len() + 2..offset]);
+                output.extend(&input[padding + name.len() + 2..offset]);
 
                 return IResult::Done(&input[lookahead_offset + 1..], output);
             }
