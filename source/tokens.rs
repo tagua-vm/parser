@@ -58,6 +58,14 @@ token!(
     "The `ABSTRACT` token.\n\nRepresent an abstract entity, e.g. `abstract class C { … }`."
 );
 token!(
+    ADD: "+";
+    "The `ADD` token.\n\nRepresent the addition operator, e.g. `$x + $y`."
+);
+token!(
+    ADD_AND_ASSIGN: "+=";
+    "The `ADD_AND_ASSIGN` token.\n\nRepresent the addition assignment operator, e.g. `$x += $y;`."
+);
+token!(
     AND: "and";
     "The `AND` token.\n\nRepresent the conjunction operator, used in a logical expression, e.g. `$x and $y`."
 );
@@ -68,6 +76,70 @@ token!(
 token!(
     AS: "as";
     "The `AS` token.\n\nRepresent the alias operator, e.g. `use Foo\\Bar as Baz`."
+);
+token!(
+    ASSIGN: "=";
+    "The `ASSIGN` token.\n\nRepresent a binding of a value to a variable, e.g. `$x = 42`."
+);
+token!(
+    ASSIGN_REFERENCE: "=&";
+    "The `ASSIGN_REFERENCE` token.\n\nRepresent the reference assignment operator, e.g. `$x =& $y;`."
+);
+token!(
+    BITWISE_AND: "&";
+    "The `BITWISE_AND` token.\n\nRepresent the bitwise conjunction operator, e.g. `$x & $y`."
+);
+token!(
+    BITWISE_AND_AND_ASSIGN: "&=";
+    "The `BITWISE_AND_AND_ASSIGN` token.\n\nRepresent the bitwise conjunction assignment operator, e.g. `$x &= $y;`."
+);
+token!(
+    BITWISE_LEFT_SHIFT: "<<";
+    "The `BITWISE_LEFT_SHIFT` token.\n\nRepresent the bitwise left shift operator, e.g. `$x << $y`."
+);
+token!(
+    BITWISE_LEFT_SHIFT_AND_ASSIGN: "<<=";
+    "The `BITWISE_LEFT_SHIFT_AND_ASSIGN` token.\n\nRepresent the bitwise left shift assignment operator, e.g. `$x <<= $y;`."
+);
+token!(
+    BITWISE_NOT: "~";
+    "The `BITWISE_NOT` token.\n\nRepresent the bitwise negation operator, e.g. `~$x`."
+);
+token!(
+    BITWISE_OR: "|";
+    "The `BITWISE_OR` token.\n\nRepresent the inclusive bitwise disjunction operator, e.g. `$x | $y`."
+);
+token!(
+    BITWISE_OR_AND_ASSIGN: "|=";
+    "The `BITWISE_OR_AND_ASSIGN` token.\n\nRepresent the inclusive bitwise disjunction assignment operator, e.g. `$x |= $y;`."
+);
+token!(
+    BITWISE_RIGHT_SHIFT: ">>";
+    "The `BITWISE_RIGHT_SHIFT` token.\n\nRepresent the bitwise right shift operator, e.g. `$x >> $y`."
+);
+token!(
+    BITWISE_RIGHT_SHIFT_AND_ASSIGN: "<<=";
+    "The `BITWISE_RIGHT_SHIFT_AND_ASSIGN` token.\n\nRepresent the bitwise right shift assignment operator, e.g. `$x >>= $y;`."
+);
+token!(
+    BITWISE_XOR: "^";
+    "The `BITWISE_XOR` token.\n\nRepresent the exclusive bitwise disjunction operator, e.g. `$x ^ $y`."
+);
+token!(
+    BITWISE_XOR_AND_ASSIGN: "^=";
+    "The `BITWISE_XOR_AND_ASSIGN` token.\n\nRepresent the exclusive bitwise disjunction assignment operator, e.g. `$x ^= $y;`."
+);
+token!(
+    BOOLEAN_AND: "&&";
+    "The `BOOLEAN_AND` token.\n\nRepresent the boolean conjunction operator, e.g. `$x && $y`."
+);
+token!(
+    BOOLEAN_NOT: "!";
+    "The `NOT` token.\n\nRepresent the boolean negation operator, e.g. `!$x`."
+);
+token!(
+    BOOLEAN_OR: "||";
+    "The `BOOLEAN_OR` token.\n\nRepresent the boolean disjunction operator, e.g. `$x || $y`."
 );
 token!(
     BREAK: "break";
@@ -94,6 +166,26 @@ token!(
     "The `CLONE` token.\n\nRepresent the clone operator, e.g. `clone $x`."
 );
 token!(
+    COALESCE: "??";
+    "The `COALESCE` token.\n\nRepresent the null coalescing operator, e.g. `$x ?? $y`."
+);
+token!(
+    COMMA: ",";
+    "The `COMMA` token.\n\nRepresent the list item separator, e.g. `($x, $y, $z)`."
+);
+token!(
+    COMPARE: "<=>";
+    "The `COMPARE` token.\n\nRepresent the comparison operator, e.g. `$x <=> $y`."
+);
+token!(
+    CONCATENATE: ".";
+    "The `CONCATENATE` token.\n\nRepresent the concatenation operator, e.g. `'foo' . 'bar'`."
+);
+token!(
+    CONCATENATE_AND_ASSIGN: ".=";
+    "The `CONCATENATE_AND_ASSIGN` token.\n\nRepresent the concatenation assignment operator, e.g. `$x .= $y;`."
+);
+token!(
     CONST: "const";
     "The `CONST` token.\n\nRepresent the constant declaration operator, e.g. `const ANSWER = 42;`."
 );
@@ -106,6 +198,10 @@ token!(
     "The `DECLARE` token.\n\nRepresent the declaration operator, e.g. `declare(foo='bar');`."
 );
 token!(
+    DECREMENT: "--";
+    "The `DECREMENT` token.\n\nRepresent the decrement operator, e.g. `$number--`."
+);
+token!(
     DEFAULT: "default";
     "The `DEFAULT` token.\n\nRepresent the default case in a `switch` control structure, e.g. `switch (…) { … default: …; }`."
 );
@@ -114,16 +210,28 @@ token!(
     "The `DIE` token.\n\nRepresent the termination operator, e.g. `die(42);`."
 );
 token!(
+    DIVIDE: "/";
+    "The `DIVIDE` token.\n\nRepresent the division operator, e.g. `$x / $y`."
+);
+token!(
+    DIVIDE_AND_ASSIGN: "/=";
+    "The `DIVIDE_AND_ASSIGN` token.\n\nRepresent the division assignment operator, e.g. `$x /= $y`."
+);
+token!(
     DO: "do";
     "The `DO` token.\n\nRepresent the body of a `do`/`while` loop, e.g. `do { … } while (…);`."
 );
 token!(
-    DOLLARS: "$";
-    "The `DOLLARS` token.\n\nRepresent the introduction of a variable, e.g. `$x`."
+    DYNAMIC_CALL: "->";
+    "The `DYNAMIC_CALL` token.\n\nRepresent the dynamic method call operator, e.g. `$object->method()`."
 );
 token!(
     ECHO: "echo";
     "The `ECHO` token.\n\nRepresent the output writer operator, e.g. `echo 'foobar';`."
+);
+token!(
+    ELLIPSIS: "...";
+    "The `ELLIPSIS` token.\n\nRepresent the ellipsis operator, e.g. `$x...`."
 );
 token!(
     ELSE: "else";
@@ -162,8 +270,8 @@ token!(
     "The `ENDWHILE` token.\n\nRepresent the end of a `while` block, e.g. `while(…): … endwhile`."
 );
 token!(
-    EQUAL: "=";
-    "The `EQUAL` token.\n\nRepresent a binding of a value to a variable, e.g. `$x = 42`."
+    EQUAL: "==";
+    "The `EQUAL` token.\n\nRepresent the equality comparison operator, e.g. `$x == $y`."
 );
 token!(
     EVAL: "eval";
@@ -206,6 +314,18 @@ token!(
     "The `GOTO` token.\n\nRepresent the jump operator, e.g. `goto x;`."
 );
 token!(
+    GREATER_THAN: ">";
+    "The `GREATER_THAN` token.\n\nRepresent the greater than comparison operator, e.g. `$x > $y`."
+);
+token!(
+    GREATER_THAN_OR_EQUAL_TO: ">=";
+    "The `GREATER_THAN_OR_EQUAL_TO` token.\n\nRepresent the greater than or equal to comparison operator, e.g. `$x >= $y`."
+);
+token!(
+    IDENTICAL: "===";
+    "The `IDENTICAL` token.\n\nRepresent the strict equality comparison operator, e.g. `$x === $y`."
+);
+token!(
     IF: "if";
     "The `IF` token.\n\nRepresent the truly block of a condition control structure, e.g. `if (…) { … }`."
 );
@@ -220,6 +340,10 @@ token!(
 token!(
     INCLUDE_ONCE: "include_once";
     "The `INCLUDE_ONCE` token.\n\nRepresent the import once operator, e.g. `include_once $x;`."
+);
+token!(
+    INCREMENT: "++";
+    "The `INCREMENT` token.\n\nRepresent the increment operator, e.g. `$number++`."
 );
 token!(
     INSTANCEOF: "instanceof";
@@ -238,8 +362,44 @@ token!(
     "The `ISSET` token.\n\nRepresent the existence operator, e.g. `isset($x)`."
 );
 token!(
+    LEFT_CURLY_BRACKET: "{";
+    "The `LEFT_CURLY_BRACKET` token.\n\nUsed to open a block, e.g. `if (…) { … }`."
+);
+token!(
+    LEFT_PARENTHESIS: "]";
+    "The `LEFT_PARENTHESIS` token.\n\nUsed to open a group of something, e.g. `if (…)`."
+);
+token!(
+    LEFT_SQUARE_BRACKET: "[";
+    "The `LEFT_SQUARE_BRACKET` token.\n\nUsed to open an array construction or an array access for instance, e.g. `[2, 4, 6, 9][0]`."
+);
+token!(
+    LESS_THAN: "<";
+    "The `LESS_THAN` token.\n\nRepresent the less than comparison operator, e.g. `$x < $y`."
+);
+token!(
+    LESS_THAN_OR_EQUAL_TO: "<=";
+    "The `LESS_THAN_OR_EQUAL_TO` token.\n\nRepresent the less than or equal to comparison operator, e.g. `$x <= $y`."
+);
+token!(
     LIST: "list";
     "The `LIST` token.\n\nRepresent the destructuring operator, e.g. `list($x, $y) = $a`."
+);
+token!(
+    MODULO: "%";
+    "The `MODULO` token.\n\nRepresent the modulus operator, e.g. `$x % $y`."
+);
+token!(
+    MODULO_AND_ASSIGN: "%=";
+    "The `MODULO_AND_ASSIGN` token.\n\nRepresent the modulus assignment operator, e.g. `$x %= $y;`."
+);
+token!(
+    MULTIPLY: "*";
+    "The `MULTIPLY` token.\n\nRepresent the multiplication operator, e.g. `$x * $y`."
+);
+token!(
+    MULTIPLY_AND_ASSIGN: "*=";
+    "The `MULTIPLY_AND_ASSIGN` token.\n\nRepresent the multiplication assignment operator, e.g. `$x *= $y;`."
 );
 token!(
     NAMESPACE: "namespace";
@@ -250,12 +410,24 @@ token!(
     "The `NEW` token.\n\nRepresent the instanciation operator, e.g. `new C()`."
 );
 token!(
-    OR: "or";
-    "The `OR` token.\n\nRepresent the disjunction operator, used in a logical expression, e.g. `$x or $y`."
+    NOT_EQUAL: "!=";
+    "The `NOT_EQUAL` token.\n\nRepresent the not equal comparison operator, e.g. `$x != $y`."
 );
 token!(
-    PLUS: "+";
-    "The `PLUS` token.\n\nRepresent the addition operator, used for instance in an arithmetic operation, e.g. `1 + 2`."
+    NOT_IDENTICAL: "!==";
+    "The `NOT_IDENTICAL` token.\n\nRepresent the strict not equal comparison operator, e.g. `$x !== $y`."
+);
+token!(
+    OR: "or";
+    "The `OR` token.\n\nRepresent the inclusive disjunction operator, used in a logical expression, e.g. `$x or $y`."
+);
+token!(
+    POW: "**";
+    "The `POW` token.\n\nRepresent the power operator, e.g. `$x ** $y`."
+);
+token!(
+    POW_AND_ASSIGN: "**=";
+    "The `POW_AND_ASSIGN` token.\n\nRepresent the power assignment operator, e.g. `$x **= $y;`."
 );
 token!(
     PRINT: "print";
@@ -274,6 +446,10 @@ token!(
     "The `PUBLIC` token.\n\nRepresent the public visibility operator, e.g. `public $x`."
 );
 token!(
+    REFERENCE: "&";
+    "The `REFERENCE` token.\n\nRepresent the reference operator, e.g. `&$x`."
+);
+token!(
     REQUIRE: "require";
     "The `REQUIRE` token.\n\nRepresent the import operator, e.g. `require $x;`."
 );
@@ -286,16 +462,48 @@ token!(
     "The `RETURN` token.\n\nRepresent the return operator, e.g. `return $x;`."
 );
 token!(
-    SEMI_COLON: ";";
-    "The `SEMI_COLON` token.\n\nRepresent a terminator of an expression, e.g. `$x = 42;`."
+    RIGHT_CURLY_BRACKET: "{";
+    "The `RIGHT_CURLY_BRACKET` token.\n\nUsed to close a block, e.g. `if (…) { … }`."
+);
+token!(
+    RIGHT_PARENTHESIS: ")";
+    "The `RIGHT_PARENTHESIS` token.\n\nUsed to close a group of something, e.g. `if (…)`."
+);
+token!(
+    RIGHT_SQUARE_BRACKET: "]";
+    "The `RIGHT_SQUARE_BRACKET` token.\n\nUsed to close an array construction or an array access for instance, e.g. `[2, 4, 6, 9][0]`."
+);
+token!(
+    SEMICOLON: ";";
+    "The `SEMICOLON` token.\n\nRepresent the end of an instruction, e.g. `$x = …;`."
 );
 token!(
     STATIC: "static";
     "The `STATIC` token.\n\nRepresent the stack declaration operator, e.g. `static $x`."
 );
 token!(
+    STATIC_CALL: "::";
+    "The `STATIC_CALL` token.\n\nRepresent the static method call operator, e.g. `class::method()`."
+);
+token!(
+    SUBTRACT: "-";
+    "The `SUBTRACT` token.\n\nRepresent the subtraction operator, e.g. `$x - $y`."
+);
+token!(
+    SUBTRACT_AND_ASSIGN: "-=";
+    "The `SUBTRACT_AND_ASSIGN` token.\n\nRepresent the subtraction assignment operator, e.g. `$x -= $y;`."
+);
+token!(
     SWITCH: "switch";
     "The `SWITCH` token.\n\nRepresent the switch control structure, e.g. `switch ($x) { … }`."
+);
+token!(
+    TERNARY_ELSE: ":";
+    "The `TERNARY_ELSE` token.\n\nRepresent the falsy block of a ternary condition, e.g. `$x ? … : …`."
+);
+token!(
+    TERNARY_THEN: "?";
+    "The `TERNARY_THEN` token.\n\nRepresent the truly block of a ternary condition, e.g. `$x ? … : …`."
 );
 token!(
     THROW: "throw";
@@ -320,6 +528,10 @@ token!(
 token!(
     VAR: "var";
     "The `VAR` token.\n\nRepresent the variable declaration operator (for old PHP versions), e.g. `var $x = …;`."
+);
+token!(
+    VARIABLE: "$";
+    "The `VARIABLE` token.\n\nRepresent the variable declaration operator, e.g. `$foo`."
 );
 token!(
     WHILE: "while";
