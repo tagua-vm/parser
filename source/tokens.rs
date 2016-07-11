@@ -82,10 +82,6 @@ token!(
     "The `ASSIGN` token.\n\nRepresent a binding of a value to a variable, e.g. `$x = 42`."
 );
 token!(
-    ASSIGN_REFERENCE: "=&";
-    "The `ASSIGN_REFERENCE` token.\n\nRepresent the reference assignment operator, e.g. `$x =& $y;`."
-);
-token!(
     BITWISE_AND: "&";
     "The `BITWISE_AND` token.\n\nRepresent the bitwise conjunction operator, e.g. `$x & $y`."
 );
