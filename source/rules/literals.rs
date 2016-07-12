@@ -179,14 +179,14 @@ pub enum StringError {
 }
 
 named!(
-    pub string< Vec<u8> >,
+    pub string<Literal>,
     alt_complete!(
         call!(string_single_quoted)
       | call!(string_nowdoc)
     )
 );
 
-fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
+fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Literal> {
     let input_length = input.len();
 
     if input_length < 2 {
@@ -223,14 +223,14 @@ fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
         } else if *item == '\'' as u8 {
             output.extend_from_slice(&input[offset..index + 1]);
 
-            return IResult::Done(&input[index + 2..], output);
+            return IResult::Done(&input[index + 2..], Literal::String(output));
         }
     }
 
     IResult::Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
 }
 
-fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
+fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Literal> {
     // `<<<'A'\nA\n` is the shortest datum.
     if input.len() < 9 {
         return IResult::Error(Err::Code(ErrorKind::Custom(StringError::TooShort as u32)));
@@ -277,7 +277,7 @@ fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
             if input[lookahead_offset] == '\n' as u8 {
                 output.extend_from_slice(&input[padding + name.len() + 2..offset]);
 
-                return IResult::Done(&input[lookahead_offset + 1..], output);
+                return IResult::Done(&input[lookahead_offset + 1..], Literal::String(output));
             }
         }
     }
@@ -459,7 +459,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted() {
         let input  = b"'foobar'";
-        let output = Done(&b""[..], b"foobar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foobar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -468,7 +468,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_quote() {
         let input  = b"'foo\\'bar'";
-        let output = Done(&b""[..], b"foo'bar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foo'bar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -477,7 +477,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_backslash() {
         let input  = b"'foo\\\\bar'";
-        let output = Done(&b""[..], b"foo\\bar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foo\\bar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_any() {
         let input  = b"'foo\\nbar'";
-        let output = Done(&b""[..], b"foo\\nbar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foo\\nbar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -495,7 +495,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_many() {
         let input  = b"'\\'f\\oo\\\\bar\\\\'";
-        let output = Done(&b""[..], b"'f\\oo\\bar\\".to_vec());
+        let output = Done(&b""[..], Literal::String(b"'f\\oo\\bar\\".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -504,7 +504,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_empty() {
         let input  = b"''";
-        let output = Done(&b""[..], Vec::new());
+        let output = Done(&b""[..], Literal::String(Vec::new()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -513,7 +513,7 @@ mod tests {
     #[test]
     fn case_string_binary_single_quoted() {
         let input  = b"b'foobar'";
-        let output = Done(&b""[..], b"foobar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foobar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -522,7 +522,7 @@ mod tests {
     #[test]
     fn case_string_binary_single_quoted_escaped_many() {
         let input  = b"b'\\'f\\oo\\\\bar'";
-        let output = Done(&b""[..], b"'f\\oo\\bar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"'f\\oo\\bar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -579,7 +579,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc() {
         let input  = b"<<<'FOO'\nhello \n  world \nFOO;\n";
-        let output = Done(&b""[..], b"hello \n  world ".to_vec());
+        let output = Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -588,7 +588,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_without_semi_colon() {
         let input  = b"<<<'FOO'\nhello \n  world \nFOO\n";
-        let output = Done(&b""[..], b"hello \n  world ".to_vec());
+        let output = Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -597,7 +597,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_empty() {
         let input  = b"<<<'FOO'\n\nFOO\n";
-        let output = Done(&b""[..], Vec::new());
+        let output = Done(&b""[..], Literal::String(Vec::new()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
