@@ -179,7 +179,7 @@ named!(
                 ::from_str(unsafe { str::from_utf8_unchecked(string) })
                 .and_then(
                     |exponential| {
-                        Ok(Literal::Float(exponential))
+                        Ok(Literal::Real(exponential))
                     }
                 )
         }
@@ -508,7 +508,7 @@ mod tests {
     #[test]
     fn case_exponential() {
         let input  = b"123.456e+78";
-        let output = Done(&b""[..], Literal::Float(123.456e78f64));
+        let output = Done(&b""[..], Literal::Real(123.456e78f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -517,7 +517,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_fractional_part() {
         let input  = b"123.456";
-        let output = Done(&b""[..], Literal::Float(123.456f64));
+        let output = Done(&b""[..], Literal::Real(123.456f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_part() {
         let input  = b"123.";
-        let output = Done(&b""[..], Literal::Float(123.0f64));
+        let output = Done(&b""[..], Literal::Real(123.0f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -535,7 +535,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_fractional_part() {
         let input  = b".456";
-        let output = Done(&b""[..], Literal::Float(0.456f64));
+        let output = Done(&b""[..], Literal::Real(0.456f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -544,7 +544,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_lowercase_e() {
         let input  = b"123.e78";
-        let output = Done(&b""[..], Literal::Float(123e78f64));
+        let output = Done(&b""[..], Literal::Real(123e78f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -553,7 +553,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_uppercase_e() {
         let input  = b"123.E78";
-        let output = Done(&b""[..], Literal::Float(123e78f64));
+        let output = Done(&b""[..], Literal::Real(123e78f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -562,7 +562,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_unsigned_exponent_part() {
         let input  = b"123.e78";
-        let output = Done(&b""[..], Literal::Float(123e78f64));
+        let output = Done(&b""[..], Literal::Real(123e78f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -571,7 +571,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_positive_exponent_part() {
         let input  = b"123.e+78";
-        let output = Done(&b""[..], Literal::Float(123e78f64));
+        let output = Done(&b""[..], Literal::Real(123e78f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -580,7 +580,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_negative_exponent_part() {
         let input  = b"123.e-78";
-        let output = Done(&b""[..], Literal::Float(123e-78f64));
+        let output = Done(&b""[..], Literal::Real(123e-78f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -589,7 +589,7 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_negative_zero_exponent_part() {
         let input  = b"123.e-0";
-        let output = Done(&b""[..], Literal::Float(123f64));
+        let output = Done(&b""[..], Literal::Real(123f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -598,7 +598,7 @@ mod tests {
     #[test]
     fn case_exponential_missing_exponent_part() {
         let input  = b".7e";
-        let output = Done(&b"e"[..], Literal::Float(0.7f64));
+        let output = Done(&b"e"[..], Literal::Real(0.7f64));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);

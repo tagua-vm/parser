@@ -66,7 +66,7 @@ pub enum Literal {
     /// An integer.
     Integer(u64),
     /// A real.
-    Float(f64),
+    Real(f64),
     /// A string.
     String(Vec<u8>),
     /// An identifier.
