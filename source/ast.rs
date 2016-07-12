@@ -56,16 +56,16 @@ pub struct Addition {
     pub b: Term
 }
 
-/// A literal.
+/// A literal represents a fixed value, aka an atom.
 #[derive(Debug, PartialEq)]
 pub enum Literal {
-    /// The null value.
+    /// A null pointer.
     Null,
-    /// A boolean.
+    /// A boolean, either `true` or `false`.
     Boolean(bool),
-    /// An integer.
+    /// An integer, for instance a binary, octal, decimal or hexadecimal number.
     Integer(u64),
-    /// A real.
+    /// A real, for instance an exponential number.
     Real(f64),
     /// A string.
     String(Vec<u8>),
