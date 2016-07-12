@@ -90,13 +90,17 @@ named!(
 );
 
 named!(
-    pub octal<u64>,
+    pub octal<Literal>,
     map_res!(
         preceded!(tag!("0"), oct_digit),
         |string: &[u8]| {
             u64::from_str_radix(
                 unsafe { str::from_utf8_unchecked(string) },
                 8
+            ).and_then(
+                |octal| {
+                    Ok(Literal::Integer(octal))
+                }
             )
         }
     )
@@ -319,7 +323,7 @@ mod tests {
 
     #[test]
     fn case_octal() {
-        assert_eq!(octal(b"052"), Done(&b""[..], 42u64));
+        assert_eq!(octal(b"052"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
