@@ -125,7 +125,7 @@ named!(
 );
 
 named!(
-    pub hexadecimal<u64>,
+    pub hexadecimal<Literal>,
     map_res!(
         preceded!(
             tag!("0"),
@@ -135,10 +135,16 @@ named!(
             )
         ),
         |string: &[u8]| {
-            u64::from_str_radix(
-                unsafe { str::from_utf8_unchecked(string) },
-                16
-            )
+            u64
+                ::from_str_radix(
+                    unsafe { str::from_utf8_unchecked(string) },
+                    16
+                )
+                .and_then(
+                    |hexadecimal| {
+                        Ok(Literal::Integer(hexadecimal))
+                    }
+                )
         }
     )
 );
@@ -361,17 +367,17 @@ mod tests {
 
     #[test]
     fn case_hexadecimal_lowercase_x() {
-        assert_eq!(hexadecimal(b"0x2a"), Done(&b""[..], 42u64));
+        assert_eq!(hexadecimal(b"0x2a"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
     fn case_hexadecimal_uppercase_x() {
-        assert_eq!(hexadecimal(b"0X2a"), Done(&b""[..], 42u64));
+        assert_eq!(hexadecimal(b"0X2a"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
     fn case_hexadecimal_uppercase_alpha() {
-        assert_eq!(hexadecimal(b"0x2A"), Done(&b""[..], 42u64));
+        assert_eq!(hexadecimal(b"0x2A"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
