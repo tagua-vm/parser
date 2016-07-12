@@ -307,6 +307,10 @@ token!(
     "The `FUNCTION` token.\n\nRepresent the function declaration operator, e.g. `function f(…) { … }`."
 );
 token!(
+    pub FUNCTION_OUTPUT: COLON;
+    "The `FUNCTION_OUTPUT` token.\n\nRepresent the function return type declaration operator, e.g. `function f(…): … { … }`."
+);
+token!(
     pub GLOBAL: "global";
     "The `GLOBAL` token.\n\nRepresent the global visibility modifier, e.g. `global $x`."
 );
@@ -419,6 +423,10 @@ token!(
     "The `NOT_IDENTICAL` token.\n\nRepresent the strict not equal comparison operator, e.g. `$x !== $y`."
 );
 token!(
+    pub NULLABLE: QUESTION_MARK;
+    "The `NULLABLE` token.\n\nRepresent the nullable operation, e.g. `function f(?int $x) { … }`."
+);
+token!(
     pub OR: "or";
     "The `OR` token.\n\nRepresent the inclusive disjunction operator, used in a logical expression, e.g. `$x or $y`."
 );
@@ -499,11 +507,11 @@ token!(
     "The `SWITCH` token.\n\nRepresent the switch control structure, e.g. `switch ($x) { … }`."
 );
 token!(
-    pub TERNARY_ELSE: ":";
+    pub TERNARY_ELSE: COLON;
     "The `TERNARY_ELSE` token.\n\nRepresent the falsy block of a ternary condition, e.g. `$x ? … : …`."
 );
 token!(
-    pub TERNARY_THEN: "?";
+    pub TERNARY_THEN: QUESTION_MARK;
     "The `TERNARY_THEN` token.\n\nRepresent the truly block of a ternary condition, e.g. `$x ? … : …`."
 );
 token!(
@@ -549,4 +557,13 @@ token!(
 token!(
     pub YIELD_FROM: "yield from";
     "The `YIELD_FROM` token.\n\nRepresent the delegated generator operator, e.g. `yield from …;`."
+);
+
+token!(
+    COLON: ":";
+    "The `COLON` private token.\n\nSee `FUNCTION_OUTPUT` and `TERNARY_ELSE`."
+);
+token!(
+    QUESTION_MARK: "?";
+    "The `QUESTION_MARK` private token.\n\nSee `NULLABLE` and `TERNARY_THEN`."
 );
