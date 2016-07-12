@@ -33,27 +33,27 @@
 
 /// A term.
 #[derive(Debug, PartialEq)]
-pub struct Term {
+pub struct Term<'a> {
     /// The term value.
-    pub t: u64
+    pub t: Literal<'a>
 }
 
 /// A binding of a value to a variable.
 #[derive(Debug, PartialEq)]
-pub struct Binding {
+pub struct Binding<'a> {
     ///
     pub variable: String,
     /// 
-    pub expression: Term
+    pub expression: Term<'a>
 }
 
 /// An addition of two terms.
 #[derive(Debug, PartialEq)]
-pub struct Addition {
+pub struct Addition<'a> {
     /// The left-hand side of the addition.
-    pub a: Term,
+    pub a: Term<'a>,
     /// The right-hand side of the addition.
-    pub b: Term
+    pub b: Term<'a>
 }
 
 /// A literal.
