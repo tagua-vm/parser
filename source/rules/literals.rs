@@ -67,7 +67,7 @@ named!(
 );
 
 named!(
-    pub binary<u64>,
+    pub binary<Literal>,
     map_res!(
         preceded!(
             tag!("0"),
@@ -80,6 +80,10 @@ named!(
             u64::from_str_radix(
                 unsafe { str::from_utf8_unchecked(string) },
                 2
+            ).and_then(
+                |binary| {
+                    Ok(Literal::Integer(binary))
+               }
             )
         }
     )
@@ -300,12 +304,12 @@ mod tests {
 
     #[test]
     fn case_binary_lowercase_b() {
-        assert_eq!(binary(b"0b101010"), Done(&b""[..], 42u64));
+        assert_eq!(binary(b"0b101010"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
     fn case_binary_uppercase_b() {
-        assert_eq!(binary(b"0B101010"), Done(&b""[..], 42u64));
+        assert_eq!(binary(b"0B101010"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
