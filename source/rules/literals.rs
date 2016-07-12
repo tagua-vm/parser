@@ -57,11 +57,11 @@ named!(
 );
 
 named!(
-    pub boolean<bool>,
+    pub boolean<Literal>,
     map_res!(
         alt!(tag!("true") | tag!("false")),
-        |string: &[u8]| -> Result<bool, ()> {
-            Ok(string[0] == 't' as u8)
+        |string: &[u8]| -> Result<Literal, ()> {
+            Ok(Literal::Boolean(string[0] == 't' as u8))
         }
     )
 );
@@ -290,12 +290,12 @@ mod tests {
 
     #[test]
     fn case_boolean_true() {
-        assert_eq!(boolean(b"true"), Done(&b""[..], true));
+        assert_eq!(boolean(b"true"), Done(&b""[..], Literal::Boolean(true)));
     }
 
     #[test]
     fn case_boolean_false() {
-        assert_eq!(boolean(b"false"), Done(&b""[..], false));
+        assert_eq!(boolean(b"false"), Done(&b""[..], Literal::Boolean(false)));
     }
 
     #[test]
