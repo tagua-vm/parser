@@ -42,15 +42,16 @@ use nom::{
     hex_digit,
     oct_digit
 };
-use std::str;
 use std::str::FromStr;
+use std::str;
+use super::super::ast::Literal;
 
 named!(
-    pub null< Option<()> >,
+    pub null<Literal>,
     map_res!(
         tag!("null"),
-        |_: &[u8]| -> Result<Option<()>, ()> {
-            Ok(None)
+        |_: &[u8]| -> Result<Literal, ()> {
+            Ok(Literal::Null)
         }
     )
 );
@@ -266,6 +267,7 @@ named!(
 mod tests {
     use nom::IResult::{Done, Error};
     use nom::{Err, ErrorKind};
+    use super::super::super::ast::Literal;
     use super::{
         StringError,
         binary,
@@ -283,7 +285,7 @@ mod tests {
 
     #[test]
     fn case_null() {
-        assert_eq!(null(b"null"), Done(&b""[..], None));
+        assert_eq!(null(b"null"), Done(&b""[..], Literal::Null));
     }
 
     #[test]
