@@ -67,6 +67,16 @@ named!(
 );
 
 named!(
+    pub integer<Literal>,
+    alt!(
+        binary
+      | octal
+      | decimal
+      | hexadecimal
+    )
+);
+
+named!(
     pub binary<Literal>,
     map_res!(
         preceded!(
@@ -309,11 +319,12 @@ mod tests {
         exponential,
         hexadecimal,
         identifier,
+        integer,
         null,
         octal,
         string,
-        string_single_quoted,
-        string_nowdoc
+        string_nowdoc,
+        string_single_quoted
     };
 
     #[test]
@@ -333,72 +344,123 @@ mod tests {
 
     #[test]
     fn case_binary_lowercase_b() {
-        assert_eq!(binary(b"0b101010"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"0b101010";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_binary_uppercase_b() {
-        assert_eq!(binary(b"0B101010"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"0B101010";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_invalid_binary_no_number() {
-        assert_eq!(binary(b"0b"), Error(Err::Position(ErrorKind::MapRes, &b"0b"[..])));
+        let input = b"0b";
+
+        assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &b"0b"[..])));
+        assert_eq!(integer(input), Error(Err::Position(ErrorKind::Alt, &b"0b"[..])));
     }
 
     #[test]
     fn case_octal() {
-        assert_eq!(octal(b"052"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"052";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(octal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_invalid_octal_not_starting_by_zero() {
-        assert_eq!(octal(b"7"), Error(Err::Position(ErrorKind::Tag, &b"7"[..])));
+        let input  = b"7";
+
+        assert_eq!(octal(input), Error(Err::Position(ErrorKind::Tag, &b"7"[..])));
+        assert_eq!(integer(input), Done(&b""[..], Literal::Integer(7u64)));
     }
 
     #[test]
     fn case_invalid_octal_not_in_base() {
-        assert_eq!(octal(b"8"), Error(Err::Position(ErrorKind::Tag, &b"8"[..])));
+        let input = b"8";
+
+        assert_eq!(octal(input), Error(Err::Position(ErrorKind::Tag, &b"8"[..])));
+        assert_eq!(integer(input), Done(&b""[..], Literal::Integer(8)));
     }
 
     #[test]
     fn case_decimal_one_digit() {
-        assert_eq!(decimal(b"7"), Done(&b""[..], Literal::Integer(7u64)));
+        let input  = b"7";
+        let output = Done(&b""[..], Literal::Integer(7u64));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_decimal_many_digits() {
-        assert_eq!(decimal(b"42"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"42";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_decimal_plus() {
-        assert_eq!(decimal(b"42+"), Done(&b"+"[..], Literal::Integer(42u64)));
+        let input  = b"42+";
+        let output = Done(&b"+"[..], Literal::Integer(42u64));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_hexadecimal_lowercase_x() {
-        assert_eq!(hexadecimal(b"0x2a"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"0x2a";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_hexadecimal_uppercase_x() {
-        assert_eq!(hexadecimal(b"0X2a"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"0X2a";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_hexadecimal_uppercase_alpha() {
-        assert_eq!(hexadecimal(b"0x2A"), Done(&b""[..], Literal::Integer(42u64)));
+        let input  = b"0x2A";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
     }
 
     #[test]
     fn case_invalid_hexadecimal_no_number() {
-        assert_eq!(hexadecimal(b"0x"), Error(Err::Position(ErrorKind::HexDigit, &b""[..])));
+        let input = b"0x";
+
+        assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b""[..])));
+        assert_eq!(integer(input), Error(Err::Position(ErrorKind::Alt, &b"0x"[..])));
     }
 
     #[test]
     fn case_invalid_hexadecimal_not_in_base() {
-        assert_eq!(hexadecimal(b"0xg"), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
+        let input = b"0xg";
+
+        assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
+        assert_eq!(integer(input), Error(Err::Position(ErrorKind::Alt, &b"0xg"[..])));
     }
 
     #[test]
