@@ -33,32 +33,32 @@
 
 /// A term.
 #[derive(Debug, PartialEq)]
-pub struct Term<'a> {
+pub struct Term {
     /// The term value.
-    pub t: Literal<'a>
+    pub t: Literal
 }
 
 /// A binding of a value to a variable.
 #[derive(Debug, PartialEq)]
-pub struct Binding<'a> {
+pub struct Binding {
     ///
     pub variable: String,
     /// 
-    pub expression: Term<'a>
+    pub expression: Term
 }
 
 /// An addition of two terms.
 #[derive(Debug, PartialEq)]
-pub struct Addition<'a> {
+pub struct Addition {
     /// The left-hand side of the addition.
-    pub a: Term<'a>,
+    pub a: Term,
     /// The right-hand side of the addition.
-    pub b: Term<'a>
+    pub b: Term
 }
 
 /// A literal.
 #[derive(Debug, PartialEq)]
-pub enum Literal<'a> {
+pub enum Literal {
     /// The null value.
     Null,
     /// A boolean.
@@ -70,5 +70,5 @@ pub enum Literal<'a> {
     /// A string.
     String(Vec<u8>),
     /// An identifier.
-    Identifier(&'a [u8])
+    Identifier(Vec<u8>)
 }

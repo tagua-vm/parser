@@ -286,8 +286,13 @@ fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Literal> {
 }
 
 named!(
-    pub identifier,
-    re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*")
+    pub identifier<Literal>,
+    map_res!(
+        re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*"),
+        |string: &[u8]| -> Result<Literal, ()> {
+            Ok(Literal::Identifier(string.to_vec()))
+        }
+    )
 );
 
 
@@ -645,34 +650,34 @@ mod tests {
 
     #[test]
     fn case_identifier() {
-        assert_eq!(identifier(b"_fooBar42"), Done(&b""[..], &b"_fooBar42"[..]));
+        assert_eq!(identifier(b"_fooBar42"), Done(&b""[..], Literal::Identifier(b"_fooBar42".to_vec())));
     }
 
     #[test]
     fn case_identifier_shortest() {
-        assert_eq!(identifier(b"x"), Done(&b""[..], &b"x"[..]));
+        assert_eq!(identifier(b"x"), Done(&b""[..], Literal::Identifier(b"x".to_vec())));
     }
 
     #[test]
     fn case_identifier_only_head() {
-        assert_eq!(identifier(b"aB_\x80"), Done(&b""[..], &b"aB_\x80"[..]));
+        assert_eq!(identifier(b"aB_\x80"), Done(&b""[..], Literal::Identifier(b"aB_\x80".to_vec())));
     }
 
     #[test]
     fn case_identifier_head_and_tail() {
-        assert_eq!(identifier(b"aB_\x80aB7\xff"), Done(&b""[..], &b"aB_\x80aB7\xff"[..]));
+        assert_eq!(identifier(b"aB_\x80aB7\xff"), Done(&b""[..], Literal::Identifier(b"aB_\x80aB7\xff".to_vec())));
     }
 
     #[test]
     fn case_identifier_copyright() {
         // © = 0xa9
-        assert_eq!(identifier(b"\xa9"), Done(&b""[..], &b"\xa9"[..]));
+        assert_eq!(identifier(b"\xa9"), Done(&b""[..], Literal::Identifier(b"\xa9".to_vec())));
     }
 
     #[test]
     fn case_identifier_non_breaking_space() {
         //   = 0xa0
-        assert_eq!(identifier(b"\xa0"), Done(&b""[..], &b"\xa0"[..]));
+        assert_eq!(identifier(b"\xa0"), Done(&b""[..], Literal::Identifier(b"\xa0".to_vec())));
     }
 
     #[test]
