@@ -109,11 +109,17 @@ named!(
 );
 
 named!(
-    pub decimal<u64>,
+    pub decimal<Literal>,
     map_res!(
         re_bytes_find_static!(r"^[1-9][0-9]*"),
         |string: &[u8]| {
-            u64::from_str(unsafe { str::from_utf8_unchecked(string) })
+            u64
+                ::from_str(unsafe { str::from_utf8_unchecked(string) })
+                .and_then(
+                    |decimal| {
+                        Ok(Literal::Integer(decimal))
+                    }
+                )
         }
     )
 );
@@ -340,17 +346,17 @@ mod tests {
 
     #[test]
     fn case_decimal_one_digit() {
-        assert_eq!(decimal(b"7"), Done(&b""[..], 7u64));
+        assert_eq!(decimal(b"7"), Done(&b""[..], Literal::Integer(7u64)));
     }
 
     #[test]
     fn case_decimal_many_digits() {
-        assert_eq!(decimal(b"42"), Done(&b""[..], 42u64));
+        assert_eq!(decimal(b"42"), Done(&b""[..], Literal::Integer(42u64)));
     }
 
     #[test]
     fn case_decimal_plus() {
-        assert_eq!(decimal(b"42+"), Done(&b"+"[..], 42u64));
+        assert_eq!(decimal(b"42+"), Done(&b"+"[..], Literal::Integer(42u64)));
     }
 
     #[test]
