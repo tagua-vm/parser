@@ -55,3 +55,20 @@ pub struct Addition {
     /// The right-hand side of the addition.
     pub b: Term
 }
+
+/// A literal.
+#[derive(Debug, PartialEq)]
+pub enum Literal<'a> {
+    /// The null value.
+    Null,
+    /// A boolean.
+    Boolean(bool),
+    /// An integer.
+    Integer(u64),
+    /// A real.
+    Float(f64),
+    /// A string.
+    String(Vec<u8>),
+    /// An identifier.
+    Identifier(&'a [u8])
+}
