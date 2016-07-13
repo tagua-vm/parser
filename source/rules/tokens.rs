@@ -35,62 +35,94 @@
 //! the [Grammar chapter, Tokens
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#tokens).
 
-use super::super::ast::Identifier;
+use super::super::tokens;
+use super::super::ast::Name;
 
 named!(
-    pub identifier<Identifier>,
+    pub variable<Name>,
     map_res!(
-        re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*"),
-        identifier_mapper
+        preceded!(
+            tag!(tokens::VARIABLE),
+            name
+        ),
+        variable_mapper
     )
 );
 
-fn identifier_mapper(string: &[u8]) -> Result<Identifier, ()> {
-    Ok(Identifier(string))
+fn variable_mapper(string: &[u8]) -> Result<Name, ()> {
+    Ok(Name::Variable(string))
 }
+
+named!(
+    name,
+    re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*")
+);
 
 
 #[cfg(test)]
 mod tests {
     use nom::IResult::{Done, Error};
     use nom::{Err, ErrorKind};
-    use super::identifier;
-    use super::super::super::ast::Identifier;
+    use super::{
+        name,
+        variable
+    };
+    use super::super::super::ast::Name;
 
     #[test]
-    fn case_identifier() {
-        assert_eq!(identifier(b"_fooBar42"), Done(&b""[..], Identifier(&b"_fooBar42"[..])));
+    fn case_variable() {
+        assert_eq!(variable(b"$foo"), Done(&b""[..], Name::Variable(&b"foo"[..])));
     }
 
     #[test]
-    fn case_identifier_shortest() {
-        assert_eq!(identifier(b"x"), Done(&b""[..], Identifier(&b"x"[..])));
+    fn case_variable_shortest() {
+        assert_eq!(variable(b"$x"), Done(&b""[..], Name::Variable(&b"x"[..])));
     }
 
     #[test]
-    fn case_identifier_only_head() {
-        assert_eq!(identifier(b"aB_\x80"), Done(&b""[..], Identifier(&b"aB_\x80"[..])));
+    fn case_invalid_variable_prefix() {
+        assert_eq!(variable(b"x"), Error(Err::Position(ErrorKind::Tag, &b"x"[..])));
     }
 
     #[test]
-    fn case_identifier_head_and_tail() {
-        assert_eq!(identifier(b"aB_\x80aB7\xff"), Done(&b""[..], Identifier(&b"aB_\x80aB7\xff"[..])));
+    fn case_invalid_variable_name() {
+        assert_eq!(variable(b"$0"), Error(Err::Code(ErrorKind::RegexpFind)));
     }
 
     #[test]
-    fn case_identifier_copyright() {
+    fn case_name() {
+        assert_eq!(name(b"_fooBar42"), Done(&b""[..], &b"_fooBar42"[..]));
+    }
+
+    #[test]
+    fn case_name_shortest() {
+        assert_eq!(name(b"x"), Done(&b""[..], &b"x"[..]));
+    }
+
+    #[test]
+    fn case_name_only_head() {
+        assert_eq!(name(b"aB_\x80"), Done(&b""[..], &b"aB_\x80"[..]));
+    }
+
+    #[test]
+    fn case_name_head_and_tail() {
+        assert_eq!(name(b"aB_\x80aB7\xff"), Done(&b""[..], &b"aB_\x80aB7\xff"[..]));
+    }
+
+    #[test]
+    fn case_name_copyright() {
         // © = 0xa9
-        assert_eq!(identifier(b"\xa9"), Done(&b""[..], Identifier(&b"\xa9"[..])));
+        assert_eq!(name(b"\xa9"), Done(&b""[..], &b"\xa9"[..]));
     }
 
     #[test]
-    fn case_identifier_non_breaking_space() {
+    fn case_name_non_breaking_space() {
         //   = 0xa0
-        assert_eq!(identifier(b"\xa0"), Done(&b""[..], Identifier(&b"\xa0"[..])));
+        assert_eq!(name(b"\xa0"), Done(&b""[..], &b"\xa0"[..]));
     }
 
     #[test]
-    fn case_identifier_invalid() {
-        assert_eq!(identifier(b"0x"), Error(Err::Code(ErrorKind::RegexpFind)));
+    fn case_invalid_name() {
+        assert_eq!(name(b"0x"), Error(Err::Code(ErrorKind::RegexpFind)));
     }
 }
