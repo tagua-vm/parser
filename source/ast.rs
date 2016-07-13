@@ -35,7 +35,7 @@
 #[derive(Debug, PartialEq)]
 pub struct Term {
     /// The term value.
-    pub t: u64
+    pub t: Literal
 }
 
 /// A binding of a value to a variable.
@@ -55,3 +55,22 @@ pub struct Addition {
     /// The right-hand side of the addition.
     pub b: Term
 }
+
+/// A literal represents a fixed value, aka an atom.
+#[derive(Debug, PartialEq)]
+pub enum Literal {
+    /// A null pointer.
+    Null,
+    /// A boolean, either `true` or `false`.
+    Boolean(bool),
+    /// An integer, for instance a binary, octal, decimal or hexadecimal number.
+    Integer(u64),
+    /// A real, for instance an exponential number.
+    Real(f64),
+    /// A string.
+    String(Vec<u8>)
+}
+
+/// An identifier represents any “entity name”.
+#[derive(Debug, PartialEq)]
+pub struct Identifier<'a>(pub &'a [u8]);

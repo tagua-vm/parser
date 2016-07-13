@@ -35,6 +35,7 @@
 
 pub mod comments;
 pub mod expressions;
+pub mod identifier;
 pub mod literals;
 
 use super::ast;
@@ -59,7 +60,7 @@ mod tests {
         assert_eq!(
             expr(b"1+2"),
             Done(
-                &b""[..], ast::Addition { a: ast::Term { t: 1 }, b: ast::Term { t: 2 } }
+                &b""[..], ast::Addition { a: ast::Term { t: ast::Literal::Integer(1) }, b: ast::Term { t: ast::Literal::Integer(2) } }
             )
         );
     }

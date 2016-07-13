@@ -42,31 +42,53 @@ use nom::{
     hex_digit,
     oct_digit
 };
-use std::str;
 use std::str::FromStr;
+use std::str;
+use super::super::ast::Literal;
 
 named!(
-    pub null< Option<()> >,
+    pub literal<Literal>,
+    alt!(
+        null
+      | boolean
+      | exponential
+      | integer
+      | string
+    )
+);
+
+named!(
+    pub null<Literal>,
     map_res!(
         tag!("null"),
-        |_: &[u8]| -> Result<Option<()>, ()> {
-            Ok(None)
+        |_: &[u8]| -> Result<Literal, ()> {
+            Ok(Literal::Null)
         }
     )
 );
 
 named!(
-    pub boolean<bool>,
+    pub boolean<Literal>,
     map_res!(
         alt!(tag!("true") | tag!("false")),
-        |string: &[u8]| -> Result<bool, ()> {
-            Ok(string[0] == 't' as u8)
+        |string: &[u8]| -> Result<Literal, ()> {
+            Ok(Literal::Boolean(string[0] == 't' as u8))
         }
     )
 );
 
 named!(
-    pub binary<u64>,
+    pub integer<Literal>,
+    alt!(
+        binary
+      | octal
+      | decimal
+      | hexadecimal
+    )
+);
+
+named!(
+    pub binary<Literal>,
     map_res!(
         preceded!(
             tag!("0"),
@@ -76,39 +98,55 @@ named!(
             )
         ),
         |string: &[u8]| {
-            u64::from_str_radix(
-                unsafe { str::from_utf8_unchecked(string) },
-                2
-            )
+            u64
+                ::from_str_radix(
+                    unsafe { str::from_utf8_unchecked(string) },
+                    2
+                ).and_then(
+                    |binary| {
+                        Ok(Literal::Integer(binary))
+                   }
+                )
         }
     )
 );
 
 named!(
-    pub octal<u64>,
+    pub octal<Literal>,
     map_res!(
         preceded!(tag!("0"), oct_digit),
         |string: &[u8]| {
-            u64::from_str_radix(
-                unsafe { str::from_utf8_unchecked(string) },
-                8
-            )
+            u64
+                ::from_str_radix(
+                    unsafe { str::from_utf8_unchecked(string) },
+                    8
+                ).and_then(
+                    |octal| {
+                        Ok(Literal::Integer(octal))
+                    }
+                )
         }
     )
 );
 
 named!(
-    pub decimal<u64>,
+    pub decimal<Literal>,
     map_res!(
         re_bytes_find_static!(r"^[1-9][0-9]*"),
         |string: &[u8]| {
-            u64::from_str(unsafe { str::from_utf8_unchecked(string) })
+            u64
+                ::from_str(unsafe { str::from_utf8_unchecked(string) })
+                .and_then(
+                    |decimal| {
+                        Ok(Literal::Integer(decimal))
+                    }
+                )
         }
     )
 );
 
 named!(
-    pub hexadecimal<u64>,
+    pub hexadecimal<Literal>,
     map_res!(
         preceded!(
             tag!("0"),
@@ -118,20 +156,32 @@ named!(
             )
         ),
         |string: &[u8]| {
-            u64::from_str_radix(
-                unsafe { str::from_utf8_unchecked(string) },
-                16
-            )
+            u64
+                ::from_str_radix(
+                    unsafe { str::from_utf8_unchecked(string) },
+                    16
+                )
+                .and_then(
+                    |hexadecimal| {
+                        Ok(Literal::Integer(hexadecimal))
+                    }
+                )
         }
     )
 );
 
 named!(
-    pub exponential<f64>,
+    pub exponential<Literal>,
     map_res!(
         re_bytes_find_static!(r"^([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?"),
         |string: &[u8]| {
-            f64::from_str(unsafe { str::from_utf8_unchecked(string) })
+            f64
+                ::from_str(unsafe { str::from_utf8_unchecked(string) })
+                .and_then(
+                    |exponential| {
+                        Ok(Literal::Real(exponential))
+                    }
+                )
         }
     )
 );
@@ -150,14 +200,14 @@ pub enum StringError {
 }
 
 named!(
-    pub string< Vec<u8> >,
+    pub string<Literal>,
     alt_complete!(
         call!(string_single_quoted)
       | call!(string_nowdoc)
     )
 );
 
-fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
+fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Literal> {
     let input_length = input.len();
 
     if input_length < 2 {
@@ -194,14 +244,14 @@ fn string_single_quoted(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
         } else if *item == '\'' as u8 {
             output.extend(&input[offset..index + 1]);
 
-            return IResult::Done(&input[index + 2..], output);
+            return IResult::Done(&input[index + 2..], Literal::String(output));
         }
     }
 
     IResult::Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
 }
 
-fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
+fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Literal> {
     // `<<<'A'\nA\n` is the shortest datum.
     if input.len() < 9 {
         return IResult::Error(Err::Code(ErrorKind::Custom(StringError::TooShort as u32)));
@@ -248,7 +298,7 @@ fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
             if input[lookahead_offset] == '\n' as u8 {
                 output.extend(&input[padding + name.len() + 2..offset]);
 
-                return IResult::Done(&input[lookahead_offset + 1..], output);
+                return IResult::Done(&input[lookahead_offset + 1..], Literal::String(output));
             }
         }
     }
@@ -256,16 +306,12 @@ fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Vec<u8>> {
     IResult::Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
 }
 
-named!(
-    pub identifier,
-    re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*")
-);
-
 
 #[cfg(test)]
 mod tests {
     use nom::IResult::{Done, Error};
     use nom::{Err, ErrorKind};
+    use super::super::super::ast::Literal;
     use super::{
         StringError,
         binary,
@@ -273,380 +319,506 @@ mod tests {
         decimal,
         exponential,
         hexadecimal,
-        identifier,
+        integer,
+        literal,
         null,
         octal,
         string,
-        string_single_quoted,
-        string_nowdoc
+        string_nowdoc,
+        string_single_quoted
     };
 
     #[test]
     fn case_null() {
-        assert_eq!(null(b"null"), Done(&b""[..], None));
+        let input  = b"null";
+        let output = Done(&b""[..], Literal::Null);
+
+        assert_eq!(null(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_boolean_true() {
-        assert_eq!(boolean(b"true"), Done(&b""[..], true));
+        let input  = b"true";
+        let output = Done(&b""[..], Literal::Boolean(true));
+
+        assert_eq!(boolean(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_boolean_false() {
-        assert_eq!(boolean(b"false"), Done(&b""[..], false));
+        let input  = b"false";
+        let output = Done(&b""[..], Literal::Boolean(false));
+
+        assert_eq!(boolean(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_binary_lowercase_b() {
-        assert_eq!(binary(b"0b101010"), Done(&b""[..], 42u64));
+        let input  = b"0b101010";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_binary_uppercase_b() {
-        assert_eq!(binary(b"0B101010"), Done(&b""[..], 42u64));
+        let input  = b"0B101010";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_binary_no_number() {
-        assert_eq!(binary(b"0b"), Error(Err::Position(ErrorKind::MapRes, &b"0b"[..])));
+        let input  = b"0b";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0b"[..]));
+
+        assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &b"0b"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_octal() {
-        assert_eq!(octal(b"052"), Done(&b""[..], 42u64));
+        let input  = b"052";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(octal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_octal_not_starting_by_zero() {
-        assert_eq!(octal(b"7"), Error(Err::Position(ErrorKind::Tag, &b"7"[..])));
+        let input  = b"7";
+        let output = Done(&b""[..], Literal::Integer(7u64));
+
+        assert_eq!(octal(input), Error(Err::Position(ErrorKind::Tag, &b"7"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_octal_not_in_base() {
-        assert_eq!(octal(b"8"), Error(Err::Position(ErrorKind::Tag, &b"8"[..])));
+        let input  = b"8";
+        let output = Done(&b""[..], Literal::Integer(8));
+
+        assert_eq!(octal(input), Error(Err::Position(ErrorKind::Tag, &b"8"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_decimal_one_digit() {
-        assert_eq!(decimal(b"7"), Done(&b""[..], 7u64));
+        let input  = b"7";
+        let output = Done(&b""[..], Literal::Integer(7u64));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_decimal_many_digits() {
-        assert_eq!(decimal(b"42"), Done(&b""[..], 42u64));
+        let input  = b"42";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_decimal_plus() {
-        assert_eq!(decimal(b"42+"), Done(&b"+"[..], 42u64));
+        let input  = b"42+";
+        let output = Done(&b"+"[..], Literal::Integer(42u64));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_hexadecimal_lowercase_x() {
-        assert_eq!(hexadecimal(b"0x2a"), Done(&b""[..], 42u64));
+        let input  = b"0x2a";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_hexadecimal_uppercase_x() {
-        assert_eq!(hexadecimal(b"0X2a"), Done(&b""[..], 42u64));
+        let input  = b"0X2a";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_hexadecimal_uppercase_alpha() {
-        assert_eq!(hexadecimal(b"0x2A"), Done(&b""[..], 42u64));
+        let input  = b"0x2A";
+        let output = Done(&b""[..], Literal::Integer(42u64));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_hexadecimal_no_number() {
-        assert_eq!(hexadecimal(b"0x"), Error(Err::Position(ErrorKind::HexDigit, &b""[..])));
+        let input  = b"0x";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0x"[..]));
+
+        assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b""[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_hexadecimal_not_in_base() {
-        assert_eq!(hexadecimal(b"0xg"), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
+        let input  = b"0xg";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0xg"[..]));
+
+        assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential() {
-        assert_eq!(exponential(b"123.456e+78"), Done(&b""[..], 123.456e78f64));
+        let input  = b"123.456e+78";
+        let output = Done(&b""[..], Literal::Real(123.456e78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_fractional_part() {
-        assert_eq!(exponential(b"123.456"), Done(&b""[..], 123.456f64));
+        let input  = b"123.456";
+        let output = Done(&b""[..], Literal::Real(123.456f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_part() {
-        assert_eq!(exponential(b"123."), Done(&b""[..], 123.0f64));
+        let input  = b"123.";
+        let output = Done(&b""[..], Literal::Real(123.0f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_fractional_part() {
-        assert_eq!(exponential(b".456"), Done(&b""[..], 0.456f64));
+        let input  = b".456";
+        let output = Done(&b""[..], Literal::Real(0.456f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_lowercase_e() {
-        assert_eq!(exponential(b"123.e78"), Done(&b""[..], 123e78f64));
+        let input  = b"123.e78";
+        let output = Done(&b""[..], Literal::Real(123e78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_uppercase_e() {
-        assert_eq!(exponential(b"123.E78"), Done(&b""[..], 123e78f64));
+        let input  = b"123.E78";
+        let output = Done(&b""[..], Literal::Real(123e78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_unsigned_exponent_part() {
-        assert_eq!(exponential(b"123.e78"), Done(&b""[..], 123e78f64));
+        let input  = b"123.e78";
+        let output = Done(&b""[..], Literal::Real(123e78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_positive_exponent_part() {
-        assert_eq!(exponential(b"123.e+78"), Done(&b""[..], 123e78f64));
+        let input  = b"123.e+78";
+        let output = Done(&b""[..], Literal::Real(123e78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_negative_exponent_part() {
-        assert_eq!(exponential(b"123.e-78"), Done(&b""[..], 123e-78f64));
+        let input  = b"123.e-78";
+        let output = Done(&b""[..], Literal::Real(123e-78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_only_with_rational_and_negative_zero_exponent_part() {
-        assert_eq!(exponential(b"123.e-0"), Done(&b""[..], 123f64));
+        let input  = b"123.e-0";
+        let output = Done(&b""[..], Literal::Real(123f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_exponential_missing_exponent_part() {
-        assert_eq!(exponential(b".7e"), Done(&b"e"[..], 0.7f64));
+        let input  = b".7e";
+        let output = Done(&b"e"[..], Literal::Real(0.7f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_exponential_only_the_dot() {
-        assert_eq!(exponential(b"."), Error(Err::Code(ErrorKind::RegexpFind)));
+        let input = b".";
+
+        assert_eq!(exponential(input), Error(Err::Code(ErrorKind::RegexpFind)));
+        assert_eq!(literal(input), Error(Err::Position(ErrorKind::Alt, &b"."[..])));
     }
 
     #[test]
     fn case_string_single_quoted() {
         let input  = b"'foobar'";
-        let output = Done(&b""[..], b"foobar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foobar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_single_quoted_escaped_quote() {
         let input  = b"'foo\\'bar'";
-        let output = Done(&b""[..], b"foo'bar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foo'bar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_single_quoted_escaped_backslash() {
         let input  = b"'foo\\\\bar'";
-        let output = Done(&b""[..], b"foo\\bar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foo\\bar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_single_quoted_escaped_any() {
         let input  = b"'foo\\nbar'";
-        let output = Done(&b""[..], b"foo\\nbar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foo\\nbar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_single_quoted_escaped_many() {
         let input  = b"'\\'f\\oo\\\\bar\\\\'";
-        let output = Done(&b""[..], b"'f\\oo\\bar\\".to_vec());
+        let output = Done(&b""[..], Literal::String(b"'f\\oo\\bar\\".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_single_quoted_empty() {
         let input  = b"''";
-        let output = Done(&b""[..], Vec::new());
+        let output = Done(&b""[..], Literal::String(Vec::new()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_binary_single_quoted() {
         let input  = b"b'foobar'";
-        let output = Done(&b""[..], b"foobar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"foobar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_binary_single_quoted_escaped_many() {
         let input  = b"b'\\'f\\oo\\\\bar'";
-        let output = Done(&b""[..], b"'f\\oo\\bar".to_vec());
+        let output = Done(&b""[..], Literal::String(b"'f\\oo\\bar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_single_quoted_too_short() {
-        let input = b"'";
+        let input  = b"'";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_single_quoted(input), Error(Err::Code(ErrorKind::Custom(StringError::TooShort as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_single_quoted_opening_character() {
-        let input = b"foobar'";
+        let input  = b"foobar'";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_single_quoted(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_single_quoted_closing_character() {
-        let input = b"'foobar";
+        let input  = b"'foobar";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_single_quoted(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_single_quoted_closing_character_is_a_backslash() {
-        let input = b"'foobar\\";
+        let input  = b"'foobar\\";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_single_quoted(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_binary_single_quoted_too_short() {
-        let input = b"b'";
+        let input  = b"b'";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_single_quoted(input), Error(Err::Code(ErrorKind::Custom(StringError::TooShort as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_binary_single_quoted_opening_character() {
-        let input = b"bb'";
+        let input  = b"bb'";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_single_quoted(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_nowdoc() {
         let input  = b"<<<'FOO'\nhello \n  world \nFOO;\n";
-        let output = Done(&b""[..], b"hello \n  world ".to_vec());
+        let output = Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_nowdoc_without_semi_colon() {
         let input  = b"<<<'FOO'\nhello \n  world \nFOO\n";
-        let output = Done(&b""[..], b"hello \n  world ".to_vec());
+        let output = Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_string_nowdoc_empty() {
         let input  = b"<<<'FOO'\n\nFOO\n";
-        let output = Done(&b""[..], Vec::new());
+        let output = Done(&b""[..], Literal::String(Vec::new()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_nowdoc_too_short() {
-        let input = b"<<<'A'\nA";
+        let input  = b"<<<'A'\nA";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Error(Err::Code(ErrorKind::Custom(StringError::TooShort as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_first_quote() {
-        let input = b"<<<FOO'\nhello \n  world \nFOO\n";
+        let input  = b"<<<FOO'\nhello \n  world \nFOO\n";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_second_quote() {
-        let input = b"<<<'FOO\nhello \n  world \nFOO\n";
+        let input  = b"<<<'FOO\nhello \n  world \nFOO\n";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_newline() {
-        let input = b"<<<'FOO'hello \n  world \nFOO\n";
+        let input  = b"<<<'FOO'hello \n  world \nFOO\n";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
     fn case_invalid_string_nowdoc_closing_character() {
-        let input = b"<<<'FOO'\nhello \n  world \nFO;\n";
+        let input  = b"<<<'FOO'\nhello \n  world \nFO;\n";
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
-        assert_eq!(string(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
-    }
-
-    #[test]
-    fn case_identifier() {
-        assert_eq!(identifier(b"_fooBar42"), Done(&b""[..], &b"_fooBar42"[..]));
-    }
-
-    #[test]
-    fn case_identifier_shortest() {
-        assert_eq!(identifier(b"x"), Done(&b""[..], &b"x"[..]));
-    }
-
-    #[test]
-    fn case_identifier_only_head() {
-        assert_eq!(identifier(b"aB_\x80"), Done(&b""[..], &b"aB_\x80"[..]));
-    }
-
-    #[test]
-    fn case_identifier_head_and_tail() {
-        assert_eq!(identifier(b"aB_\x80aB7\xff"), Done(&b""[..], &b"aB_\x80aB7\xff"[..]));
-    }
-
-    #[test]
-    fn case_identifier_copyright() {
-        // © = 0xa9
-        assert_eq!(identifier(b"\xa9"), Done(&b""[..], &b"\xa9"[..]));
-    }
-
-    #[test]
-    fn case_identifier_non_breaking_space() {
-        //   = 0xa0
-        assert_eq!(identifier(b"\xa0"), Done(&b""[..], &b"\xa0"[..]));
-    }
-
-    #[test]
-    fn case_identifier_invalid() {
-        assert_eq!(identifier(b"0x"), Error(Err::Code(ErrorKind::RegexpFind)));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
     }
 }
