@@ -377,11 +377,12 @@ mod tests {
 
     #[test]
     fn case_invalid_binary_no_number() {
-        let input = b"0b";
+        let input  = b"0b";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0b"[..]));
 
         assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &b"0b"[..])));
-        assert_eq!(integer(input), Error(Err::Position(ErrorKind::Alt, &b"0b"[..])));
-        assert_eq!(literal(input), Error(Err::Position(ErrorKind::Alt, &b"0b"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
     }
 
     #[test]
