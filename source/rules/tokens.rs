@@ -54,6 +54,27 @@ fn variable_mapper(string: &[u8]) -> Result<Name, ()> {
 }
 
 named!(
+    pub namespace<Name>,
+    chain!(
+        mut output: map_res!(name, wrap_into_vector_mapper) ~
+        many0!(
+            tap!(
+                tail: preceded!(tag!(tokens::NAMESPACE_SEPARATOR), name) => {
+                    output.push(tail)
+                }
+            )
+        ),
+        || {
+            Name::Namespace(output)
+        }
+    )
+);
+
+fn wrap_into_vector_mapper(string: &[u8]) -> Result<Vec<&[u8]>, ()> {
+    Ok(vec![string])
+}
+
+named!(
     name,
     re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*")
 );
@@ -65,6 +86,7 @@ mod tests {
     use nom::{Err, ErrorKind};
     use super::{
         name,
+        namespace,
         variable
     };
     use super::super::super::ast::Name;
@@ -87,6 +109,21 @@ mod tests {
     #[test]
     fn case_invalid_variable_name() {
         assert_eq!(variable(b"$0"), Error(Err::Code(ErrorKind::RegexpFind)));
+    }
+
+    #[test]
+    fn case_namespace() {
+        assert_eq!(namespace(b"Foo\\Bar\\Baz"), Done(&b""[..], Name::Namespace(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_namespace_unit() {
+        assert_eq!(namespace(b"Foo"), Done(&b""[..], Name::Namespace(vec![&b"Foo"[..]])));
+    }
+
+    #[test]
+    fn case_invalid_namespace_ending_with_a_separator() {
+        assert_eq!(namespace(b"Foo\\Bar\\"), Done(&b"\\"[..], Name::Namespace(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
 
     #[test]
