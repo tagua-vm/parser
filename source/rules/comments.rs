@@ -38,8 +38,8 @@
 named!(
     pub comment,
     alt!(
-        call!(comment_single_line)
-      | call!(comment_delimited)
+        comment_single_line
+      | comment_delimited
     )
 );
 
