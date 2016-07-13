@@ -488,7 +488,7 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_not_in_base() {
         let input  = b"0xg";
-        let output =Error(Err::Position(ErrorKind::Alt, &b"0xg"[..]));
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0xg"[..]));
 
         assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
         assert_eq!(integer(input), output);
