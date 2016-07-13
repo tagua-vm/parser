@@ -411,6 +411,10 @@ token!(
     "The `NAMESPACE` token.\n\nRepresent the namespace declaration operator, e.g. `namespace N;`."
 );
 token!(
+    pub NAMESPACE_SEPARATOR: "\\";
+    "The `NAMESPACE_SEPARATOR` token.\n\nRepresent the namespace separator, e.g. `A\\B\\C`."
+);
+token!(
     pub NEW: "new";
     "The `NEW` token.\n\nRepresent the instanciation operator, e.g. `new C()`."
 );
