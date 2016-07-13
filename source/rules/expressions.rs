@@ -39,7 +39,7 @@ named!(
     pub expr<ast::Addition>,
     chain!(
         left: decimal ~
-        tag!(token::PLUS) ~
+        tag!(token::ADD) ~
         right: decimal,
         || ast::Addition { a: ast::Term { t: left }, b: ast::Term { t: right } }
     )
