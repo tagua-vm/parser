@@ -29,11 +29,11 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! The identifier rule.
+//! Group of token rules.
 //!
-//! The identifier rule as described by the PHP Language Specification in The
-//! [Lexical Structure chapter, Names
-//! section](https://github.com/php/php-langspec/blob/master/spec/09-lexical-structure.md#names).
+//! The list of all tokens is provided by the PHP Language Specification in
+//! the [Grammar chapter, Tokens
+//! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#tokens).
 
 use super::super::ast::Identifier;
 

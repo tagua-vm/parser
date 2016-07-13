@@ -35,8 +35,8 @@
 
 pub mod comments;
 pub mod expressions;
-pub mod identifier;
 pub mod literals;
+pub mod tokens;
 
 use super::ast;
 use nom::IResult::Done;
