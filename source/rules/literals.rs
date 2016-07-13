@@ -306,16 +306,6 @@ fn string_nowdoc(input: &[u8]) -> IResult<&[u8], Literal> {
     IResult::Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
 }
 
-named!(
-    pub identifier<Literal>,
-    map_res!(
-        re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*"),
-        |string: &[u8]| -> Result<Literal, ()> {
-            Ok(Literal::Identifier(string.to_vec()))
-        }
-    )
-);
-
 
 #[cfg(test)]
 mod tests {
@@ -329,7 +319,6 @@ mod tests {
         decimal,
         exponential,
         hexadecimal,
-        identifier,
         integer,
         literal,
         null,
@@ -830,42 +819,5 @@ mod tests {
         assert_eq!(string_nowdoc(input), Error(Err::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
-    }
-
-    #[test]
-    fn case_identifier() {
-        assert_eq!(identifier(b"_fooBar42"), Done(&b""[..], Literal::Identifier(b"_fooBar42".to_vec())));
-    }
-
-    #[test]
-    fn case_identifier_shortest() {
-        assert_eq!(identifier(b"x"), Done(&b""[..], Literal::Identifier(b"x".to_vec())));
-    }
-
-    #[test]
-    fn case_identifier_only_head() {
-        assert_eq!(identifier(b"aB_\x80"), Done(&b""[..], Literal::Identifier(b"aB_\x80".to_vec())));
-    }
-
-    #[test]
-    fn case_identifier_head_and_tail() {
-        assert_eq!(identifier(b"aB_\x80aB7\xff"), Done(&b""[..], Literal::Identifier(b"aB_\x80aB7\xff".to_vec())));
-    }
-
-    #[test]
-    fn case_identifier_copyright() {
-        // © = 0xa9
-        assert_eq!(identifier(b"\xa9"), Done(&b""[..], Literal::Identifier(b"\xa9".to_vec())));
-    }
-
-    #[test]
-    fn case_identifier_non_breaking_space() {
-        //   = 0xa0
-        assert_eq!(identifier(b"\xa0"), Done(&b""[..], Literal::Identifier(b"\xa0".to_vec())));
-    }
-
-    #[test]
-    fn case_identifier_invalid() {
-        assert_eq!(identifier(b"0x"), Error(Err::Code(ErrorKind::RegexpFind)));
     }
 }

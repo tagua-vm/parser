@@ -35,6 +35,7 @@
 
 pub mod comments;
 pub mod expressions;
+pub mod identifier;
 pub mod literals;
 
 use super::ast;

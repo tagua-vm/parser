@@ -68,7 +68,9 @@ pub enum Literal {
     /// A real, for instance an exponential number.
     Real(f64),
     /// A string.
-    String(Vec<u8>),
-    /// An identifier.
-    Identifier(Vec<u8>)
+    String(Vec<u8>)
 }
+
+/// An identifier represents any “entity name”.
+#[derive(Debug, PartialEq)]
+pub struct Identifier<'a>(pub &'a [u8]);
