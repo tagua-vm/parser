@@ -1,6 +1,6 @@
 # Tagua VM
 
-[![build status](https://api.travis-ci.org/tagua-vm/parser.svg)](https://travis-ci.org/tagua-vm/parser)
+[![Build status](https://api.travis-ci.org/tagua-vm/parser.svg?branch=master)](https://travis-ci.org/tagua-vm/parser)
 [![Chat on Freenode](https://img.shields.io/badge/chat-on_%23taguavm-ff0066.svg)](https://webchat.freenode.net/?channels=#taguavm)
 [![Chat on Gitter](https://img.shields.io/badge/chat-on_gitter-ff0066.svg)](https://gitter.im/tagua-vm/tagua-vm)
 
@@ -56,6 +56,10 @@ following command:
 $ cargo doc
 $ open target/doc/taguavm_parser/index.html
 ```
+
+To get help on IRC, please join the official [`#taguavm` channel on
+Freenode](https://webchat.freenode.net/?channels=#taguavm). Alternatively, there
+is a [mirrored room on Gitter](https://gitter.im/tagua-vm/tagua-vm).
 
 ## License
 
