@@ -71,6 +71,15 @@ pub enum Literal {
     String(Vec<u8>)
 }
 
-/// An identifier represents any “entity name”.
+/// A name represents either a variable or an entity name.
 #[derive(Debug, PartialEq)]
-pub struct Identifier<'a>(pub &'a [u8]);
+pub enum Name<'a> {
+    /// A variable.
+    Variable(&'a [u8]),
+    /// An entity name with its namespace.
+    Namespace(Vec<&'a [u8]>),
+    /// A qualified entity name.
+    Qualified(&'a [u8]),
+    /// A fully qualified entity name.
+    FullyQualified(&'a [u8])
+}
