@@ -54,18 +54,37 @@ fn variable_mapper(string: &[u8]) -> Result<Name, ()> {
 }
 
 named!(
-    pub namespace<Name>,
+    pub qualified_name<Name>,
     chain!(
-        mut output: map_res!(name, wrap_into_vector_mapper) ~
+        head: alt!(
+            tag!(tokens::NAMESPACE_SEPARATOR)
+          | terminated!(tag!(tokens::NAMESPACE), tag!(tokens::NAMESPACE_SEPARATOR))
+        )? ~
+        mut accumulator: map_res!(name, wrap_into_vector_mapper) ~
         many0!(
             tap!(
                 tail: preceded!(tag!(tokens::NAMESPACE_SEPARATOR), name) => {
-                    output.push(tail)
+                    accumulator.push(tail)
                 }
             )
         ),
         || {
-            Name::Namespace(output)
+            match head {
+                Some(handle) => {
+                    if handle == tokens::NAMESPACE_SEPARATOR {
+                        Name::FullyQualified(accumulator)
+                    } else {
+                        Name::RelativeQualified(accumulator)
+                    }
+                },
+
+                None =>
+                    if accumulator.len() > 1 {
+                        Name::Qualified(accumulator)
+                    } else {
+                        Name::Unqualified(accumulator[0])
+                    }
+            }
         }
     )
 );
@@ -86,7 +105,7 @@ mod tests {
     use nom::{Err, ErrorKind};
     use super::{
         name,
-        namespace,
+        qualified_name,
         variable
     };
     use super::super::super::ast::Name;
@@ -112,18 +131,33 @@ mod tests {
     }
 
     #[test]
-    fn case_namespace() {
-        assert_eq!(namespace(b"Foo\\Bar\\Baz"), Done(&b""[..], Name::Namespace(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    fn case_unqualified_name() {
+        assert_eq!(qualified_name(b"Foo"), Done(&b""[..], Name::Unqualified(&b"Foo"[..])));
     }
 
     #[test]
-    fn case_namespace_unit() {
-        assert_eq!(namespace(b"Foo"), Done(&b""[..], Name::Namespace(vec![&b"Foo"[..]])));
+    fn case_qualified_name() {
+        assert_eq!(qualified_name(b"Foo\\Bar\\Baz"), Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
 
     #[test]
-    fn case_invalid_namespace_ending_with_a_separator() {
-        assert_eq!(namespace(b"Foo\\Bar\\"), Done(&b"\\"[..], Name::Namespace(vec![&b"Foo"[..], &b"Bar"[..]])));
+    fn case_relative_qualified_name() {
+        assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_fully_qualified_name() {
+        assert_eq!(qualified_name(b"\\Foo\\Bar\\Baz"), Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_fully_qualified_shortest_name() {
+        assert_eq!(qualified_name(b"\\Foo"), Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..]])));
+    }
+
+    #[test]
+    fn case_invalid_qualified_name_ending_with_a_separator() {
+        assert_eq!(qualified_name(b"Foo\\Bar\\"), Done(&b"\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
 
     #[test]
