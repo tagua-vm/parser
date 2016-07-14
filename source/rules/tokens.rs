@@ -58,25 +58,30 @@ named!(
     chain!(
         head: alt!(
             tag!(tokens::NAMESPACE_SEPARATOR)
-          | terminated!(tag!(tokens::NAMESPACE), tag!(tokens::NAMESPACE_SEPARATOR))
+          | terminated!(
+                tag!(tokens::NAMESPACE),
+                tag!(tokens::NAMESPACE_SEPARATOR)
+            )
         )? ~
         mut accumulator: map_res!(name, wrap_into_vector_mapper) ~
         many0!(
             tap!(
-                tail: preceded!(tag!(tokens::NAMESPACE_SEPARATOR), name) => {
+                tail: preceded!(
+                    tag!(tokens::NAMESPACE_SEPARATOR),
+                    name
+                ) => {
                     accumulator.push(tail)
                 }
             )
         ),
         || {
             match head {
-                Some(handle) => {
+                Some(handle) =>
                     if handle == tokens::NAMESPACE_SEPARATOR {
                         Name::FullyQualified(accumulator)
                     } else {
                         Name::RelativeQualified(accumulator)
-                    }
-                },
+                    },
 
                 None =>
                     if accumulator.len() > 1 {
