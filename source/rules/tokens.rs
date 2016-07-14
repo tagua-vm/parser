@@ -75,7 +75,7 @@ fn wrap_into_vector_mapper(string: &[u8]) -> Result<Vec<&[u8]>, ()> {
 }
 
 named!(
-    name,
+    pub name,
     re_bytes_find_static!(r"^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*")
 );
 
