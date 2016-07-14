@@ -76,10 +76,15 @@ pub enum Literal {
 pub enum Name<'a> {
     /// A variable.
     Variable(&'a [u8]),
-    /// An entity name with its namespace.
-    Namespace(Vec<&'a [u8]>),
-    /// A qualified entity name.
-    Qualified(&'a [u8]),
-    /// A fully qualified entity name.
-    FullyQualified(&'a [u8])
+    /// An unqualified name, i.e. a name without a namespace, like `Bar`.
+    Unqualified(&'a [u8]),
+    /// A qualified name, i.e. a name in a relative namespace (aliased or not),
+    /// like `Foo\Bar`.
+    Qualified(Vec<&'a [u8]>),
+    /// A relative qualified name, i.e. a name in a relative namespace
+    /// restricted to the current namespace, like `namespace\Foo\Bar`.
+    RelativeQualified(Vec<&'a [u8]>),
+    /// A fully qualified name, i.e. a name in an absolute namespace, like
+    /// `\Foo\Bar`.
+    FullyQualified(Vec<&'a [u8]>)
 }
