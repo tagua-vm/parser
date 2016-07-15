@@ -45,10 +45,16 @@ pub enum ErrorKindCustom {
 /// This is handy when the first parser accepts general values and the second
 /// parser denies a particular subset of values.
 ///
-/// ```ignore
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
 /// use nom::IResult::{Done, Error};
 /// use nom::{Err, ErrorKind};
+/// # #[macro_use]
+/// # extern crate taguavm_parser;
+/// use taguavm_parser::macros::ErrorKindCustom;
 ///
+/// # fn main() {
 /// named!(
 ///     test,
 ///     and_not!(
@@ -62,6 +68,7 @@ pub enum ErrorKindCustom {
 ///
 /// assert_eq!(test(&b"fedabc"[..]), Done(&b""[..], &b"fedabc"[..]));
 /// assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::AndNot as u32), &b"abcabc"[..])));
+/// # }
 /// ```
 #[macro_export]
 macro_rules! and_not(
