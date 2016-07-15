@@ -63,15 +63,17 @@ named!(
                 tag!(tokens::NAMESPACE_SEPARATOR)
             )
         )? ~
-        mut accumulator: map_res!(name, wrap_into_vector_mapper) ~
+        mut accumulator: map_res!(
+            and_not!(name, tag!(tokens::NAMESPACE)),
+            wrap_into_vector_mapper
+        ) ~
         many0!(
             tap!(
                 tail: preceded!(
                     tag!(tokens::NAMESPACE_SEPARATOR),
-                    name
-                ) => {
+                    and_not!(name, tag!(tokens::NAMESPACE))
+                ) =>
                     accumulator.push(tail)
-                }
             )
         ),
         || {
@@ -114,6 +116,7 @@ mod tests {
         variable
     };
     use super::super::super::ast::Name;
+    use super::super::super::macros::ErrorKindCustom;
 
     #[test]
     fn case_variable() {
@@ -146,8 +149,18 @@ mod tests {
     }
 
     #[test]
+    fn case_invalid_qualified_name() {
+        assert_eq!(qualified_name(b"Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
+    }
+
+    #[test]
     fn case_relative_qualified_name() {
         assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_invalid_relative_qualified_name() {
+        assert_eq!(qualified_name(b"namespace\\Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
     }
 
     #[test]
@@ -158,6 +171,11 @@ mod tests {
     #[test]
     fn case_fully_qualified_shortest_name() {
         assert_eq!(qualified_name(b"\\Foo"), Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..]])));
+    }
+
+    #[test]
+    fn case_invalid_fully_and_relative_qualified_name() {
+        assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::AndNot as u32), &b"namespace\\Foo\\Bar"[..])));
     }
 
     #[test]
