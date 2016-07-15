@@ -72,7 +72,7 @@ pub enum ErrorKindCustom {
 /// ```
 #[macro_export]
 macro_rules! and_not(
-    ($input:expr, $submacro1:ident!( $($arguments1:tt)* ), $submacro2:ident!( $($arguments2:tt)* )) => (
+    ($input:expr, $submacro1:ident!($($arguments1:tt)*), $submacro2:ident!($($arguments2:tt)*)) => (
         {
             match $submacro1!($input, $($arguments1)*) {
                 ::nom::IResult::Done(i, o) =>
