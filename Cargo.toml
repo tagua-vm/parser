@@ -43,5 +43,8 @@ codegen-units    = 1
 
 [dependencies]
 lazy_static = "~0.1"
-nom = {git = "https://github.com/Geal/nom", rev = "master", "features" = ["regexp", "regexp_macros"]}
 regex = "~0.1"
+
+[dependencies.nom]
+version = "^1.2.3"
+features = ["regexp", "regexp_macros"]
