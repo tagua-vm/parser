@@ -1,5 +1,5 @@
 [package]
-name        = "tagua-vm-parser"
+name        = "tagua-parser"
 version     = "0.0.1"
 authors     = ["Ivan Enderlin <ivan.enderlin@hoa-project.net>"]
 repository  = "https://github.com/tagua-vm/parser"
@@ -9,7 +9,7 @@ keywords    = ["php", "virtual machine", "parser", "lexical", "syntactic", "anal
 license     = "BSD-3-Clause"
 
 [lib]
-name    = "taguavm_parser"
+name    = "tagua_parser"
 path    = "source/lib.rs"
 test    = true
 doctest = true
