@@ -75,16 +75,113 @@ pub enum Literal {
 #[derive(Debug, PartialEq)]
 pub enum Name<'a> {
     /// A variable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate taguavm_parser;
+    /// use taguavm_parser::rules::tokens::variable;
+    /// use taguavm_parser::ast::Name;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     variable(b"$foo"),
+    ///     Done(&b""[..], Name::Variable(&b"foo"[..]))
+    /// );
+    /// # }
+    /// ```
+    /// Note that the `$` is not present.
     Variable(&'a [u8]),
+
     /// An unqualified name, i.e. a name without a namespace, like `Bar`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate taguavm_parser;
+    /// use taguavm_parser::rules::tokens::qualified_name;
+    /// use taguavm_parser::ast::Name;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     qualified_name(b"Bar"),
+    ///     Done(&b""[..], Name::Unqualified(&b"Bar"[..]))
+    /// );
+    /// # }
+    /// ```
     Unqualified(&'a [u8]),
+
     /// A qualified name, i.e. a name in a relative namespace (aliased or not),
     /// like `Foo\Bar`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate taguavm_parser;
+    /// use taguavm_parser::rules::tokens::qualified_name;
+    /// use taguavm_parser::ast::Name;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     qualified_name(b"Foo\\Bar"),
+    ///     Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]]))
+    /// );
+    /// # }
+    /// ```
     Qualified(Vec<&'a [u8]>),
+
     /// A relative qualified name, i.e. a name in a relative namespace
     /// restricted to the current namespace, like `namespace\Foo\Bar`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate taguavm_parser;
+    /// use taguavm_parser::rules::tokens::qualified_name;
+    /// use taguavm_parser::ast::Name;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     qualified_name(b"namespace\\Foo\\Bar"),
+    ///     Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
+    /// );
+    /// # }
+    /// ```
+    /// Note that the `namespace` part is not present.
     RelativeQualified(Vec<&'a [u8]>),
+
     /// A fully qualified name, i.e. a name in an absolute namespace, like
     /// `\Foo\Bar`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate taguavm_parser;
+    /// use taguavm_parser::rules::tokens::qualified_name;
+    /// use taguavm_parser::ast::Name;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     qualified_name(b"\\Foo\\Bar"),
+    ///     Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
+    /// );
+    /// # }
+    /// ```
+    /// Note that the leading `\` part is not present.
     FullyQualified(Vec<&'a [u8]>)
 }
