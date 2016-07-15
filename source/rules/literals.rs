@@ -201,9 +201,9 @@ pub enum StringError {
 
 named!(
     pub string<Literal>,
-    alt_complete!(
-        call!(string_single_quoted)
-      | call!(string_nowdoc)
+    alt!(
+        string_single_quoted
+      | string_nowdoc
     )
 );
 
