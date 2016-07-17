@@ -71,31 +71,33 @@ pub enum Literal {
     String(Vec<u8>)
 }
 
-/// A name represents either a variable or an entity name.
+
+/// A variable.
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
+/// use nom::IResult::Done;
+/// # extern crate taguavm_parser;
+/// use taguavm_parser::rules::tokens::variable;
+/// use taguavm_parser::ast::Variable;
+///
+/// # fn main () {
+/// assert_eq!(
+///     variable(b"$foo"),
+///     Done(&b""[..], Variable(&b"foo"[..]))
+/// );
+/// # }
+/// ```
+/// Note that the `$` is not present.
+#[derive(Debug, PartialEq)]
+pub struct Variable<'a>(pub &'a [u8]);
+
+/// A name represents an entity name.
 #[derive(Debug, PartialEq)]
 pub enum Name<'a> {
-    /// A variable.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
-    /// # extern crate taguavm_parser;
-    /// use taguavm_parser::rules::tokens::variable;
-    /// use taguavm_parser::ast::Name;
-    ///
-    /// # fn main () {
-    /// assert_eq!(
-    ///     variable(b"$foo"),
-    ///     Done(&b""[..], Name::Variable(&b"foo"[..]))
-    /// );
-    /// # }
-    /// ```
-    /// Note that the `$` is not present.
-    Variable(&'a [u8]),
-
     /// An unqualified name, i.e. a name without a namespace, like `Bar`.
     ///
     /// # Examples

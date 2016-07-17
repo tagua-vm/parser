@@ -36,10 +36,13 @@
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#tokens).
 
 use super::super::tokens;
-use super::super::ast::Name;
+use super::super::ast::{
+    Name,
+    Variable
+};
 
 named!(
-    pub variable<Name>,
+    pub variable<Variable>,
     map_res!(
         preceded!(
             tag!(tokens::VARIABLE),
@@ -49,8 +52,8 @@ named!(
     )
 );
 
-fn variable_mapper(string: &[u8]) -> Result<Name, ()> {
-    Ok(Name::Variable(string))
+fn variable_mapper(string: &[u8]) -> Result<Variable, ()> {
+    Ok(Variable(string))
 }
 
 named!(
@@ -115,17 +118,20 @@ mod tests {
         qualified_name,
         variable
     };
-    use super::super::super::ast::Name;
+    use super::super::super::ast::{
+        Name,
+        Variable
+    };
     use super::super::super::macros::ErrorKindCustom;
 
     #[test]
     fn case_variable() {
-        assert_eq!(variable(b"$foo"), Done(&b""[..], Name::Variable(&b"foo"[..])));
+        assert_eq!(variable(b"$foo"), Done(&b""[..], Variable(&b"foo"[..])));
     }
 
     #[test]
     fn case_variable_shortest() {
-        assert_eq!(variable(b"$x"), Done(&b""[..], Name::Variable(&b"x"[..])));
+        assert_eq!(variable(b"$x"), Done(&b""[..], Variable(&b"x"[..])));
     }
 
     #[test]
