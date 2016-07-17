@@ -76,7 +76,7 @@ macro_rules! exclude(
         {
             match $submacro1!($input, $($arguments1)*) {
                 ::nom::IResult::Done(i, o) =>
-                    match $submacro2!($input, $($arguments2)*) {
+                    match $submacro2!(o, $($arguments2)*) {
                         ::nom::IResult::Done(_, _) =>
                             ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32), $input)),
 
