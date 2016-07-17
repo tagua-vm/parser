@@ -67,14 +67,14 @@ named!(
             )
         )? ~
         mut accumulator: map_res!(
-            and_not!(name, tag!(tokens::NAMESPACE)),
+            exclude!(name, tag!(tokens::NAMESPACE)),
             wrap_into_vector_mapper
         ) ~
         many0!(
             tap!(
                 tail: preceded!(
                     tag!(tokens::NAMESPACE_SEPARATOR),
-                    and_not!(name, tag!(tokens::NAMESPACE))
+                    exclude!(name, tag!(tokens::NAMESPACE))
                 ) =>
                     accumulator.push(tail)
             )
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn case_invalid_fully_and_relative_qualified_name() {
-        assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::AndNot as u32), &b"namespace\\Foo\\Bar"[..])));
+        assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"namespace\\Foo\\Bar"[..])));
     }
 
     #[test]

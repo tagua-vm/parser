@@ -34,11 +34,11 @@
 /// Custom values for `nom::ErrorKind::Custom`.
 #[derive(Debug)]
 pub enum ErrorKindCustom {
-    /// Represent errors from the `and_not` macro.
-    AndNot
+    /// Represent errors from the `exclude` macro.
+    Exclude
 }
 
-/// `and_not!(I -> IResult<I, O>, I -> IResult<I, P>) => I -> IResult<I, 0>`
+/// `exclude!(I -> IResult<I, O>, I -> IResult<I, P>) => I -> IResult<I, 0>`
 /// returns the result of the first parser if the second fails. Both parsers
 /// run on the same input.
 ///
@@ -57,7 +57,7 @@ pub enum ErrorKindCustom {
 /// # fn main() {
 /// named!(
 ///     test,
-///     and_not!(
+///     exclude!(
 ///         is_a!("abcdef"),
 ///         alt!(
 ///             tag!("abc")
@@ -67,18 +67,18 @@ pub enum ErrorKindCustom {
 /// );
 ///
 /// assert_eq!(test(&b"fedabc"[..]), Done(&b""[..], &b"fedabc"[..]));
-/// assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::AndNot as u32), &b"abcabc"[..])));
+/// assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
 /// # }
 /// ```
 #[macro_export]
-macro_rules! and_not(
+macro_rules! exclude(
     ($input:expr, $submacro1:ident!($($arguments1:tt)*), $submacro2:ident!($($arguments2:tt)*)) => (
         {
             match $submacro1!($input, $($arguments1)*) {
                 ::nom::IResult::Done(i, o) =>
                     match $submacro2!($input, $($arguments2)*) {
                         ::nom::IResult::Done(_, _) =>
-                            ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::AndNot as u32), $input)),
+                            ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32), $input)),
 
                         ::nom::IResult::Incomplete(_) =>
                             ::nom::IResult::Done(i, o),
@@ -97,15 +97,15 @@ macro_rules! and_not(
     );
 
     ($input:expr, $submacro1:ident!( $($arguments1:tt)* ), $g:expr) => (
-        and_not!($input, $submacro1!($($arguments1)*), call!($g));
+        exclude!($input, $submacro1!($($arguments1)*), call!($g));
     );
 
     ($input:expr, $f:expr, $submacro1:ident!( $($arguments1:tt)* )) => (
-        and_not!($input, call!($f), $submacro1!($($arguments1)*));
+        exclude!($input, call!($f), $submacro1!($($arguments1)*));
     );
 
     ($input:expr, $f:expr, $g:expr) => (
-        and_not!($input, call!($f), call!($g));
+        exclude!($input, call!($f), call!($g));
     );
 );
 
@@ -117,10 +117,10 @@ mod tests {
     use super::ErrorKindCustom;
 
     #[test]
-    fn case_and_not() {
+    fn case_exclude() {
         named!(
             test,
-            and_not!(
+            exclude!(
                 is_a!("abcdef"),
                 alt!(
                     tag!("abc")
@@ -130,7 +130,7 @@ mod tests {
         );
 
         assert_eq!(test(&b"fedabc"[..]), Done(&b""[..], &b"fedabc"[..]));
-        assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::AndNot as u32), &b"abcabc"[..])));
-        assert_eq!(test(&b"acebdf"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::AndNot as u32), &b"acebdf"[..])));
+        assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
+        assert_eq!(test(&b"acebdf"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
     }
 }
