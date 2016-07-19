@@ -37,7 +37,7 @@ alternative: It provides everything needed to build, test and run Tagua VM.
 First, build the Docker image:
 
 ```sh
-$ docker build -t tagua-vm-parser-dev
+$ docker build -t tagua-vm-parser-dev .
 ```
 
 Now, it is possible to run a container from this image:
