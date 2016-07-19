@@ -96,12 +96,12 @@ macro_rules! exclude(
         }
     );
 
-    ($input:expr, $submacro1:ident!( $($arguments1:tt)* ), $g:expr) => (
+    ($input:expr, $submacro1:ident!($($arguments1:tt)*), $g:expr) => (
         exclude!($input, $submacro1!($($arguments1)*), call!($g));
     );
 
-    ($input:expr, $f:expr, $submacro1:ident!( $($arguments1:tt)* )) => (
-        exclude!($input, call!($f), $submacro1!($($arguments1)*));
+    ($input:expr, $f:expr, $submacro2:ident!($($arguments2:tt)*)) => (
+        exclude!($input, call!($f), $submacro2!($($arguments2)*));
     );
 
     ($input:expr, $f:expr, $g:expr) => (
