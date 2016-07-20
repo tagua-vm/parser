@@ -203,31 +203,40 @@ mod tests {
 
     #[test]
     fn case_first_with_whitespace() {
-        named!(
-            test,
-            first!(tag!("hello"))
-        );
+        named!(hello, tag!("hello"));
+        named!(test1, first!(tag!("hello")));
+        named!(test2, first!(hello));
 
-        assert_eq!(test(&b"  \nhello\t\r"[..]), Done(&b"\t\r"[..], &b"hello"[..]));
+        let input  = &b"  \nhello\t\r"[..];
+        let output = Done(&b"\t\r"[..], &b"hello"[..]);
+
+        assert_eq!(test1(input), output);
+        assert_eq!(test2(input), output);
     }
 
     #[test]
     fn case_first_with_comment() {
-        named!(
-            test,
-            first!(tag!("hello"))
-        );
+        named!(hello, tag!("hello"));
+        named!(test1, first!(tag!("hello")));
+        named!(test2, first!(hello));
 
-        assert_eq!(test(&b"/* foo */hello/* bar */"[..]), Done(&b"/* bar */"[..], &b"hello"[..]));
+        let input  = &b"/* foo */hello/* bar */"[..];
+        let output = Done(&b"/* bar */"[..], &b"hello"[..]);
+
+        assert_eq!(test1(input), output);
+        assert_eq!(test2(input), output);
     }
 
     #[test]
     fn case_first_with_whitespace_and_comment() {
-        named!(
-            test,
-            first!(tag!("hello"))
-        );
+        named!(hello, tag!("hello"));
+        named!(test1, first!(tag!("hello")));
+        named!(test2, first!(hello));
 
-        assert_eq!(test(&b"/* foo */  \nhello/* bar */\t"[..]), Done(&b"/* bar */\t"[..], &b"hello"[..]));
+        let input  = &b"/* foo */  \nhello/* bar */\t"[..];
+        let output = Done(&b"/* bar */\t"[..], &b"hello"[..]);
+
+        assert_eq!(test1(input), output);
+        assert_eq!(test2(input), output);
     }
 }
