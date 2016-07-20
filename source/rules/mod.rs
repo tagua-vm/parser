@@ -37,6 +37,7 @@ pub mod comments;
 pub mod expressions;
 pub mod literals;
 pub mod tokens;
+pub mod whitespaces;
 
 use super::ast;
 use nom::IResult::Done;
