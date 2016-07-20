@@ -35,9 +35,7 @@
 #[derive(Debug)]
 pub enum ErrorKindCustom {
     /// Represent errors from the `exclude` macro.
-    Exclude,
-    /// Represent errors from the `skip` macro.
-    Skip
+    Exclude
 }
 
 /// `exclude!(I -> IResult<I, O>, I -> IResult<I, P>) => I -> IResult<I, 0>`
@@ -111,92 +109,6 @@ macro_rules! exclude(
     );
 );
 
-/// `skip!(I -> IResult<I, O>) => I -> IResult<I, Option<()>>`
-/// applies the parser 0 or more times and skips the consumed data,
-/// nothing is returned.
-///
-/// The embedded parser may return `nom::IResult::Incomplete`.
-///
-/// This is heavily inspired by the original nom `many0` macro.
-///
-/// ```
-/// # #[macro_use]
-/// # extern crate nom;
-/// use nom::IResult::{Done, Error};
-/// use nom::{Err, ErrorKind};
-/// # #[macro_use]
-/// # extern crate taguavm_parser;
-/// use taguavm_parser::macros::ErrorKindCustom;
-///
-/// # fn main() {
-/// named!(
-///     test< Option<()> >,
-///     skip!(tag!("abc"))
-/// );
-///
-/// let output = Done(&b"def"[..], None);
-/// assert_eq!(test(&b"def"[..]), output);
-/// assert_eq!(test(&b"abcdef"[..]), output);
-/// assert_eq!(test(&b"abcabcdef"[..]), output);
-/// # }
-/// ```
-#[macro_export]
-macro_rules! skip(
-    ($input:expr, $submac:ident!($($arguments:tt)*)) => (
-        {
-            use ::nom::InputLength;
-
-            let out;
-            let mut input = $input;
-
-            loop {
-                if input.input_len() == 0 {
-                    out = ::nom::IResult::Done(input, None);
-
-                    break;
-                }
-
-                match $submac!(input, $($arguments)*) {
-                    ::nom::IResult::Done(i, _) => {
-                        if i == input {
-                            out = ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::Skip as u32), input));
-
-                            break;
-                        }
-
-                        input = i;
-                    },
-
-                    ::nom::IResult::Incomplete(::nom::Needed::Unknown) => {
-                        out = ::nom::IResult::Incomplete(::nom::Needed::Unknown);
-
-                        break;
-                    },
-
-                    ::nom::IResult::Incomplete(::nom::Needed::Size(i)) => {
-                        let size = i + ($input).input_len() - input.input_len();
-                        out      = ::nom::IResult::Incomplete(::nom::Needed::Size(size));
-
-                        break;
-                    },
-
-                    ::nom::IResult::Error(_) => {
-                        out = ::nom::IResult::Done(input, None);
-
-                        break;
-                    }
-                }
-            }
-
-            out
-        }
-    );
-
-    ($input:expr, $f:expr) => (
-        skip!($input, call!($f));
-    );
-);
-
 
 #[cfg(test)]
 mod tests {
@@ -250,35 +162,5 @@ mod tests {
         );
 
         assert_eq!(test(&b"acebdf"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
-    }
-
-    #[test]
-    fn case_skip_iterate_0_time() {
-        named!(
-            test< Option<()> >,
-            skip!(tag!("abc"))
-        );
-
-        assert_eq!(test(&b"def"[..]), Done(&b"def"[..], None));
-    }
-
-    #[test]
-    fn case_skip_iterate_1_time() {
-        named!(
-            test< Option<()> >,
-            skip!(tag!("abc"))
-        );
-
-        assert_eq!(test(&b"abcdef"[..]), Done(&b"def"[..], None));
-    }
-
-    #[test]
-    fn case_skip_iterate_2_time() {
-        named!(
-            test< Option<()> >,
-            skip!(tag!("abc"))
-        );
-
-        assert_eq!(test(&b"abcabcdef"[..]), Done(&b"def"[..], None));
     }
 }
