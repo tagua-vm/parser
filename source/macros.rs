@@ -117,7 +117,7 @@ mod tests {
     use super::ErrorKindCustom;
 
     #[test]
-    fn case_exclude() {
+    fn case_exclude_empty_set() {
         named!(
             test,
             exclude!(
@@ -130,7 +130,37 @@ mod tests {
         );
 
         assert_eq!(test(&b"fedabc"[..]), Done(&b""[..], &b"fedabc"[..]));
+    }
+
+    #[test]
+    fn case_exclude_one_branch() {
+        named!(
+            test,
+            exclude!(
+                is_a!("abcdef"),
+                alt!(
+                    tag!("abc")
+                  | tag!("ace")
+                )
+            )
+        );
+
         assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
+    }
+
+    #[test]
+    fn case_exclude_another_branch() {
+        named!(
+            test,
+            exclude!(
+                is_a!("abcdef"),
+                alt!(
+                    tag!("abc")
+                  | tag!("ace")
+                )
+            )
+        );
+
         assert_eq!(test(&b"acebdf"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
     }
 }
