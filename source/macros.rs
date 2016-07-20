@@ -53,8 +53,8 @@ pub enum ErrorKindCustom {
 /// use nom::IResult::{Done, Error};
 /// use nom::{Err, ErrorKind};
 /// # #[macro_use]
-/// # extern crate taguavm_parser;
-/// use taguavm_parser::macros::ErrorKindCustom;
+/// # extern crate tagua_parser;
+/// use tagua_parser::macros::ErrorKindCustom;
 ///
 /// # fn main() {
 /// named!(
@@ -122,7 +122,7 @@ macro_rules! exclude(
 /// # extern crate nom;
 /// use nom::IResult::Done;
 /// # #[macro_use]
-/// # extern crate taguavm_parser;
+/// # extern crate tagua_parser;
 ///
 /// # fn main() {
 /// named!(

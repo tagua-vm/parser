@@ -78,7 +78,7 @@ following command:
 
 ```sh
 $ cargo doc
-$ open target/doc/taguavm_parser/index.html
+$ open target/doc/tagua_parser/index.html
 ```
 
 To get help on IRC, please join the official [`#taguavm` channel on

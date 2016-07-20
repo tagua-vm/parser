@@ -80,9 +80,9 @@ pub enum Literal {
 /// # #[macro_use]
 /// # extern crate nom;
 /// use nom::IResult::Done;
-/// # extern crate taguavm_parser;
-/// use taguavm_parser::rules::tokens::variable;
-/// use taguavm_parser::ast::Variable;
+/// # extern crate tagua_parser;
+/// use tagua_parser::rules::tokens::variable;
+/// use tagua_parser::ast::Variable;
 ///
 /// # fn main () {
 /// assert_eq!(
@@ -106,9 +106,9 @@ pub enum Name<'a> {
     /// # #[macro_use]
     /// # extern crate nom;
     /// use nom::IResult::Done;
-    /// # extern crate taguavm_parser;
-    /// use taguavm_parser::rules::tokens::qualified_name;
-    /// use taguavm_parser::ast::Name;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::ast::Name;
     ///
     /// # fn main () {
     /// assert_eq!(
@@ -128,9 +128,9 @@ pub enum Name<'a> {
     /// # #[macro_use]
     /// # extern crate nom;
     /// use nom::IResult::Done;
-    /// # extern crate taguavm_parser;
-    /// use taguavm_parser::rules::tokens::qualified_name;
-    /// use taguavm_parser::ast::Name;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::ast::Name;
     ///
     /// # fn main () {
     /// assert_eq!(
@@ -150,9 +150,9 @@ pub enum Name<'a> {
     /// # #[macro_use]
     /// # extern crate nom;
     /// use nom::IResult::Done;
-    /// # extern crate taguavm_parser;
-    /// use taguavm_parser::rules::tokens::qualified_name;
-    /// use taguavm_parser::ast::Name;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::ast::Name;
     ///
     /// # fn main () {
     /// assert_eq!(
@@ -173,9 +173,9 @@ pub enum Name<'a> {
     /// # #[macro_use]
     /// # extern crate nom;
     /// use nom::IResult::Done;
-    /// # extern crate taguavm_parser;
-    /// use taguavm_parser::rules::tokens::qualified_name;
-    /// use taguavm_parser::ast::Name;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::ast::Name;
     ///
     /// # fn main () {
     /// assert_eq!(

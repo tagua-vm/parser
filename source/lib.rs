@@ -75,7 +75,7 @@ pub mod tokens;
 /// # Examples
 ///
 /// ```
-/// use taguavm_parser as parser;
+/// use tagua_parser as parser;
 ///
 /// let expression = b"1+2";
 /// parser::parse(&expression[..]);
