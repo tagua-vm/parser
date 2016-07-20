@@ -29,41 +29,43 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! The grammar as a set of rules.
+//! The skip rule.
 //!
-//! The grammar is splitted into group of rules for the sake of clarity.
+//! The skip rule is a special rule representing all the tokens that are not
+//! required. For instance, whitespaces and comments can most of the time be
+//! skipped.
 
-pub mod comments;
-pub mod expressions;
-pub mod literals;
-pub mod skip;
-pub mod tokens;
-pub mod whitespaces;
+use super::comments::comment;
+use super::whitespaces::whitespace;
 
-use super::ast;
-use nom::IResult::Done;
-
-pub fn root(input: &[u8]) -> ast::Addition {
-    match expressions::expr(input) {
-        Done(_, ast) => ast,
-        _ => panic!("Youhouuu")
-    }
-}
+named!(
+    pub skip< Vec<&[u8]> >,
+    many0!(
+        alt!(
+            comment
+          | whitespace
+        )
+    )
+);
 
 
 #[cfg(test)]
 mod tests {
     use nom::IResult::Done;
-    use super::expressions::expr;
-    use super::super::ast;
+    use super::skip;
 
     #[test]
-    fn case_expr() {
-        assert_eq!(
-            expr(b"1+2"),
-            Done(
-                &b""[..], ast::Addition { a: ast::Term { t: ast::Literal::Integer(1) }, b: ast::Term { t: ast::Literal::Integer(2) } }
-            )
-        );
+    fn case_skip_comment() {
+        assert_eq!(skip(b"/* foo */hello"), Done(&b"hello"[..], vec![&b" foo "[..]]));
+    }
+
+    #[test]
+    fn case_skip_whitespace() {
+        assert_eq!(skip(b"  \nhello"), Done(&b"hello"[..], vec![&b"  \n"[..]]));
+    }
+
+    #[test]
+    fn case_skip_comment_whitespace() {
+        assert_eq!(skip(b"/* foo */  \nhello"), Done(&b"hello"[..], vec![&b" foo "[..], &b"  \n"[..]]));
     }
 }
