@@ -63,18 +63,18 @@ named!(
             tag!(tokens::NAMESPACE_SEPARATOR)
           | terminated!(
                 tag!(tokens::NAMESPACE),
-                tag!(tokens::NAMESPACE_SEPARATOR)
+                first!(tag!(tokens::NAMESPACE_SEPARATOR))
             )
         )? ~
         mut accumulator: map_res!(
-            exclude!(name, tag!(tokens::NAMESPACE)),
+            exclude!(first!(name), tag!(tokens::NAMESPACE)),
             wrap_into_vector_mapper
         ) ~
         many0!(
             tap!(
                 tail: preceded!(
-                    tag!(tokens::NAMESPACE_SEPARATOR),
-                    exclude!(name, tag!(tokens::NAMESPACE))
+                    first!(tag!(tokens::NAMESPACE_SEPARATOR)),
+                    exclude!(first!(name), tag!(tokens::NAMESPACE))
                 ) =>
                     accumulator.push(tail)
             )
@@ -155,6 +155,11 @@ mod tests {
     }
 
     #[test]
+    fn case_qualified_name_with_skip_tokens() {
+        assert_eq!(qualified_name(b"Foo\n/* baz */ \\ Bar /* qux */\\"), Done(&b" /* qux */\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+    }
+
+    #[test]
     fn case_invalid_qualified_name() {
         assert_eq!(qualified_name(b"Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
     }
@@ -162,6 +167,11 @@ mod tests {
     #[test]
     fn case_relative_qualified_name() {
         assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_relative_qualified_name_with_skip_tokens() {
+        assert_eq!(qualified_name(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\"), Done(&b" /* hello */\\"[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
 
     #[test]
