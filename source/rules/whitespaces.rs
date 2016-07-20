@@ -37,7 +37,7 @@
 
 named!(
     pub whitespace,
-    re_bytes_find_static!(r"^( |\t|\r\n|\r|\n)+")
+    is_a!(" \t\n\r")
 );
 
 
@@ -83,17 +83,17 @@ mod tests {
     }
 
     #[test]
-    fn case_invalid_whitespace_too_short() {
-        assert_eq!(whitespace(b""), Error(Err::Code(ErrorKind::RegexpFind)));
+    fn case_whitespace_too_short() {
+        assert_eq!(whitespace(b""), Done(&b""[..], &b""[..]));
     }
 
     #[test]
     fn case_invalid_whitespace_not_a_valid_whitespace() {
-        assert_eq!(whitespace(b"\xa0 "), Error(Err::Code(ErrorKind::RegexpFind)));
+        assert_eq!(whitespace(b"\xa0 "), Error(Err::Position(ErrorKind::IsA, &b"\xa0 "[..])));
     }
 
     #[test]
     fn case_invalid_whitespace_not_a_valid_character() {
-        assert_eq!(whitespace(b"abc\n \t"), Error(Err::Code(ErrorKind::RegexpFind)));
+        assert_eq!(whitespace(b"abc\n \t"), Error(Err::Position(ErrorKind::IsA, &b"abc\n \t"[..])));
     }
 }
