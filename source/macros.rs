@@ -45,6 +45,8 @@ pub enum ErrorKindCustom {
 /// This is handy when the first parser accepts general values and the second
 /// parser denies a particular subset of values.
 ///
+/// # Examples
+///
 /// ```
 /// # #[macro_use]
 /// # extern crate nom;
@@ -112,6 +114,8 @@ macro_rules! exclude(
 /// `first!(I -> IResult<I, O>) => I -> IResult<I, O>`
 /// is applying the `skip` rule before the first argument; it allows to skip
 /// tokens.
+///
+/// # Examples
 ///
 /// ```
 /// # #[macro_use]
