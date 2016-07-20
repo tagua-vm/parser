@@ -109,6 +109,43 @@ macro_rules! exclude(
     );
 );
 
+/// `first!(I -> IResult<I, O>) => I -> IResult<I, O>`
+/// is applying the `skip` rule before the first argument; it allows to skip
+/// tokens.
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
+/// use nom::IResult::Done;
+/// # #[macro_use]
+/// # extern crate taguavm_parser;
+///
+/// # fn main() {
+/// named!(
+///     test,
+///     first!(tag!("bar"))
+/// );
+///
+/// assert_eq!(test(&b"/* foo */bar"[..]), Done(&b""[..], &b"bar"[..]));
+/// # }
+/// ```
+#[macro_export]
+macro_rules! first(
+    ($input:expr, $submacro:ident!($($arguments:tt)*)) => (
+        {
+            preceded!(
+                $input,
+                call!($crate::rules::skip::skip),
+                $submacro!($($arguments)*)
+            )
+        }
+    );
+
+    ($input:expr, $f:expr) => (
+        first!($input, call!($f));
+    );
+);
+
 
 #[cfg(test)]
 mod tests {
@@ -162,5 +199,35 @@ mod tests {
         );
 
         assert_eq!(test(&b"acebdf"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
+    }
+
+    #[test]
+    fn case_first_with_whitespace() {
+        named!(
+            test,
+            first!(tag!("hello"))
+        );
+
+        assert_eq!(test(&b"  \nhello\t\r"[..]), Done(&b"\t\r"[..], &b"hello"[..]));
+    }
+
+    #[test]
+    fn case_first_with_comment() {
+        named!(
+            test,
+            first!(tag!("hello"))
+        );
+
+        assert_eq!(test(&b"/* foo */hello/* bar */"[..]), Done(&b"/* bar */"[..], &b"hello"[..]));
+    }
+
+    #[test]
+    fn case_first_with_whitespace_and_comment() {
+        named!(
+            test,
+            first!(tag!("hello"))
+        );
+
+        assert_eq!(test(&b"/* foo */  \nhello/* bar */\t"[..]), Done(&b"/* bar */\t"[..], &b"hello"[..]));
     }
 }
