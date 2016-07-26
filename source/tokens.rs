@@ -571,3 +571,166 @@ token!(
     QUESTION_MARK: b"?";
     "The `QUESTION_MARK` private token.\n\nSee `NULLABLE` and `TERNARY_THEN`."
 );
+
+named!(
+    pub keywords,
+    alt_complete!(
+        tag!(ABSTRACT)
+      | tag!(AND)
+      | tag!(ARRAY)
+      | tag!(AS)
+      | tag!(BREAK)
+      | tag!(CALLABLE)
+      | tag!(CASE)
+      | tag!(CATCH)
+      | tag!(CLASS)
+      | tag!(CLONE)
+      | tag!(CONST)
+      | tag!(CONTINUE)
+      | tag!(DECLARE)
+      | tag!(DEFAULT)
+      | tag!(DIE)
+      | tag!(DO)
+      | tag!(ECHO)
+      | tag!(ELSEIF)
+      | tag!(ELSE)
+      | tag!(EMPTY)
+      | tag!(ENDDECLARE)
+      | tag!(ENDFOREACH)
+      | tag!(ENDFOR)
+      | tag!(ENDIF)
+      | tag!(ENDSWITCH)
+      | tag!(ENDWHILE)
+      | tag!(EVAL)
+      | tag!(EXIT)
+      | tag!(EXTENDS)
+      | tag!(FINALLY)
+      | tag!(FINAL)
+      | tag!(FOREACH)
+      | tag!(FOR)
+      | tag!(FUNCTION)
+      | tag!(GLOBAL)
+      | tag!(GOTO)
+      | tag!(IF)
+      | tag!(IMPLEMENTS)
+      | tag!(INCLUDE_ONCE)
+      | tag!(INCLUDE)
+      | tag!(INSTANCEOF)
+      | tag!(INSTEADOF)
+      | tag!(INTERFACE)
+      | tag!(ISSET)
+      | tag!(LIST)
+      | tag!(NAMESPACE)
+      | tag!(NEW)
+      | tag!(OR)
+      | tag!(PRINT)
+      | tag!(PRIVATE)
+      | tag!(PROTECTED)
+      | tag!(PUBLIC)
+      | tag!(REQUIRE_ONCE)
+      | tag!(REQUIRE)
+      | tag!(RETURN)
+      | tag!(STATIC)
+      | tag!(SWITCH)
+      | tag!(THROW)
+      | tag!(TRAIT)
+      | tag!(TRY)
+      | tag!(UNSET)
+      | tag!(USE)
+      | tag!(VAR)
+      | tag!(WHILE)
+      | tag!(XOR)
+      | tag!(YIELD_FROM)
+      | tag!(YIELD)
+    )
+);
+
+
+#[cfg(test)]
+mod tests {
+    use nom::IResult::{Done, Error};
+    use nom::{Err, ErrorKind};
+    use super::keywords;
+
+    macro_rules! test_keyword {
+        ($test_case_name:ident: ($string:expr, $expect:expr)) => (
+            #[test]
+            fn $test_case_name() {
+                assert_eq!(keywords($string), Done(&b""[..], $expect));
+            }
+        )
+    }
+
+    test_keyword!(case_keyword_abstract:     (b"abstract", super::ABSTRACT));
+    test_keyword!(case_keyword_and:          (b"and", super::AND));
+    test_keyword!(case_keyword_array:        (b"array", super::ARRAY));
+    test_keyword!(case_keyword_as:           (b"as", super::AS));
+    test_keyword!(case_keyword_break:        (b"break", super::BREAK));
+    test_keyword!(case_keyword_callable:     (b"callable", super::CALLABLE));
+    test_keyword!(case_keyword_case:         (b"case", super::CASE));
+    test_keyword!(case_keyword_catch:        (b"catch", super::CATCH));
+    test_keyword!(case_keyword_class:        (b"class", super::CLASS));
+    test_keyword!(case_keyword_clone:        (b"clone", super::CLONE));
+    test_keyword!(case_keyword_const:        (b"const", super::CONST));
+    test_keyword!(case_keyword_continue:     (b"continue", super::CONTINUE));
+    test_keyword!(case_keyword_declare:      (b"declare", super::DECLARE));
+    test_keyword!(case_keyword_default:      (b"default", super::DEFAULT));
+    test_keyword!(case_keyword_die:          (b"die", super::DIE));
+    test_keyword!(case_keyword_do:           (b"do", super::DO));
+    test_keyword!(case_keyword_echo:         (b"echo", super::ECHO));
+    test_keyword!(case_keyword_else:         (b"else", super::ELSE));
+    test_keyword!(case_keyword_elseif:       (b"elseif", super::ELSEIF));
+    test_keyword!(case_keyword_empty:        (b"empty", super::EMPTY));
+    test_keyword!(case_keyword_enddeclare:   (b"enddeclare", super::ENDDECLARE));
+    test_keyword!(case_keyword_endfor:       (b"endfor", super::ENDFOR));
+    test_keyword!(case_keyword_endforeach:   (b"endforeach", super::ENDFOREACH));
+    test_keyword!(case_keyword_endif:        (b"endif", super::ENDIF));
+    test_keyword!(case_keyword_endswitch:    (b"endswitch", super::ENDSWITCH));
+    test_keyword!(case_keyword_endwhile:     (b"endwhile", super::ENDWHILE));
+    test_keyword!(case_keyword_eval:         (b"eval", super::EVAL));
+    test_keyword!(case_keyword_exit:         (b"exit", super::EXIT));
+    test_keyword!(case_keyword_extends:      (b"extends", super::EXTENDS));
+    test_keyword!(case_keyword_final:        (b"final", super::FINAL));
+    test_keyword!(case_keyword_finally:      (b"finally", super::FINALLY));
+    test_keyword!(case_keyword_for:          (b"for", super::FOR));
+    test_keyword!(case_keyword_foreach:      (b"foreach", super::FOREACH));
+    test_keyword!(case_keyword_function:     (b"function", super::FUNCTION));
+    test_keyword!(case_keyword_global:       (b"global", super::GLOBAL));
+    test_keyword!(case_keyword_goto:         (b"goto", super::GOTO));
+    test_keyword!(case_keyword_if:           (b"if", super::IF));
+    test_keyword!(case_keyword_implements:   (b"implements", super::IMPLEMENTS));
+    test_keyword!(case_keyword_include:      (b"include", super::INCLUDE));
+    test_keyword!(case_keyword_include_once: (b"include_once", super::INCLUDE_ONCE));
+    test_keyword!(case_keyword_instanceof:   (b"instanceof", super::INSTANCEOF));
+    test_keyword!(case_keyword_insteadof:    (b"insteadof", super::INSTEADOF));
+    test_keyword!(case_keyword_interface:    (b"interface", super::INTERFACE));
+    test_keyword!(case_keyword_isset:        (b"isset", super::ISSET));
+    test_keyword!(case_keyword_list:         (b"list", super::LIST));
+    test_keyword!(case_keyword_namespace:    (b"namespace", super::NAMESPACE));
+    test_keyword!(case_keyword_new:          (b"new", super::NEW));
+    test_keyword!(case_keyword_or:           (b"or", super::OR));
+    test_keyword!(case_keyword_print:        (b"print", super::PRINT));
+    test_keyword!(case_keyword_private:      (b"private", super::PRIVATE));
+    test_keyword!(case_keyword_protected:    (b"protected", super::PROTECTED));
+    test_keyword!(case_keyword_public:       (b"public", super::PUBLIC));
+    test_keyword!(case_keyword_require:      (b"require", super::REQUIRE));
+    test_keyword!(case_keyword_require_once: (b"require_once", super::REQUIRE_ONCE));
+    test_keyword!(case_keyword_return:       (b"return", super::RETURN));
+    test_keyword!(case_keyword_static:       (b"static", super::STATIC));
+    test_keyword!(case_keyword_switch:       (b"switch", super::SWITCH));
+    test_keyword!(case_keyword_throw:        (b"throw", super::THROW));
+    test_keyword!(case_keyword_trait:        (b"trait", super::TRAIT));
+    test_keyword!(case_keyword_try:          (b"try", super::TRY));
+    test_keyword!(case_keyword_unset:        (b"unset", super::UNSET));
+    test_keyword!(case_keyword_use:          (b"use", super::USE));
+    test_keyword!(case_keyword_var:          (b"var", super::VAR));
+    test_keyword!(case_keyword_while:        (b"while", super::WHILE));
+    test_keyword!(case_keyword_xor:          (b"xor", super::XOR));
+    test_keyword!(case_keyword_yield:        (b"yield", super::YIELD));
+    test_keyword!(case_keyword_yield_from:   (b"yield from", super::YIELD_FROM));
+
+    #[test]
+    fn case_invalid_keyword() {
+        assert_eq!(keywords(b"hello"), Error(Err::Position(ErrorKind::Alt, &b"hello"[..])));
+    }
+}
