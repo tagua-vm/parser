@@ -215,6 +215,46 @@ macro_rules! itag(
     );
 );
 
+/// `keyword!(&[T]: nom::AsBytes) => &[T] -> IResult<&[T], &[T]>`
+/// is an alias to the `itag` macro.
+///
+/// The goal of this alias is twofold:
+///
+///   1. It avoids confusion and errors (a PHP keyword is always
+///      case-insensitive),
+///   2. It ensures a better readability of parsers.
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
+/// use nom::IResult::Done;
+/// # #[macro_use]
+/// # extern crate taguavm_parser;
+/// use taguavm_parser::tokens;
+///
+/// # fn main() {
+/// named!(
+///     test<&[u8]>,
+///     keyword!(tokens::CLASS)
+/// );
+///
+/// let output = Done(&b""[..], tokens::CLASS);
+///
+/// assert_eq!(test(&b"class"[..]), output);
+/// assert_eq!(test(&b"ClAsS"[..]), output);
+/// # }
+/// ```
+#[macro_export]
+macro_rules! keyword(
+    ($input:expr, $keyword:expr) => (
+        {
+            itag!($input, $keyword)
+        }
+    );
+);
+
 
 #[cfg(test)]
 mod tests {
@@ -335,6 +375,36 @@ mod tests {
     #[test]
     fn case_itag_error() {
         named!(test<&str>, itag!("foobar"));
+
+        assert_eq!(test(&b"BaZQuX"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
+    }
+
+    #[test]
+    fn case_keyword() {
+        named!(test1<&str>, keyword!("foobar"));
+        named!(test2<&str>, keyword!("fOoBaR"));
+
+        let input = &b"FoObArBaZQuX"[..];
+
+        assert_eq!(test1(input), Done(&b"BaZQuX"[..], "foobar"));
+        assert_eq!(test2(input), Done(&b"BaZQuX"[..], "fOoBaR"));
+    }
+
+    #[test]
+    fn case_keyword_incomplete() {
+        named!(test1<&str>, keyword!("foobar"));
+        named!(test2<&str>, keyword!("FoObAR"));
+
+        let input  = &b"FoOb"[..];
+        let output = Incomplete(Needed::Size(6));
+
+        assert_eq!(test1(input), output);
+        assert_eq!(test2(input), output);
+    }
+
+    #[test]
+    fn case_keyword_error() {
+        named!(test<&str>, keyword!("foobar"));
 
         assert_eq!(test(&b"BaZQuX"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
     }
