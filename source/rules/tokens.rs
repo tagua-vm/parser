@@ -62,7 +62,7 @@ named!(
         head: alt!(
             tag!(tokens::NAMESPACE_SEPARATOR)
           | terminated!(
-                tag!(tokens::NAMESPACE),
+                keyword!(tokens::NAMESPACE),
                 first!(tag!(tokens::NAMESPACE_SEPARATOR))
             )
         )? ~
@@ -174,6 +174,11 @@ mod tests {
     #[test]
     fn case_relative_qualified_name() {
         assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_relative_qualified_name_case_insensitive() {
+        assert_eq!(qualified_name(b"NaMeSpAcE\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
 
     #[test]
