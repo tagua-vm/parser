@@ -176,8 +176,10 @@ macro_rules! first(
 ///     itag!("foobar")
 /// );
 ///
-/// assert_eq!(test(&b"foobar"[..]), Done(&b""[..], "foobar"));
-/// assert_eq!(test(&b"FoObAr"[..]), Done(&b""[..], "foobar"));
+/// let output = Done(&b""[..], "foobar");
+///
+/// assert_eq!(test(&b"foobar"[..]), output);
+/// assert_eq!(test(&b"FoObAr"[..]), output);
 /// # }
 /// ```
 #[macro_export]
