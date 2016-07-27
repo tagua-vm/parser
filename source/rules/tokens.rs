@@ -52,6 +52,7 @@ named!(
     )
 );
 
+#[inline(always)]
 fn variable_mapper(string: &[u8]) -> Result<Variable, ()> {
     Ok(Variable(string))
 }
@@ -99,6 +100,7 @@ named!(
     )
 );
 
+#[inline(always)]
 fn wrap_into_vector_mapper(string: &[u8]) -> Result<Vec<&[u8]>, ()> {
     Ok(vec![string])
 }
