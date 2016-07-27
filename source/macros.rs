@@ -35,7 +35,9 @@
 #[derive(Debug)]
 pub enum ErrorKindCustom {
     /// Represent errors from the `exclude` macro.
-    Exclude
+    Exclude,
+    /// Represent errors from the `itag` macro.
+    ITag
 }
 
 /// `exclude!(I -> IResult<I, O>, I -> IResult<I, P>) => I -> IResult<I, 0>`
@@ -150,11 +152,72 @@ macro_rules! first(
     );
 );
 
+/// `itag!(&[T]: nom::AsBytes) => &[T] -> IResult<&[T], &[T]>`
+/// declares a case-insensitive ASCII array as a suite to recognize.
+///
+/// It is pretty similar to the nom `tag!` macro except it is case-insensitive
+/// and only accepts ASCII characters so far.
+///
+/// It does not return the consumed data but the expected data (the first
+/// argument).
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
+/// use nom::IResult::Done;
+/// # #[macro_use]
+/// # extern crate taguavm_parser;
+///
+/// # fn main() {
+/// named!(
+///     test<&str>,
+///     itag!("foobar")
+/// );
+///
+/// assert_eq!(test(&b"foobar"[..]), Done(&b""[..], "foobar"));
+/// assert_eq!(test(&b"FoObAr"[..]), Done(&b""[..], "foobar"));
+/// # }
+/// ```
+#[macro_export]
+macro_rules! itag(
+    ($input:expr, $string:expr) => (
+        {
+            use std::ascii::AsciiExt;
+
+            #[inline(always)]
+            fn as_bytes<T: ::nom::AsBytes>(datum: &T) -> &[u8] {
+                datum.as_bytes()
+            }
+
+            let expected      = $string;
+            let bytes         = as_bytes(&expected);
+            let input_length  = $input.len();
+            let bytes_length  = bytes.len();
+            let length        = ::std::cmp::min(input_length, bytes_length);
+            let reduced_input = &$input[..length];
+            let reduced_bytes = &bytes[..length];
+
+            let output: ::nom::IResult<_, _> =
+                if !reduced_input.eq_ignore_ascii_case(reduced_bytes) {
+                    ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), $input))
+                } else if length < bytes_length {
+                    ::nom::IResult::Incomplete(::nom::Needed::Size(bytes_length))
+                } else {
+                    ::nom::IResult::Done(&$input[bytes_length..], $string)
+                };
+
+            output
+        }
+    );
+);
+
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::{Done, Error};
-    use nom::{Err, ErrorKind};
+    use nom::IResult::{Done, Error, Incomplete};
+    use nom::{Err, ErrorKind, Needed};
     use super::ErrorKindCustom;
 
     #[test]
@@ -242,5 +305,35 @@ mod tests {
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
+    }
+
+    #[test]
+    fn case_itag() {
+        named!(test1<&str>, itag!("foobar"));
+        named!(test2<&str>, itag!("fOoBaR"));
+
+        let input = &b"FoObArBaZQuX"[..];
+
+        assert_eq!(test1(input), Done(&b"BaZQuX"[..], "foobar"));
+        assert_eq!(test2(input), Done(&b"BaZQuX"[..], "fOoBaR"));
+    }
+
+    #[test]
+    fn case_itag_incomplete() {
+        named!(test1<&str>, itag!("foobar"));
+        named!(test2<&str>, itag!("FoObAR"));
+
+        let input  = &b"FoOb"[..];
+        let output = Incomplete(Needed::Size(6));
+
+        assert_eq!(test1(input), output);
+        assert_eq!(test2(input), output);
+    }
+
+    #[test]
+    fn case_itag_error() {
+        named!(test<&str>, itag!("foobar"));
+
+        assert_eq!(test(&b"BaZQuX"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
     }
 }
