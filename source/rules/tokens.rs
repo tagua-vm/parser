@@ -67,14 +67,14 @@ named!(
             )
         )? ~
         mut accumulator: map_res!(
-            exclude!(first!(name), tag!(tokens::NAMESPACE)),
+            exclude!(first!(name), tokens::keywords),
             wrap_into_vector_mapper
         ) ~
         many0!(
             tap!(
                 tail: preceded!(
                     first!(tag!(tokens::NAMESPACE_SEPARATOR)),
-                    exclude!(first!(name), tag!(tokens::NAMESPACE))
+                    exclude!(first!(name), tokens::keywords)
                 ) =>
                     accumulator.push(tail)
             )
@@ -150,6 +150,11 @@ mod tests {
     }
 
     #[test]
+    fn case_invalid_unqualified_name() {
+        assert_eq!(qualified_name(b"class"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
+    }
+
+    #[test]
     fn case_qualified_name() {
         assert_eq!(qualified_name(b"Foo\\Bar\\Baz"), Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
@@ -161,7 +166,7 @@ mod tests {
 
     #[test]
     fn case_invalid_qualified_name() {
-        assert_eq!(qualified_name(b"Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
+        assert_eq!(qualified_name(b"Foo\\class\\Baz"), Done(&b"\\class\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
     }
 
     #[test]
@@ -175,8 +180,13 @@ mod tests {
     }
 
     #[test]
-    fn case_invalid_relative_qualified_name() {
+    fn case_invalid_relative_qualified_name_with_namespace() {
         assert_eq!(qualified_name(b"namespace\\Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
+    }
+
+    #[test]
+    fn case_invalid_relative_qualified_name_with_any_keyword() {
+        assert_eq!(qualified_name(b"namespace\\class"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
     }
 
     #[test]
@@ -190,8 +200,13 @@ mod tests {
     }
 
     #[test]
-    fn case_invalid_fully_and_relative_qualified_name() {
+    fn case_invalid_fully_and_relative_qualified_name_with_namespace() {
         assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"namespace\\Foo\\Bar"[..])));
+    }
+
+    #[test]
+    fn case_invalid_fully_and_relative_qualified_name_with_any_keyword() {
+        assert_eq!(qualified_name(b"\\class\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class\\Foo\\Bar"[..])));
     }
 
     #[test]
