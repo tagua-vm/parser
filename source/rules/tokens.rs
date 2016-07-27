@@ -152,6 +152,7 @@ mod tests {
     #[test]
     fn case_invalid_unqualified_name() {
         assert_eq!(qualified_name(b"class"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
+        assert_eq!(qualified_name(b"ClAsS"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
     }
 
     #[test]
@@ -167,6 +168,7 @@ mod tests {
     #[test]
     fn case_invalid_qualified_name() {
         assert_eq!(qualified_name(b"Foo\\class\\Baz"), Done(&b"\\class\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
+        assert_eq!(qualified_name(b"Foo\\ClAsS\\Baz"), Done(&b"\\ClAsS\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
     }
 
     #[test]
@@ -182,11 +184,13 @@ mod tests {
     #[test]
     fn case_invalid_relative_qualified_name_with_namespace() {
         assert_eq!(qualified_name(b"namespace\\Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
+        assert_eq!(qualified_name(b"namespace\\Foo\\NaMeSpAcE\\Baz"), Done(&b"\\NaMeSpAcE\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
     }
 
     #[test]
     fn case_invalid_relative_qualified_name_with_any_keyword() {
         assert_eq!(qualified_name(b"namespace\\class"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
+        assert_eq!(qualified_name(b"namespace\\ClAsS"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
     }
 
     #[test]
@@ -207,6 +211,7 @@ mod tests {
     #[test]
     fn case_invalid_fully_and_relative_qualified_name_with_any_keyword() {
         assert_eq!(qualified_name(b"\\class\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class\\Foo\\Bar"[..])));
+        assert_eq!(qualified_name(b"\\ClAsS\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS\\Foo\\Bar"[..])));
     }
 
     #[test]
