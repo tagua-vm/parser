@@ -37,6 +37,8 @@
 //!
 //! All lexemes are declared as static string constants.
 
+use rules::whitespaces::whitespace;
+
 /// Helper to declare a token.
 ///
 /// ### Examples
@@ -640,7 +642,12 @@ named!(
       | keyword!(VAR)
       | keyword!(WHILE)
       | keyword!(XOR)
-      | keyword!(YIELD_FROM)
+      | chain!(
+            keyword!("yield") ~
+            whitespace ~
+            keyword!("from"),
+            || { YIELD_FROM }
+        )
       | keyword!(YIELD)
     )
 );
@@ -735,6 +742,8 @@ mod tests {
     test_keyword!(case_keyword_xor:          (b"xor", super::XOR));
     test_keyword!(case_keyword_yield:        (b"yield", super::YIELD));
     test_keyword!(case_keyword_yield_from:   (b"yield from", super::YIELD_FROM));
+
+    test_keyword!(case_keyword_yield_from_with_many_whitespaces: (b"yield  \t \t \n \n \r \r  from", super::YIELD_FROM));
 
     #[test]
     fn case_invalid_keyword() {
