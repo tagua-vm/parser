@@ -70,7 +70,7 @@ named!(
 named!(
     pub boolean<Literal>,
     map_res!(
-        alt!(tag!("true") | tag!("false")),
+        alt!(itag!("true".as_bytes()) | itag!("false".as_bytes())),
         |string: &[u8]| -> Result<Literal, ()> {
             Ok(Literal::Boolean(string[0] == 't' as u8))
         }
@@ -356,8 +356,26 @@ mod tests {
     }
 
     #[test]
+    fn case_boolean_true_case_insensitive() {
+        let input  = b"TrUe";
+        let output = Done(&b""[..], Literal::Boolean(true));
+
+        assert_eq!(boolean(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_boolean_false() {
         let input  = b"false";
+        let output = Done(&b""[..], Literal::Boolean(false));
+
+        assert_eq!(boolean(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_boolean_false_case_insensitive() {
+        let input  = b"FaLsE";
         let output = Done(&b""[..], Literal::Boolean(false));
 
         assert_eq!(boolean(input), output);
