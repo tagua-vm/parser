@@ -120,6 +120,25 @@ pub enum Literal {
     Integer(u64),
 
     /// A real, for instance an exponential number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::ast::Literal;
+    ///
+    /// # fn main () {
+    /// let output = Done(&b""[..], Literal::Real(4.2f64));
+    ///
+    /// assert_eq!(literal(b"4.2"), output);
+    /// assert_eq!(literal(b".42e1"), output);
+    /// assert_eq!(literal(b"420.0e-2"), output);
+    /// # }
+    /// ```
     Real(f64),
 
     /// A string.
