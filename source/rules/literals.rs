@@ -98,7 +98,7 @@ named!(
             )
         ),
         |string: &[u8]| {
-            u64
+            i64
                 ::from_str_radix(
                     unsafe { str::from_utf8_unchecked(string) },
                     2
@@ -116,7 +116,7 @@ named!(
     map_res!(
         preceded!(tag!("0"), oct_digit),
         |string: &[u8]| {
-            u64
+            i64
                 ::from_str_radix(
                     unsafe { str::from_utf8_unchecked(string) },
                     8
@@ -134,7 +134,7 @@ named!(
     map_res!(
         re_bytes_find_static!(r"^[1-9][0-9]*"),
         |string: &[u8]| {
-            u64
+            i64
                 ::from_str(unsafe { str::from_utf8_unchecked(string) })
                 .and_then(
                     |decimal| {
@@ -156,7 +156,7 @@ named!(
             )
         ),
         |string: &[u8]| {
-            u64
+            i64
                 ::from_str_radix(
                     unsafe { str::from_utf8_unchecked(string) },
                     16
@@ -385,7 +385,7 @@ mod tests {
     #[test]
     fn case_binary_lowercase_b() {
         let input  = b"0b101010";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(binary(input), output);
         assert_eq!(integer(input), output);
@@ -395,9 +395,29 @@ mod tests {
     #[test]
     fn case_binary_uppercase_b() {
         let input  = b"0B101010";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_binary_maximum_value() {
+        let input  = b"0b111111111111111111111111111111111111111111111111111111111111111";
+        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+
+        assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_binary_overflow() {
+        let input  = b"0b1000000000000000000000000000000000000000000000000000000000000000";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0b1000000000000000000000000000000000000000000000000000000000000000"[..]));
+
+        assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &b"0b1000000000000000000000000000000000000000000000000000000000000000"[..])));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -413,9 +433,29 @@ mod tests {
     }
 
     #[test]
+    fn case_invalid_binary_not_starting_by_zero_b() {
+        let input  = b"1";
+        let output = Done(&b""[..], Literal::Integer(1i64));
+
+        assert_eq!(binary(input), Error(Err::Position(ErrorKind::Tag, &b"1"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_binary_not_in_base() {
+        let input  = b"0b120";
+        let output = Done(&b"20"[..], Literal::Integer(1i64));
+
+        assert_eq!(binary(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_octal() {
         let input  = b"052";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(octal(input), output);
         assert_eq!(integer(input), output);
@@ -423,9 +463,29 @@ mod tests {
     }
 
     #[test]
+    fn case_octal_maximum_value() {
+        let input  = b"0777777777777777777777";
+        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+
+        assert_eq!(octal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_octal_overflow() {
+        let input  = b"01000000000000000000000";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"01000000000000000000000"[..]));
+
+        assert_eq!(octal(input), Error(Err::Position(ErrorKind::MapRes, &b"01000000000000000000000"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_invalid_octal_not_starting_by_zero() {
         let input  = b"7";
-        let output = Done(&b""[..], Literal::Integer(7u64));
+        let output = Done(&b""[..], Literal::Integer(7i64));
 
         assert_eq!(octal(input), Error(Err::Position(ErrorKind::Tag, &b"7"[..])));
         assert_eq!(integer(input), output);
@@ -445,7 +505,7 @@ mod tests {
     #[test]
     fn case_decimal_one_digit() {
         let input  = b"7";
-        let output = Done(&b""[..], Literal::Integer(7u64));
+        let output = Done(&b""[..], Literal::Integer(7i64));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -455,7 +515,7 @@ mod tests {
     #[test]
     fn case_decimal_many_digits() {
         let input  = b"42";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -465,7 +525,7 @@ mod tests {
     #[test]
     fn case_decimal_plus() {
         let input  = b"42+";
-        let output = Done(&b"+"[..], Literal::Integer(42u64));
+        let output = Done(&b"+"[..], Literal::Integer(42i64));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -473,9 +533,29 @@ mod tests {
     }
 
     #[test]
+    fn case_decimal_maximum_value() {
+        let input  = b"9223372036854775807";
+        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_decimal_overflow() {
+        let input  = b"9223372036854775808";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"9223372036854775808"[..]));
+
+        assert_eq!(decimal(input), Error(Err::Position(ErrorKind::MapRes, &b"9223372036854775808"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_hexadecimal_lowercase_x() {
         let input  = b"0x2a";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -485,7 +565,7 @@ mod tests {
     #[test]
     fn case_hexadecimal_uppercase_x() {
         let input  = b"0X2a";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -495,7 +575,7 @@ mod tests {
     #[test]
     fn case_hexadecimal_uppercase_alpha() {
         let input  = b"0x2A";
-        let output = Done(&b""[..], Literal::Integer(42u64));
+        let output = Done(&b""[..], Literal::Integer(42i64));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -518,6 +598,26 @@ mod tests {
         let output = Error(Err::Position(ErrorKind::Alt, &b"0xg"[..]));
 
         assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_hexadecimal_maximum_value() {
+        let input  = b"0x7fffffffffffffff";
+        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+
+        assert_eq!(hexadecimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_hexadecimal_overflow() {
+        let input  = b"0x8000000000000000";
+        let output = Error(Err::Position(ErrorKind::Alt, &b"0x8000000000000000"[..]));
+
+        assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::MapRes, &b"0x8000000000000000"[..])));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
