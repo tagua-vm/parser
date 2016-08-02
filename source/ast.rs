@@ -136,7 +136,7 @@ pub enum Literal {
     ///
     /// assert_eq!(literal(b"4.2"), output);
     /// assert_eq!(literal(b".42e1"), output);
-    /// assert_eq!(literal(b"420.0e-2"), output);
+    /// assert_eq!(literal(b"420e-2"), output);
     /// # }
     /// ```
     Real(f64),
