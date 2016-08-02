@@ -72,15 +72,28 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     ///
     /// # fn main () {
-    /// assert_eq!(
-    ///     literal(b"null"),
-    ///     Done(&b""[..], Literal::Null)
-    /// );
+    /// assert_eq!(literal(b"null"), Done(&b""[..], Literal::Null));
     /// # }
     /// ```
     Null,
 
     /// A boolean, either `true` or `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::ast::Literal;
+    ///
+    /// # fn main () {
+    /// assert_eq!(literal(b"true"),  Done(&b""[..], Literal::Boolean(true)));
+    /// assert_eq!(literal(b"false"), Done(&b""[..], Literal::Boolean(false)));
+    /// # }
+    /// ```
     Boolean(bool),
 
     /// An integer, for instance a binary, octal, decimal or hexadecimal number.
