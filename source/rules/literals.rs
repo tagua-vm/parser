@@ -173,7 +173,7 @@ named!(
 named!(
     pub exponential<Literal>,
     map_res!(
-        re_bytes_find_static!(r"^([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?"),
+        re_bytes_find_static!(r"^(([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)"),
         |string: &[u8]| {
             f64
                 ::from_str(unsafe { str::from_utf8_unchecked(string) })
@@ -534,6 +534,15 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_lowercase_e() {
         let input  = b"123.e78";
+        let output = Done(&b""[..], Literal::Real(123e78f64));
+
+        assert_eq!(exponential(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_exponential_only_with_integer_rational_and_exponent_part() {
+        let input  = b"123e78";
         let output = Done(&b""[..], Literal::Real(123e78f64));
 
         assert_eq!(exponential(input), output);
