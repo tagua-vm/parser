@@ -97,6 +97,26 @@ pub enum Literal {
     Boolean(bool),
 
     /// An integer, for instance a binary, octal, decimal or hexadecimal number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::ast::Literal;
+    ///
+    /// # fn main () {
+    /// let output = Done(&b""[..], Literal::Integer(42u64));
+    ///
+    /// assert_eq!(literal(b"0b101010"), output);
+    /// assert_eq!(literal(b"052"), output);
+    /// assert_eq!(literal(b"42"), output);
+    /// assert_eq!(literal(b"0x2a"), output);
+    /// # }
+    /// ```
     Integer(u64),
 
     /// A real, for instance an exponential number.
