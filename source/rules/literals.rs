@@ -42,6 +42,7 @@ use nom::{
     hex_digit,
     oct_digit
 };
+use std::num::ParseIntError;
 use std::str::FromStr;
 use std::str;
 use super::super::ast::Literal;
@@ -135,12 +136,25 @@ named!(
     pub decimal<Literal>,
     map_res!(
         re_bytes_find_static!(r"^[1-9][0-9]*"),
-        |string: &[u8]| {
+        |bytes: &[u8]| {
+            let string = unsafe { str::from_utf8_unchecked(bytes) };
+
             i64
-                ::from_str(unsafe { str::from_utf8_unchecked(string) })
+                ::from_str(string)
                 .and_then(
                     |decimal| {
                         Ok(Literal::Integer(decimal))
+                   }
+                )
+                .or_else(
+                    |_: ParseIntError| {
+                        f64
+                            ::from_str(string)
+                            .and_then(
+                                |decimal| {
+                                    Ok(Literal::Real(decimal))
+                                }
+                            )
                     }
                 )
         }
@@ -405,9 +419,9 @@ mod tests {
     }
 
     #[test]
-    fn case_binary_maximum_value() {
+    fn case_binary_maximum_integer_value() {
         let input  = b"0b111111111111111111111111111111111111111111111111111111111111111";
-        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+        let output = Done(&b""[..], Literal::Integer(::std::i64::MAX));
 
         assert_eq!(binary(input), output);
         assert_eq!(integer(input), output);
@@ -415,11 +429,11 @@ mod tests {
     }
 
     #[test]
-    fn case_invalid_binary_overflow() {
+    fn case_binary_overflow() {
         let input  = b"0b1000000000000000000000000000000000000000000000000000000000000000";
-        let output = Error(Err::Position(ErrorKind::Alt, &b"0b1000000000000000000000000000000000000000000000000000000000000000"[..]));
+        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
-        assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &b"0b1000000000000000000000000000000000000000000000000000000000000000"[..])));
+        assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &input[..])));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -535,9 +549,9 @@ mod tests {
     }
 
     #[test]
-    fn case_decimal_maximum_value() {
+    fn case_decimal_maximum_integer_value() {
         let input  = b"9223372036854775807";
-        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+        let output = Done(&b""[..], Literal::Integer(::std::i64::MAX));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -545,11 +559,31 @@ mod tests {
     }
 
     #[test]
-    fn case_invalid_decimal_overflow() {
+    fn case_decimal_overflow_to_real() {
         let input  = b"9223372036854775808";
-        let output = Error(Err::Position(ErrorKind::Alt, &b"9223372036854775808"[..]));
+        let output = Done(&b""[..], Literal::Real(9223372036854775808f64));
 
-        assert_eq!(decimal(input), Error(Err::Position(ErrorKind::MapRes, &b"9223372036854775808"[..])));
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_decimal_maximum_real_value() {
+        let input  = b"179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        let output = Done(&b""[..], Literal::Real(::std::f64::MAX));
+
+        assert_eq!(decimal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_decimal_overflow_to_infinity() {
+        let input  = b"1797693134862315700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        let output = Done(&b""[..], Literal::Real(::std::f64::INFINITY));
+
+        assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
