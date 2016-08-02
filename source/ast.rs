@@ -154,7 +154,10 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     ///
     /// # fn main () {
-    /// assert_eq!(literal(b"'foo\\'bar'"), Done(&b""[..], Literal::String(b"foo'bar".to_vec())));
+    /// assert_eq!(
+    ///     literal(b"'foo\\'bar'"),
+    ///     Done(&b""[..], Literal::String(b"foo'bar".to_vec()))
+    /// );
     /// # }
     /// ```
     String(Vec<u8>)
