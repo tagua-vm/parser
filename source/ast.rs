@@ -142,6 +142,21 @@ pub enum Literal {
     Real(f64),
 
     /// A string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use]
+    /// # extern crate nom;
+    /// use nom::IResult::Done;
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::ast::Literal;
+    ///
+    /// # fn main () {
+    /// assert_eq!(literal(b"'foo\\'bar'"), Done(&b""[..], Literal::String(b"foo'bar".to_vec())));
+    /// # }
+    /// ```
     String(Vec<u8>)
 }
 
