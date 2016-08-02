@@ -71,8 +71,8 @@ named!(
     pub boolean<Literal>,
     map_res!(
         alt!(itag!("true".as_bytes()) | itag!("false".as_bytes())),
-        |string: &[u8]| -> Result<Literal, ()> {
-            Ok(Literal::Boolean(string[0] == 't' as u8))
+        |bytes: &[u8]| -> Result<Literal, ()> {
+            Ok(Literal::Boolean(bytes[0] == 't' as u8))
         }
     )
 );
@@ -97,12 +97,13 @@ named!(
                 is_a!("01")
             )
         ),
-        |string: &[u8]| {
+        |bytes: &[u8]| {
             i64
                 ::from_str_radix(
-                    unsafe { str::from_utf8_unchecked(string) },
+                    unsafe { str::from_utf8_unchecked(bytes) },
                     2
-                ).and_then(
+                )
+                .and_then(
                     |binary| {
                         Ok(Literal::Integer(binary))
                    }
@@ -115,12 +116,13 @@ named!(
     pub octal<Literal>,
     map_res!(
         preceded!(tag!("0"), oct_digit),
-        |string: &[u8]| {
+        |bytes: &[u8]| {
             i64
                 ::from_str_radix(
-                    unsafe { str::from_utf8_unchecked(string) },
+                    unsafe { str::from_utf8_unchecked(bytes) },
                     8
-                ).and_then(
+                )
+                .and_then(
                     |octal| {
                         Ok(Literal::Integer(octal))
                     }
@@ -155,10 +157,10 @@ named!(
                 hex_digit
             )
         ),
-        |string: &[u8]| {
+        |bytes: &[u8]| {
             i64
                 ::from_str_radix(
-                    unsafe { str::from_utf8_unchecked(string) },
+                    unsafe { str::from_utf8_unchecked(bytes) },
                     16
                 )
                 .and_then(
@@ -174,9 +176,9 @@ named!(
     pub exponential<Literal>,
     map_res!(
         re_bytes_find_static!(r"^(([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)"),
-        |string: &[u8]| {
+        |bytes: &[u8]| {
             f64
-                ::from_str(unsafe { str::from_utf8_unchecked(string) })
+                ::from_str(unsafe { str::from_utf8_unchecked(bytes) })
                 .and_then(
                     |exponential| {
                         Ok(Literal::Real(exponential))
