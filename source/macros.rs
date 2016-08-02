@@ -168,7 +168,7 @@ macro_rules! first(
 /// # extern crate nom;
 /// use nom::IResult::Done;
 /// # #[macro_use]
-/// # extern crate taguavm_parser;
+/// # extern crate tagua_parser;
 ///
 /// # fn main() {
 /// named!(
@@ -231,8 +231,8 @@ macro_rules! itag(
 /// # extern crate nom;
 /// use nom::IResult::Done;
 /// # #[macro_use]
-/// # extern crate taguavm_parser;
-/// use taguavm_parser::tokens;
+/// # extern crate tagua_parser;
+/// use tagua_parser::tokens;
 ///
 /// # fn main() {
 /// named!(
