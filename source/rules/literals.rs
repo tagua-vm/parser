@@ -60,8 +60,8 @@ named!(
 named!(
     pub null<Literal>,
     map_res!(
-        tag!("null"),
-        |_: &[u8]| -> Result<Literal, ()> {
+        itag!("null"),
+        |_| -> Result<Literal, ()> {
             Ok(Literal::Null)
         }
     )
@@ -331,6 +331,15 @@ mod tests {
     #[test]
     fn case_null() {
         let input  = b"null";
+        let output = Done(&b""[..], Literal::Null);
+
+        assert_eq!(null(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_null_case_insensitive() {
+        let input  = b"NuLl";
         let output = Done(&b""[..], Literal::Null);
 
         assert_eq!(null(input), output);
