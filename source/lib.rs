@@ -53,6 +53,9 @@
 //! much as possible zero copy. We try to enforce the zero copy property to
 //! hold.
 
+// Increase the macro recursion limit.
+#![recursion_limit="128"]
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
