@@ -109,7 +109,7 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     ///
     /// # fn main () {
-    /// let output = Done(&b""[..], Literal::Integer(42u64));
+    /// let output = Done(&b""[..], Literal::Integer(42i64));
     ///
     /// assert_eq!(literal(b"0b101010"), output);
     /// assert_eq!(literal(b"052"), output);
@@ -117,7 +117,7 @@ pub enum Literal {
     /// assert_eq!(literal(b"0x2a"), output);
     /// # }
     /// ```
-    Integer(u64),
+    Integer(i64),
 
     /// A real, for instance an exponential number.
     ///
