@@ -481,7 +481,7 @@ mod tests {
     #[test]
     fn case_octal_maximum_integer_value() {
         let input  = b"0777777777777777777777";
-        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+        let output = Done(&b""[..], Literal::Integer(::std::i64::MAX));
 
         assert_eq!(octal(input), output);
         assert_eq!(integer(input), output);
