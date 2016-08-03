@@ -33,4 +33,4 @@ script:
       travis-cargo test &&
       travis-cargo --only stable doc
 after_success:
-  - travis-cargo --only stable doc-upload
+    - travis-cargo --only stable --branch gh-pages doc-upload
