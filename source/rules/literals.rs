@@ -429,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn case_binary_overflow() {
+    fn case_invalid_binary_overflow() {
         let input  = b"0b1000000000000000000000000000000000000000000000000000000000000000";
         let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
 
@@ -479,7 +479,7 @@ mod tests {
     }
 
     #[test]
-    fn case_octal_maximum_value() {
+    fn case_octal_maximum_integer_value() {
         let input  = b"0777777777777777777777";
         let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
 
@@ -639,9 +639,9 @@ mod tests {
     }
 
     #[test]
-    fn case_hexadecimal_maximum_value() {
+    fn case_hexadecimal_maximum_integer_value() {
         let input  = b"0x7fffffffffffffff";
-        let output = Done(&b""[..], Literal::Integer(!(1i64 << 63)));
+        let output = Done(&b""[..], Literal::Integer(::std::i64::MAX));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
