@@ -80,11 +80,11 @@ named!(
 
 named!(
     pub integer<Literal>,
-    alt!(
+    alt_complete!(
         binary
-      | octal
       | decimal
       | hexadecimal
+      | octal
     )
 );
 
@@ -116,18 +116,24 @@ named!(
 named!(
     pub octal<Literal>,
     map_res!(
-        preceded!(tag!("0"), oct_digit),
-        |bytes: &[u8]| {
-            i64
-                ::from_str_radix(
-                    unsafe { str::from_utf8_unchecked(bytes) },
-                    8
-                )
-                .and_then(
-                    |octal| {
-                        Ok(Literal::Integer(octal))
-                    }
-                )
+        preceded!(tag!("0"), opt!(oct_digit)),
+        |value: Option<&[u8]>| {
+            match value {
+                Some(bytes) =>
+                    i64
+                        ::from_str_radix(
+                            unsafe { str::from_utf8_unchecked(bytes) },
+                            8
+                        )
+                        .and_then(
+                            |octal| {
+                                Ok(Literal::Integer(octal))
+                            }
+                        ),
+
+                None =>
+                    Ok(Literal::Integer(0i64))
+            }
         }
     )
 );
@@ -431,7 +437,7 @@ mod tests {
     #[test]
     fn case_invalid_binary_overflow() {
         let input  = b"0b1000000000000000000000000000000000000000000000000000000000000000";
-        let output = Error(Err::Position(ErrorKind::Alt, &input[..]));
+        let output = Done(&b"b1000000000000000000000000000000000000000000000000000000000000000"[..], Literal::Integer(0i64));
 
         assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &input[..])));
         assert_eq!(integer(input), output);
@@ -441,7 +447,7 @@ mod tests {
     #[test]
     fn case_invalid_binary_no_number() {
         let input  = b"0b";
-        let output = Error(Err::Position(ErrorKind::Alt, &b"0b"[..]));
+        let output = Done(&b"b"[..], Literal::Integer(0i64));
 
         assert_eq!(binary(input), Error(Err::Position(ErrorKind::MapRes, &b"0b"[..])));
         assert_eq!(integer(input), output);
@@ -472,6 +478,16 @@ mod tests {
     fn case_octal() {
         let input  = b"052";
         let output = Done(&b""[..], Literal::Integer(42i64));
+
+        assert_eq!(octal(input), output);
+        assert_eq!(integer(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_octal_zero() {
+        let input  = b"0";
+        let output = Done(&b""[..], Literal::Integer(0i64));
 
         assert_eq!(octal(input), output);
         assert_eq!(integer(input), output);
@@ -540,6 +556,7 @@ mod tests {
 
     quickcheck! {
         fn case_decimal_random(input: u32) -> bool {
+            let input  = input * 2 + 1;
             let string = input.to_string();
             let bytes  = string.as_bytes();
 
@@ -636,7 +653,7 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_no_number() {
         let input  = b"0x";
-        let output = Error(Err::Position(ErrorKind::Alt, &b"0x"[..]));
+        let output = Done(&b"x"[..], Literal::Integer(0i64));
 
         assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b""[..])));
         assert_eq!(integer(input), output);
@@ -646,7 +663,7 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_not_in_base() {
         let input  = b"0xg";
-        let output = Error(Err::Position(ErrorKind::Alt, &b"0xg"[..]));
+        let output = Done(&b"xg"[..], Literal::Integer(0i64));
 
         assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::HexDigit, &b"g"[..])));
         assert_eq!(integer(input), output);
@@ -666,7 +683,7 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_overflow() {
         let input  = b"0x8000000000000000";
-        let output = Error(Err::Position(ErrorKind::Alt, &b"0x8000000000000000"[..]));
+        let output = Done(&b"x8000000000000000"[..], Literal::Integer(0i64));
 
         assert_eq!(hexadecimal(input), Error(Err::Position(ErrorKind::MapRes, &b"0x8000000000000000"[..])));
         assert_eq!(integer(input), output);
