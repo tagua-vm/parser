@@ -43,8 +43,11 @@ codegen-units    = 1
 
 [dependencies]
 lazy_static = "~0.1"
-regex = "~0.1"
+regex       = "~0.1"
 
 [dependencies.nom]
-version = "^1.2.3"
+version  = "^1.2.3"
 features = ["regexp", "regexp_macros"]
+
+[dev-dependencies]
+quickcheck = "~0.3"

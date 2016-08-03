@@ -538,6 +538,21 @@ mod tests {
         assert_eq!(literal(input), output);
     }
 
+    quickcheck! {
+        fn case_decimal_random(input: u32) -> bool {
+            let string = input.to_string();
+            let bytes  = string.as_bytes();
+
+            match decimal(bytes) {
+                Done(_, Literal::Integer(output)) =>
+                    input == output as u32,
+
+                _ =>
+                    false
+            }
+        }
+    }
+
     #[test]
     fn case_decimal_plus() {
         let input  = b"42+";
