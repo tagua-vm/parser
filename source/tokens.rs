@@ -655,9 +655,12 @@ named!(
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::{Done, Error};
-    use nom::{Err, ErrorKind};
     use super::keywords;
+    use super::super::internal::{
+        Error,
+        ErrorKind,
+        Result
+    };
 
     macro_rules! test_keyword {
         ($test_case_name:ident: ($string:expr, $expect:expr)) => (
@@ -666,7 +669,7 @@ mod tests {
                 use std::ascii::AsciiExt;
                 use std::str;
 
-                let output     = Done(&b""[..], $expect);
+                let output     = Result::Done(&b""[..], $expect);
                 let uppercased = str::from_utf8($string).unwrap().to_ascii_uppercase();
 
                 assert_eq!(keywords($string), output);
@@ -747,6 +750,6 @@ mod tests {
 
     #[test]
     fn case_invalid_keyword() {
-        assert_eq!(keywords(b"hello"), Error(Err::Position(ErrorKind::Alt, &b"hello"[..])));
+        assert_eq!(keywords(b"hello"), Result::Error(Error::Position(ErrorKind::Alt, &b"hello"[..])));
     }
 }

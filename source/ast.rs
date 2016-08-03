@@ -64,15 +64,13 @@ pub enum Literal {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
+    /// use tagua_parser::rules::literals::literal;
     ///
     /// # fn main () {
-    /// assert_eq!(literal(b"null"), Done(&b""[..], Literal::Null));
+    /// assert_eq!(literal(b"null"), Result::Done(&b""[..], Literal::Null));
     /// # }
     /// ```
     Null,
@@ -82,16 +80,14 @@ pub enum Literal {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
+    /// use tagua_parser::rules::literals::literal;
     ///
     /// # fn main () {
-    /// assert_eq!(literal(b"true"),  Done(&b""[..], Literal::Boolean(true)));
-    /// assert_eq!(literal(b"false"), Done(&b""[..], Literal::Boolean(false)));
+    /// assert_eq!(literal(b"true"),  Result::Done(&b""[..], Literal::Boolean(true)));
+    /// assert_eq!(literal(b"false"), Result::Done(&b""[..], Literal::Boolean(false)));
     /// # }
     /// ```
     Boolean(bool),
@@ -101,15 +97,13 @@ pub enum Literal {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
+    /// use tagua_parser::rules::literals::literal;
     ///
     /// # fn main () {
-    /// let output = Done(&b""[..], Literal::Integer(42u64));
+    /// let output = Result::Done(&b""[..], Literal::Integer(42u64));
     ///
     /// assert_eq!(literal(b"0b101010"), output);
     /// assert_eq!(literal(b"052"), output);
@@ -124,15 +118,13 @@ pub enum Literal {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
+    /// use tagua_parser::rules::literals::literal;
     ///
     /// # fn main () {
-    /// let output = Done(&b""[..], Literal::Real(4.2f64));
+    /// let output = Result::Done(&b""[..], Literal::Real(4.2f64));
     ///
     /// assert_eq!(literal(b"4.2"), output);
     /// assert_eq!(literal(b".42e1"), output);
@@ -146,17 +138,15 @@ pub enum Literal {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::literals::literal;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
+    /// use tagua_parser::rules::literals::literal;
     ///
     /// # fn main () {
     /// assert_eq!(
     ///     literal(b"'foo\\'bar'"),
-    ///     Done(&b""[..], Literal::String(b"foo'bar".to_vec()))
+    ///     Result::Done(&b""[..], Literal::String(b"foo'bar".to_vec()))
     /// );
     /// # }
     /// ```
@@ -169,17 +159,15 @@ pub enum Literal {
 /// # Examples
 ///
 /// ```
-/// # #[macro_use]
-/// # extern crate nom;
-/// use nom::IResult::Done;
 /// # extern crate tagua_parser;
-/// use tagua_parser::rules::tokens::variable;
+/// use tagua_parser::Result;
 /// use tagua_parser::ast::Variable;
+/// use tagua_parser::rules::tokens::variable;
 ///
 /// # fn main () {
 /// assert_eq!(
 ///     variable(b"$foo"),
-///     Done(&b""[..], Variable(&b"foo"[..]))
+///     Result::Done(&b""[..], Variable(&b"foo"[..]))
 /// );
 /// # }
 /// ```
@@ -195,17 +183,15 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
+    /// use tagua_parser::rules::tokens::qualified_name;
     ///
     /// # fn main () {
     /// assert_eq!(
     ///     qualified_name(b"Bar"),
-    ///     Done(&b""[..], Name::Unqualified(&b"Bar"[..]))
+    ///     Result::Done(&b""[..], Name::Unqualified(&b"Bar"[..]))
     /// );
     /// # }
     /// ```
@@ -217,17 +203,15 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
+    /// use tagua_parser::rules::tokens::qualified_name;
     ///
     /// # fn main () {
     /// assert_eq!(
     ///     qualified_name(b"Foo\\Bar"),
-    ///     Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]]))
+    ///     Result::Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]]))
     /// );
     /// # }
     /// ```
@@ -239,17 +223,15 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
+    /// use tagua_parser::rules::tokens::qualified_name;
     ///
     /// # fn main () {
     /// assert_eq!(
     ///     qualified_name(b"namespace\\Foo\\Bar"),
-    ///     Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
+    ///     Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
     /// );
     /// # }
     /// ```
@@ -262,17 +244,15 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use]
-    /// # extern crate nom;
-    /// use nom::IResult::Done;
     /// # extern crate tagua_parser;
-    /// use tagua_parser::rules::tokens::qualified_name;
+    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
+    /// use tagua_parser::rules::tokens::qualified_name;
     ///
     /// # fn main () {
     /// assert_eq!(
     ///     qualified_name(b"\\Foo\\Bar"),
-    ///     Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
+    ///     Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
     /// );
     /// # }
     /// ```

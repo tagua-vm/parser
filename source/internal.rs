@@ -29,43 +29,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! The skip rule.
-//!
-//! The skip rule is a special rule representing all the tokens that are not
-//! required. For instance, whitespaces and comments can most of the time be
-//! skipped.
+//! Internal utilities for the parser.
 
-use super::comments::comment;
-use super::whitespaces::whitespace;
-
-named!(
-    pub skip< Vec<&[u8]> >,
-    many0!(
-        alt!(
-            comment
-          | whitespace
-        )
-    )
-);
-
-
-#[cfg(test)]
-mod tests {
-    use super::skip;
-    use super::super::super::internal::Result;
-
-    #[test]
-    fn case_skip_comment() {
-        assert_eq!(skip(b"/* foo */hello"), Result::Done(&b"hello"[..], vec![&b" foo "[..]]));
-    }
-
-    #[test]
-    fn case_skip_whitespace() {
-        assert_eq!(skip(b"  \nhello"), Result::Done(&b"hello"[..], vec![&b"  \n"[..]]));
-    }
-
-    #[test]
-    fn case_skip_comment_whitespace() {
-        assert_eq!(skip(b"/* foo */  \nhello"), Result::Done(&b"hello"[..], vec![&b" foo "[..], &b"  \n"[..]]));
-    }
-}
+pub use nom::Err as Error;
+pub use nom::ErrorKind;
+pub use nom::IResult as Result;
+pub use nom::Needed;

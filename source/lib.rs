@@ -62,12 +62,14 @@ extern crate lazy_static;
 extern crate nom;
 extern crate regex;
 
+pub mod internal;
 #[macro_use]
 pub mod macros;
-
 pub mod ast;
 pub mod rules;
 pub mod tokens;
+
+pub use self::internal::*;
 
 /// Complete parsing of a datum starting by the sentence symbol of the grammar.
 ///
