@@ -239,7 +239,7 @@ fn string_single_quoted(input: &[u8]) -> Result<&[u8], Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
     }
 
-    if input[0] == 'b' as u8 {
+    if input[0] == 'b' as u8 || input[0] == 'B' as u8 {
         if input_length < 3 {
             return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
         } else if input[1] != '\'' as u8 {
@@ -875,6 +875,16 @@ mod tests {
     #[test]
     fn case_string_binary_single_quoted() {
         let input  = b"b'foobar'";
+        let output = Result::Done(&b""[..], Literal::String(b"foobar".to_vec()));
+
+        assert_eq!(string_single_quoted(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_binary_uppercase_single_quoted() {
+        let input  = b"B'foobar'";
         let output = Result::Done(&b""[..], Literal::String(b"foobar".to_vec()));
 
         assert_eq!(string_single_quoted(input), output);
