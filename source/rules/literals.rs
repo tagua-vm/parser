@@ -97,7 +97,7 @@ named!(
         preceded!(
             tag!("0"),
             preceded!(
-                alt!(tag!("b") | tag!("B")),
+                is_a!("bB"),
                 is_a!("01")
             )
         ),
@@ -176,7 +176,7 @@ named!(
         preceded!(
             tag!("0"),
             preceded!(
-                alt!(tag!("x") | tag!("X")),
+                is_a!("xX"),
                 hex_digit
             )
         ),
