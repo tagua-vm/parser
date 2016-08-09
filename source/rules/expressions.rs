@@ -48,16 +48,24 @@ named!(
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::Done;
     use super::expr;
     use super::super::super::ast;
+    use super::super::super::internal::Result;
 
     #[test]
     fn case_expr() {
         assert_eq!(
             expr(b"1+2"),
-            Done(
-                &b""[..], ast::Addition { a: ast::Term { t: ast::Literal::Integer(1) }, b: ast::Term { t: ast::Literal::Integer(2) } }
+            Result::Done(
+                &b""[..],
+                ast::Addition {
+                    a: ast::Term {
+                        t: ast::Literal::Integer(1)
+                    },
+                    b: ast::Term {
+                        t: ast::Literal::Integer(2)
+                    }
+                }
             )
         );
     }
