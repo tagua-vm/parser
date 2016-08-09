@@ -276,13 +276,25 @@ fn string_single_quoted(input: &[u8]) -> Result<&[u8], Literal> {
     Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
 }
 
+const STRING_NOWDOC_OPENING: &'static [u8] = &['<' as u8, '<' as u8, '<' as u8, '\'' as u8];
+
 fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
+    let input_length = input.len();
+
     // `<<<'A'\nA\n` is the shortest datum.
-    if input.len() < 9 {
+    if input_length < 9 {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
     }
 
-    if false == input.starts_with(&['<' as u8, '<' as u8, '<' as u8, '\'' as u8]) {
+    if input[0] == 'b' as u8 || input[0] == 'B' as u8 {
+        if input_length < 10 {
+            return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
+        } else if false == input[1..].starts_with(STRING_NOWDOC_OPENING) {
+            return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+        } else {
+            return string_nowdoc(&input[1..]);
+        }
+    } else if false == input.starts_with(STRING_NOWDOC_OPENING) {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
@@ -986,6 +998,26 @@ mod tests {
     fn case_string_nowdoc_empty() {
         let input  = b"<<<'FOO'\n\nFOO\n";
         let output = Result::Done(&b""[..], Literal::String(Vec::new()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_binary_nowdoc() {
+        let input  = b"b<<<'FOO'\nhello \n  world \nFOO\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_binary_uppercase_nowdoc() {
+        let input  = b"B<<<'FOO'\nhello \n  world \nFOO\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
