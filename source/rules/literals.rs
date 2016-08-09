@@ -965,6 +965,16 @@ mod tests {
     }
 
     #[test]
+    fn case_invalid_string_binary_uppercase_single_quoted_too_short() {
+        let input  = b"B'";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_invalid_string_binary_single_quoted_opening_character() {
         let input  = b"bb'";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
@@ -1070,6 +1080,66 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_binary_nowdoc_too_short() {
+        let input  = b"b<<<'A'\nA";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_binary_nowdoc_opening_character_missing_first_quote() {
+        let input  = b"b<<<FOO'\nhello \n  world \nFOO\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_binary_nowdoc_opening_character_missing_second_quote() {
+        let input  = b"b<<<'FOO\nhello \n  world \nFOO\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_binary_uppercase_nowdoc_too_short() {
+        let input  = b"B<<<'A'\nA";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_binary_uppercase_nowdoc_opening_character_missing_first_quote() {
+        let input  = b"B<<<FOO'\nhello \n  world \nFOO\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_binary_uppercase_nowdoc_opening_character_missing_second_quote() {
+        let input  = b"B<<<'FOO\nhello \n  world \nFOO\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
