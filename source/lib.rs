@@ -65,12 +65,14 @@ extern crate regex;
 #[macro_use]
 extern crate quickcheck;
 
+pub mod internal;
 #[macro_use]
 pub mod macros;
-
 pub mod ast;
 pub mod rules;
 pub mod tokens;
+
+pub use self::internal::*;
 
 /// Complete parsing of a datum starting by the sentence symbol of the grammar.
 ///

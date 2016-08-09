@@ -113,8 +113,6 @@ named!(
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::{Done, Error};
-    use nom::{Err, ErrorKind};
     use super::{
         name,
         qualified_name,
@@ -124,142 +122,147 @@ mod tests {
         Name,
         Variable
     };
+    use super::super::super::internal::{
+        Error,
+        ErrorKind,
+        Result
+    };
     use super::super::super::macros::ErrorKindCustom;
 
     #[test]
     fn case_variable() {
-        assert_eq!(variable(b"$foo"), Done(&b""[..], Variable(&b"foo"[..])));
+        assert_eq!(variable(b"$foo"), Result::Done(&b""[..], Variable(&b"foo"[..])));
     }
 
     #[test]
     fn case_variable_shortest() {
-        assert_eq!(variable(b"$x"), Done(&b""[..], Variable(&b"x"[..])));
+        assert_eq!(variable(b"$x"), Result::Done(&b""[..], Variable(&b"x"[..])));
     }
 
     #[test]
     fn case_invalid_variable_prefix() {
-        assert_eq!(variable(b"x"), Error(Err::Position(ErrorKind::Tag, &b"x"[..])));
+        assert_eq!(variable(b"x"), Result::Error(Error::Position(ErrorKind::Tag, &b"x"[..])));
     }
 
     #[test]
     fn case_invalid_variable_name() {
-        assert_eq!(variable(b"$0"), Error(Err::Code(ErrorKind::RegexpFind)));
+        assert_eq!(variable(b"$0"), Result::Error(Error::Code(ErrorKind::RegexpFind)));
     }
 
     #[test]
     fn case_unqualified_name() {
-        assert_eq!(qualified_name(b"Foo"), Done(&b""[..], Name::Unqualified(&b"Foo"[..])));
+        assert_eq!(qualified_name(b"Foo"), Result::Done(&b""[..], Name::Unqualified(&b"Foo"[..])));
     }
 
     #[test]
     fn case_invalid_unqualified_name() {
-        assert_eq!(qualified_name(b"class"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
-        assert_eq!(qualified_name(b"ClAsS"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
+        assert_eq!(qualified_name(b"class"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
+        assert_eq!(qualified_name(b"ClAsS"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
     }
 
     #[test]
     fn case_qualified_name() {
-        assert_eq!(qualified_name(b"Foo\\Bar\\Baz"), Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        assert_eq!(qualified_name(b"Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
 
     #[test]
     fn case_qualified_name_with_skip_tokens() {
-        assert_eq!(qualified_name(b"Foo\n/* baz */ \\ Bar /* qux */\\"), Done(&b" /* qux */\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        assert_eq!(qualified_name(b"Foo\n/* baz */ \\ Bar /* qux */\\"), Result::Done(&b" /* qux */\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
 
     #[test]
     fn case_invalid_qualified_name() {
-        assert_eq!(qualified_name(b"Foo\\class\\Baz"), Done(&b"\\class\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
-        assert_eq!(qualified_name(b"Foo\\ClAsS\\Baz"), Done(&b"\\ClAsS\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
+        assert_eq!(qualified_name(b"Foo\\class\\Baz"), Result::Done(&b"\\class\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
+        assert_eq!(qualified_name(b"Foo\\ClAsS\\Baz"), Result::Done(&b"\\ClAsS\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
     }
 
     #[test]
     fn case_relative_qualified_name() {
-        assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
 
     #[test]
     fn case_relative_qualified_name_case_insensitive() {
-        assert_eq!(qualified_name(b"NaMeSpAcE\\Foo\\Bar\\Baz"), Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        assert_eq!(qualified_name(b"NaMeSpAcE\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
 
     #[test]
     fn case_relative_qualified_name_with_skip_tokens() {
-        assert_eq!(qualified_name(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\"), Done(&b" /* hello */\\"[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        assert_eq!(qualified_name(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\"), Result::Done(&b" /* hello */\\"[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
 
     #[test]
     fn case_invalid_relative_qualified_name_with_namespace() {
-        assert_eq!(qualified_name(b"namespace\\Foo\\namespace\\Baz"), Done(&b"\\namespace\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
-        assert_eq!(qualified_name(b"namespace\\Foo\\NaMeSpAcE\\Baz"), Done(&b"\\NaMeSpAcE\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
+        assert_eq!(qualified_name(b"namespace\\Foo\\namespace\\Baz"), Result::Done(&b"\\namespace\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
+        assert_eq!(qualified_name(b"namespace\\Foo\\NaMeSpAcE\\Baz"), Result::Done(&b"\\NaMeSpAcE\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
     }
 
     #[test]
     fn case_invalid_relative_qualified_name_with_any_keyword() {
-        assert_eq!(qualified_name(b"namespace\\class"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
-        assert_eq!(qualified_name(b"namespace\\ClAsS"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
+        assert_eq!(qualified_name(b"namespace\\class"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
+        assert_eq!(qualified_name(b"namespace\\ClAsS"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
     }
 
     #[test]
     fn case_fully_qualified_name() {
-        assert_eq!(qualified_name(b"\\Foo\\Bar\\Baz"), Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        assert_eq!(qualified_name(b"\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
     }
 
     #[test]
     fn case_fully_qualified_shortest_name() {
-        assert_eq!(qualified_name(b"\\Foo"), Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..]])));
+        assert_eq!(qualified_name(b"\\Foo"), Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..]])));
     }
 
     #[test]
     fn case_invalid_fully_and_relative_qualified_name_with_namespace() {
-        assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"namespace\\Foo\\Bar"[..])));
+        assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"namespace\\Foo\\Bar"[..])));
     }
 
     #[test]
     fn case_invalid_fully_and_relative_qualified_name_with_any_keyword() {
-        assert_eq!(qualified_name(b"\\class\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class\\Foo\\Bar"[..])));
-        assert_eq!(qualified_name(b"\\ClAsS\\Foo\\Bar"), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS\\Foo\\Bar"[..])));
+        assert_eq!(qualified_name(b"\\class\\Foo\\Bar"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class\\Foo\\Bar"[..])));
+        assert_eq!(qualified_name(b"\\ClAsS\\Foo\\Bar"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS\\Foo\\Bar"[..])));
     }
 
     #[test]
     fn case_invalid_qualified_name_ending_with_a_separator() {
-        assert_eq!(qualified_name(b"Foo\\Bar\\"), Done(&b"\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        assert_eq!(qualified_name(b"Foo\\Bar\\"), Result::Done(&b"\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
 
     #[test]
     fn case_name() {
-        assert_eq!(name(b"_fooBar42"), Done(&b""[..], &b"_fooBar42"[..]));
+        assert_eq!(name(b"_fooBar42"), Result::Done(&b""[..], &b"_fooBar42"[..]));
     }
 
     #[test]
     fn case_name_shortest() {
-        assert_eq!(name(b"x"), Done(&b""[..], &b"x"[..]));
+        assert_eq!(name(b"x"), Result::Done(&b""[..], &b"x"[..]));
     }
 
     #[test]
     fn case_name_only_head() {
-        assert_eq!(name(b"aB_\x80"), Done(&b""[..], &b"aB_\x80"[..]));
+        assert_eq!(name(b"aB_\x80"), Result::Done(&b""[..], &b"aB_\x80"[..]));
     }
 
     #[test]
     fn case_name_head_and_tail() {
-        assert_eq!(name(b"aB_\x80aB7\xff"), Done(&b""[..], &b"aB_\x80aB7\xff"[..]));
+        assert_eq!(name(b"aB_\x80aB7\xff"), Result::Done(&b""[..], &b"aB_\x80aB7\xff"[..]));
     }
 
     #[test]
     fn case_name_copyright() {
         // © = 0xa9
-        assert_eq!(name(b"\xa9"), Done(&b""[..], &b"\xa9"[..]));
+        assert_eq!(name(b"\xa9"), Result::Done(&b""[..], &b"\xa9"[..]));
     }
 
     #[test]
     fn case_name_non_breaking_space() {
         //   = 0xa0
-        assert_eq!(name(b"\xa0"), Done(&b""[..], &b"\xa0"[..]));
+        assert_eq!(name(b"\xa0"), Result::Done(&b""[..], &b"\xa0"[..]));
     }
 
     #[test]
     fn case_invalid_name() {
-        assert_eq!(name(b"0x"), Error(Err::Code(ErrorKind::RegexpFind)));
+        assert_eq!(name(b"0x"), Result::Error(Error::Code(ErrorKind::RegexpFind)));
     }
 }

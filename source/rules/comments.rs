@@ -62,18 +62,21 @@ named!(
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::{Done, Error};
-    use nom::{Err, ErrorKind};
     use super::{
         comment,
         comment_delimited,
         comment_single_line
     };
+    use super::super::super::internal::{
+        Error,
+        ErrorKind,
+        Result
+    };
 
     #[test]
     fn case_comment_single_line_double_slash_empty() {
         let input  = b"//";
-        let output = Done(&b""[..], &b""[..]);
+        let output = Result::Done(&b""[..], &b""[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -82,7 +85,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_double_slash_with_feed() {
         let input  = b"// foobar\nbazqux";
-        let output = Done(&b"bazqux"[..], &b" foobar\n"[..]);
+        let output = Result::Done(&b"bazqux"[..], &b" foobar\n"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -91,7 +94,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_double_slash_with_carriage_return() {
         let input  = b"// foobar\rbazqux";
-        let output = Done(&b"bazqux"[..], &b" foobar\r"[..]);
+        let output = Result::Done(&b"bazqux"[..], &b" foobar\r"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -100,7 +103,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_double_slash_with_carriage_return_feed() {
         let input  = b"// foobar\r\nbazqux";
-        let output = Done(&b"bazqux"[..], &b" foobar\r\n"[..]);
+        let output = Result::Done(&b"bazqux"[..], &b" foobar\r\n"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -109,7 +112,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_double_slash_without_ending() {
         let input  = b"// foobar";
-        let output = Done(&b""[..], &b" foobar"[..]);
+        let output = Result::Done(&b""[..], &b" foobar"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -118,7 +121,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_double_slash_embedded() {
         let input  = b"//foo//bar";
-        let output = Done(&b""[..], &b"foo//bar"[..]);
+        let output = Result::Done(&b""[..], &b"foo//bar"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -127,7 +130,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_hash_empty() {
         let input  = b"#";
-        let output = Done(&b""[..], &b""[..]);
+        let output = Result::Done(&b""[..], &b""[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -136,7 +139,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_hash_with_line_feed() {
         let input  = b"# foobar\nbazqux";
-        let output = Done(&b"bazqux"[..], &b" foobar\n"[..]);
+        let output = Result::Done(&b"bazqux"[..], &b" foobar\n"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -145,7 +148,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_hash_with_carriage_return() {
         let input  = b"# foobar\rbazqux";
-        let output = Done(&b"bazqux"[..], &b" foobar\r"[..]);
+        let output = Result::Done(&b"bazqux"[..], &b" foobar\r"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -154,7 +157,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_hash_with_carriage_return_line_feed() {
         let input  = b"# foobar\r\nbazqux";
-        let output = Done(&b"bazqux"[..], &b" foobar\r\n"[..]);
+        let output = Result::Done(&b"bazqux"[..], &b" foobar\r\n"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -163,7 +166,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_hash_without_line_ending() {
         let input  = b"# foobar";
-        let output = Done(&b""[..], &b" foobar"[..]);
+        let output = Result::Done(&b""[..], &b" foobar"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -172,7 +175,7 @@ mod tests {
     #[test]
     fn case_comment_single_line_hash_embedded() {
         let input  = b"#foo#bar";
-        let output = Done(&b""[..], &b"foo#bar"[..]);
+        let output = Result::Done(&b""[..], &b"foo#bar"[..]);
 
         assert_eq!(comment_single_line(input), output);
         assert_eq!(comment(input), output);
@@ -181,7 +184,7 @@ mod tests {
     #[test]
     fn case_comment_delimited_empty() {
         let input  = b"/**/xyz";
-        let output = Done(&b"xyz"[..], &b""[..]);
+        let output = Result::Done(&b"xyz"[..], &b""[..]);
 
         assert_eq!(comment_delimited(input), output);
         assert_eq!(comment(input), output);
@@ -190,7 +193,7 @@ mod tests {
     #[test]
     fn case_comment_delimited() {
         let input  = b"/* foo bar\nbaz\r\nqux // hello,\n /*world!*/xyz */";
-        let output = Done(&b"xyz */"[..], &b" foo bar\nbaz\r\nqux // hello,\n /*world!"[..]);
+        let output = Result::Done(&b"xyz */"[..], &b" foo bar\nbaz\r\nqux // hello,\n /*world!"[..]);
 
         assert_eq!(comment_delimited(input), output);
         assert_eq!(comment(input), output);
@@ -200,7 +203,7 @@ mod tests {
     fn case_invalid_comment_delimited_not_closed() {
         let input = b"/*foobar";
 
-        assert_eq!(comment_delimited(input), Error(Err::Position(ErrorKind::TakeUntilAndConsume, &b"foobar"[..])));
-        assert_eq!(comment(input), Error(Err::Position(ErrorKind::Alt, &input[..])));
+        assert_eq!(comment_delimited(input), Result::Error(Error::Position(ErrorKind::TakeUntilAndConsume, &b"foobar"[..])));
+        assert_eq!(comment(input), Result::Error(Error::Position(ErrorKind::Alt, &input[..])));
     }
 }

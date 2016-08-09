@@ -43,57 +43,60 @@ named!(
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::{Done, Error};
-    use nom::{Err, ErrorKind};
+    use super::super::super::internal::{
+        Error,
+        ErrorKind,
+        Result
+    };
     use super::whitespace;
 
     #[test]
     fn case_whitespace_space() {
-        assert_eq!(whitespace(b"   "), Done(&b""[..], &b"   "[..]));
+        assert_eq!(whitespace(b"   "), Result::Done(&b""[..], &b"   "[..]));
     }
 
     #[test]
     fn case_whitespace_horizontal_tabulation() {
-        assert_eq!(whitespace(b"\t\t\t"), Done(&b""[..], &b"\t\t\t"[..]));
+        assert_eq!(whitespace(b"\t\t\t"), Result::Done(&b""[..], &b"\t\t\t"[..]));
     }
 
     #[test]
     fn case_whitespace_carriage_return_line_feed() {
-        assert_eq!(whitespace(b"\r\n\r\n\r\n"), Done(&b""[..], &b"\r\n\r\n\r\n"[..]));
+        assert_eq!(whitespace(b"\r\n\r\n\r\n"), Result::Done(&b""[..], &b"\r\n\r\n\r\n"[..]));
     }
 
     #[test]
     fn case_whitespace_carriage_return() {
-        assert_eq!(whitespace(b"\r\r\r"), Done(&b""[..], &b"\r\r\r"[..]));
+        assert_eq!(whitespace(b"\r\r\r"), Result::Done(&b""[..], &b"\r\r\r"[..]));
     }
 
     #[test]
     fn case_whitespace_line_feed() {
-        assert_eq!(whitespace(b"\n\n\n"), Done(&b""[..], &b"\n\n\n"[..]));
+        assert_eq!(whitespace(b"\n\n\n"), Result::Done(&b""[..], &b"\n\n\n"[..]));
     }
 
     #[test]
     fn case_whitespace_mixed() {
-        assert_eq!(whitespace(b"\n \n \r\t  \t\r\n\t \t\t"), Done(&b""[..], &b"\n \n \r\t  \t\r\n\t \t\t"[..]));
+        assert_eq!(whitespace(b"\n \n \r\t  \t\r\n\t \t\t"), Result::Done(&b""[..], &b"\n \n \r\t  \t\r\n\t \t\t"[..]));
     }
 
     #[test]
     fn case_whitespace_with_a_tail() {
-        assert_eq!(whitespace(b"\n \n \r\t  \t\r\n\t \t\tabc "), Done(&b"abc "[..], &b"\n \n \r\t  \t\r\n\t \t\t"[..]));
+        assert_eq!(whitespace(b"\n \n \r\t  \t\r\n\t \t\tabc "), Result::Done(&b"abc "[..], &b"\n \n \r\t  \t\r\n\t \t\t"[..]));
     }
 
     #[test]
     fn case_whitespace_too_short() {
-        assert_eq!(whitespace(b""), Done(&b""[..], &b""[..]));
+        assert_eq!(whitespace(b""), Result::Done(&b""[..], &b""[..]));
     }
 
     #[test]
     fn case_invalid_whitespace_not_a_valid_whitespace() {
-        assert_eq!(whitespace(b"\xa0 "), Error(Err::Position(ErrorKind::IsA, &b"\xa0 "[..])));
+        assert_eq!(whitespace(b"\xa0 "), Result::Error(Error::Position(ErrorKind::IsA, &b"\xa0 "[..])));
     }
 
     #[test]
     fn case_invalid_whitespace_not_a_valid_character() {
-        assert_eq!(whitespace(b"abc\n \t"), Error(Err::Position(ErrorKind::IsA, &b"abc\n \t"[..])));
+        assert_eq!(whitespace(b"abc\n \t"), Result::Error(Error::Position(ErrorKind::IsA, &b"abc\n \t"[..])));
     }
 }

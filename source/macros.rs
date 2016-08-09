@@ -31,7 +31,7 @@
 
 //! Extra macros helping to write parsers.
 
-/// Custom values for `nom::ErrorKind::Custom`.
+/// Custom values for `ErrorKind::Custom`.
 #[derive(Debug)]
 pub enum ErrorKindCustom {
     /// Represent errors from the `exclude` macro.
@@ -40,7 +40,7 @@ pub enum ErrorKindCustom {
     ITag
 }
 
-/// `exclude!(I -> IResult<I, O>, I -> IResult<I, P>) => I -> IResult<I, 0>`
+/// `exclude!(I -> Result<I, O>, I -> Result<I, P>) => I -> Result<I, 0>`
 /// returns the result of the first parser if the second fails. Both parsers
 /// run on the same input.
 ///
@@ -52,10 +52,13 @@ pub enum ErrorKindCustom {
 /// ```
 /// # #[macro_use]
 /// # extern crate nom;
-/// use nom::IResult::{Done, Error};
-/// use nom::{Err, ErrorKind};
 /// # #[macro_use]
 /// # extern crate tagua_parser;
+/// use tagua_parser::{
+///     Error,
+///     ErrorKind,
+///     Result
+/// };
 /// use tagua_parser::macros::ErrorKindCustom;
 ///
 /// # fn main() {
@@ -70,8 +73,8 @@ pub enum ErrorKindCustom {
 ///     )
 /// );
 ///
-/// assert_eq!(test(&b"fedabc"[..]), Done(&b""[..], &b"fedabc"[..]));
-/// assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
+/// assert_eq!(test(&b"fedabc"[..]), Result::Done(&b""[..], &b"fedabc"[..]));
+/// assert_eq!(test(&b"abcabc"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
 /// # }
 /// ```
 #[macro_export]
@@ -79,23 +82,23 @@ macro_rules! exclude(
     ($input:expr, $submacro1:ident!($($arguments1:tt)*), $submacro2:ident!($($arguments2:tt)*)) => (
         {
             match $submacro1!($input, $($arguments1)*) {
-                ::nom::IResult::Done(i, o) =>
+                $crate::Result::Done(i, o) =>
                     match $submacro2!(o, $($arguments2)*) {
-                        ::nom::IResult::Done(_, _) =>
-                            ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32), $input)),
+                        $crate::Result::Done(_, _) =>
+                            $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32), $input)),
 
-                        ::nom::IResult::Incomplete(_) =>
-                            ::nom::IResult::Done(i, o),
+                        $crate::Result::Incomplete(_) =>
+                            $crate::Result::Done(i, o),
 
-                        ::nom::IResult::Error(_) =>
-                            ::nom::IResult::Done(i, o),
+                        $crate::Result::Error(_) =>
+                            $crate::Result::Done(i, o),
                     },
 
-                ::nom::IResult::Incomplete(e) =>
-                    ::nom::IResult::Incomplete(e),
+                $crate::Result::Incomplete(e) =>
+                    $crate::Result::Incomplete(e),
 
-                ::nom::IResult::Error(e) =>
-                    ::nom::IResult::Error(e)
+                $crate::Result::Error(e) =>
+                    $crate::Result::Error(e)
             }
         }
     );
@@ -113,7 +116,7 @@ macro_rules! exclude(
     );
 );
 
-/// `first!(I -> IResult<I, O>) => I -> IResult<I, O>`
+/// `first!(I -> Result<I, O>) => I -> Result<I, O>`
 /// is applying the `skip` rule before the first argument; it allows to skip
 /// tokens.
 ///
@@ -122,9 +125,9 @@ macro_rules! exclude(
 /// ```
 /// # #[macro_use]
 /// # extern crate nom;
-/// use nom::IResult::Done;
 /// # #[macro_use]
 /// # extern crate tagua_parser;
+/// use tagua_parser::Result;
 ///
 /// # fn main() {
 /// named!(
@@ -132,7 +135,7 @@ macro_rules! exclude(
 ///     first!(tag!("bar"))
 /// );
 ///
-/// assert_eq!(test(&b"/* foo */bar"[..]), Done(&b""[..], &b"bar"[..]));
+/// assert_eq!(test(&b"/* foo */bar"[..]), Result::Done(&b""[..], &b"bar"[..]));
 /// # }
 /// ```
 #[macro_export]
@@ -152,7 +155,7 @@ macro_rules! first(
     );
 );
 
-/// `itag!(&[T]: nom::AsBytes) => &[T] -> IResult<&[T], &[T]>`
+/// `itag!(&[T]: nom::AsBytes) => &[T] -> Result<&[T], &[T]>`
 /// declares a case-insensitive ASCII array as a suite to recognize.
 ///
 /// It is pretty similar to the nom `tag!` macro except it is case-insensitive
@@ -166,9 +169,9 @@ macro_rules! first(
 /// ```
 /// # #[macro_use]
 /// # extern crate nom;
-/// use nom::IResult::Done;
 /// # #[macro_use]
 /// # extern crate tagua_parser;
+/// use tagua_parser::Result;
 ///
 /// # fn main() {
 /// named!(
@@ -176,7 +179,7 @@ macro_rules! first(
 ///     itag!("foobar")
 /// );
 ///
-/// let output = Done(&b""[..], "foobar");
+/// let output = Result::Done(&b""[..], "foobar");
 ///
 /// assert_eq!(test(&b"foobar"[..]), output);
 /// assert_eq!(test(&b"FoObAr"[..]), output);
@@ -201,13 +204,13 @@ macro_rules! itag(
             let reduced_input = &$input[..length];
             let reduced_bytes = &bytes[..length];
 
-            let output: ::nom::IResult<_, _> =
+            let output: $crate::Result<_, _> =
                 if !reduced_input.eq_ignore_ascii_case(reduced_bytes) {
-                    ::nom::IResult::Error(::nom::Err::Position(::nom::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), $input))
+                    $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), $input))
                 } else if length < bytes_length {
-                    ::nom::IResult::Incomplete(::nom::Needed::Size(bytes_length))
+                    $crate::Result::Incomplete($crate::Needed::Size(bytes_length))
                 } else {
-                    ::nom::IResult::Done(&$input[bytes_length..], $string)
+                    $crate::Result::Done(&$input[bytes_length..], $string)
                 };
 
             output
@@ -215,7 +218,7 @@ macro_rules! itag(
     );
 );
 
-/// `keyword!(&[T]: nom::AsBytes) => &[T] -> IResult<&[T], &[T]>`
+/// `keyword!(&[T]: nom::AsBytes) => &[T] -> Result<&[T], &[T]>`
 /// is an alias to the `itag` macro.
 ///
 /// The goal of this alias is twofold:
@@ -229,10 +232,12 @@ macro_rules! itag(
 /// ```
 /// # #[macro_use]
 /// # extern crate nom;
-/// use nom::IResult::Done;
 /// # #[macro_use]
 /// # extern crate tagua_parser;
-/// use tagua_parser::tokens;
+/// use tagua_parser::{
+///     Result,
+///     tokens
+/// };
 ///
 /// # fn main() {
 /// named!(
@@ -240,7 +245,7 @@ macro_rules! itag(
 ///     keyword!(tokens::CLASS)
 /// );
 ///
-/// let output = Done(&b""[..], tokens::CLASS);
+/// let output = Result::Done(&b""[..], tokens::CLASS);
 ///
 /// assert_eq!(test(&b"class"[..]), output);
 /// assert_eq!(test(&b"ClAsS"[..]), output);
@@ -258,9 +263,13 @@ macro_rules! keyword(
 
 #[cfg(test)]
 mod tests {
-    use nom::IResult::{Done, Error, Incomplete};
-    use nom::{Err, ErrorKind, Needed};
     use super::ErrorKindCustom;
+    use super::super::internal::{
+        Error,
+        ErrorKind,
+        Needed,
+        Result
+    };
 
     #[test]
     fn case_exclude_empty_set() {
@@ -275,7 +284,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"fedabc"[..]), Done(&b""[..], &b"fedabc"[..]));
+        assert_eq!(test(&b"fedabc"[..]), Result::Done(&b""[..], &b"fedabc"[..]));
     }
 
     #[test]
@@ -291,7 +300,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"abcabc"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
+        assert_eq!(test(&b"abcabc"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
     }
 
     #[test]
@@ -307,7 +316,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"acebdf"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
+        assert_eq!(test(&b"acebdf"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
     }
 
     #[test]
@@ -317,7 +326,7 @@ mod tests {
         named!(test2, first!(hello));
 
         let input  = &b"  \nhello\t\r"[..];
-        let output = Done(&b"\t\r"[..], &b"hello"[..]);
+        let output = Result::Done(&b"\t\r"[..], &b"hello"[..]);
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -330,7 +339,7 @@ mod tests {
         named!(test2, first!(hello));
 
         let input  = &b"/* foo */hello/* bar */"[..];
-        let output = Done(&b"/* bar */"[..], &b"hello"[..]);
+        let output = Result::Done(&b"/* bar */"[..], &b"hello"[..]);
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -343,7 +352,7 @@ mod tests {
         named!(test2, first!(hello));
 
         let input  = &b"/* foo */  \nhello/* bar */\t"[..];
-        let output = Done(&b"/* bar */\t"[..], &b"hello"[..]);
+        let output = Result::Done(&b"/* bar */\t"[..], &b"hello"[..]);
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -356,8 +365,8 @@ mod tests {
 
         let input = &b"FoObArBaZQuX"[..];
 
-        assert_eq!(test1(input), Done(&b"BaZQuX"[..], "foobar"));
-        assert_eq!(test2(input), Done(&b"BaZQuX"[..], "fOoBaR"));
+        assert_eq!(test1(input), Result::Done(&b"BaZQuX"[..], "foobar"));
+        assert_eq!(test2(input), Result::Done(&b"BaZQuX"[..], "fOoBaR"));
     }
 
     #[test]
@@ -366,7 +375,7 @@ mod tests {
         named!(test2<&str>, itag!("FoObAR"));
 
         let input  = &b"FoOb"[..];
-        let output = Incomplete(Needed::Size(6));
+        let output = Result::Incomplete(Needed::Size(6));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -376,7 +385,7 @@ mod tests {
     fn case_itag_error() {
         named!(test<&str>, itag!("foobar"));
 
-        assert_eq!(test(&b"BaZQuX"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
+        assert_eq!(test(&b"BaZQuX"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
     }
 
     #[test]
@@ -386,8 +395,8 @@ mod tests {
 
         let input = &b"FoObArBaZQuX"[..];
 
-        assert_eq!(test1(input), Done(&b"BaZQuX"[..], "foobar"));
-        assert_eq!(test2(input), Done(&b"BaZQuX"[..], "fOoBaR"));
+        assert_eq!(test1(input), Result::Done(&b"BaZQuX"[..], "foobar"));
+        assert_eq!(test2(input), Result::Done(&b"BaZQuX"[..], "fOoBaR"));
     }
 
     #[test]
@@ -396,7 +405,7 @@ mod tests {
         named!(test2<&str>, keyword!("FoObAR"));
 
         let input  = &b"FoOb"[..];
-        let output = Incomplete(Needed::Size(6));
+        let output = Result::Incomplete(Needed::Size(6));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -406,6 +415,6 @@ mod tests {
     fn case_keyword_error() {
         named!(test<&str>, keyword!("foobar"));
 
-        assert_eq!(test(&b"BaZQuX"[..]), Error(Err::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
+        assert_eq!(test(&b"BaZQuX"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
     }
 }
