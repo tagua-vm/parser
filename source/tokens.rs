@@ -35,7 +35,7 @@
 //! Specification in the [Grammar
 //! chapter](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#lexical-grammar).
 //!
-//! All lexemes are declared as static string constants.
+//! All lexemes are declared as static bytes constants.
 
 use rules::whitespaces::whitespace;
 
