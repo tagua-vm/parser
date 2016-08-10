@@ -49,6 +49,7 @@ use super::super::internal::{
     ErrorKind,
     Result
 };
+use super::tokens;
 
 named!(
     pub literal<Literal>,
@@ -298,44 +299,52 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
-    let padding      = 4;
-    let mut offset   = padding;
-    let mut iterator = input[offset..].iter().enumerate();
+    let name;
+    let next_input;
 
-    while let Some((index, item)) = iterator.next() {
-        if *item == '\'' as u8 {
-            offset += index;
-
-            break;
-        }
+    if let Result::Done(i, n) = tokens::name(&input[4..]) {
+        name       = n;
+        next_input = i;
+    } else {
+        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))
     }
 
-    if input[offset] != '\'' as u8 || input[offset + 1] != '\n' as u8 {
+    let next_input_length = next_input.len();
+
+    if next_input_length < 3 + name.len() ||
+       next_input[0] != '\'' as u8 ||
+       next_input[1] != '\n' as u8 {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
-    let name       = &input[padding..offset];
-    let mut output = Vec::new();
-
-    iterator.next();
+    let offset       = 2;
+    let mut iterator = next_input[offset..].iter().enumerate();
 
     while let Some((index, item)) = iterator.next() {
         if *item == '\n' as u8 {
-            if !input[padding + index + 1..].starts_with(name) {
+            if !next_input[offset + index + 1..].starts_with(name) {
                 continue;
             }
 
-            offset                   = padding + index;
-            let mut lookahead_offset = offset + name.len() + 1;
+            let mut lookahead_offset = offset + index + name.len() + 1;
 
-            if input[lookahead_offset] == ';' as u8 {
+            if lookahead_offset > next_input_length {
+                return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+            }
+
+            if next_input[lookahead_offset] == ';' as u8 {
                 lookahead_offset += 1;
             }
 
-            if input[lookahead_offset] == '\n' as u8 {
-                output.extend(&input[padding + name.len() + 2..offset]);
+            if lookahead_offset > next_input_length {
+                return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+            }
 
-                return Result::Done(&input[lookahead_offset + 1..], Literal::String(output));
+            if next_input[lookahead_offset] == '\n' as u8 {
+                return Result::Done(
+                    &next_input[lookahead_offset + 1..],
+                    Literal::String(next_input[offset..offset + index].to_vec())
+                );
             }
         }
     }
@@ -1057,6 +1066,16 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_second_quote() {
         let input  = b"<<<'FOO\nhello \n  world \nFOO\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_nowdoc_invalid_identifier() {
+        let input  = b"<<<'F O O'\nhello \n  world \nF O O\n";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
