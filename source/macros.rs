@@ -319,6 +319,38 @@ mod tests {
     }
 
     #[test]
+    fn case_exclude_incomplete() {
+        named!(
+            test,
+            exclude!(
+                take!(3),
+                alt!(
+                    tag!("abc")
+                  | tag!("ace")
+                )
+            )
+        );
+
+        assert_eq!(test(&b"a"[..]), Result::Incomplete(Needed::Size(3)));
+    }
+
+    #[test]
+    fn case_exclude_incomplete_submacro() {
+        named!(
+            test,
+            exclude!(
+                is_a!("abcdef"),
+                alt!(
+                    tag!("abcdefgh")
+                  | tag!("ace")
+                )
+            )
+        );
+
+        assert_eq!(test(&b"acebdf"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
+    }
+
+    #[test]
     fn case_first_with_whitespace() {
         named!(hello, tag!("hello"));
         named!(test1, first!(tag!("hello")));
