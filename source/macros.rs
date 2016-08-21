@@ -32,7 +32,6 @@
 //! Extra macros helping to write parsers.
 
 /// Custom values for `ErrorKind::Custom`.
-#[derive(Debug)]
 pub enum ErrorKindCustom {
     /// Represent errors from the `exclude` macro.
     Exclude,
