@@ -62,10 +62,10 @@ mod tests {
             root(b"1+2"),
             ast::Addition {
                 a: ast::Term {
-                    t: ast::Literal::Integer(1)
+                    t: ast::Literal::Integer(1i64)
                 },
                 b: ast::Term {
-                    t: ast::Literal::Integer(2)
+                    t: ast::Literal::Integer(2i64)
                 }
             }
         );
