@@ -53,25 +53,21 @@ pub fn root(input: &[u8]) -> ast::Addition {
 
 #[cfg(test)]
 mod tests {
-    use super::expressions::expr;
+    use super::root;
     use super::super::ast;
-    use super::super::internal::Result;
 
     #[test]
     fn case_expr() {
         assert_eq!(
-            expr(b"1+2"),
-            Result::Done(
-                &b""[..],
-                ast::Addition {
-                    a: ast::Term {
-                        t: ast::Literal::Integer(1)
-                    },
-                    b: ast::Term {
-                        t: ast::Literal::Integer(2)
-                    }
+            root(b"1+2"),
+            ast::Addition {
+                a: ast::Term {
+                    t: ast::Literal::Integer(1)
+                },
+                b: ast::Term {
+                    t: ast::Literal::Integer(2)
                 }
-            )
+            }
         );
     }
 }
