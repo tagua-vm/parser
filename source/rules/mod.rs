@@ -70,4 +70,10 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    #[should_panic(expected = "Youhouuu")]
+    fn case_expr_panic() {
+        root(b"panic!");
+    }
 }
