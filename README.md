@@ -3,6 +3,7 @@
 [![Build status](https://api.travis-ci.org/tagua-vm/parser.svg?branch=master)](https://travis-ci.org/tagua-vm/parser)
 [![Chat on Freenode](https://img.shields.io/badge/chat-on_%23taguavm-ff0066.svg)](https://webchat.freenode.net/?channels=#taguavm)
 [![Chat on Gitter](https://img.shields.io/badge/chat-on_gitter-ff0066.svg)](https://gitter.im/tagua-vm/tagua-vm)
+[![Coverage](https://img.shields.io/coveralls/tagua-vm/parser/master.svg)](https://coveralls.io/github/tagua-vm/parser?branch=master)
 
 Tagua VM is an experimental [PHP](http://php.net/) Virtual Machine written with
 [the Rust language](https://www.rust-lang.org/) and [the LLVM Compiler
