@@ -213,7 +213,6 @@ named!(
 );
 
 /// String errors.
-#[derive(Debug)]
 pub enum StringError {
     /// The datum starts as a string but is too short to be a string.
     TooShort,
