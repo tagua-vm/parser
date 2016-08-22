@@ -589,11 +589,13 @@ mod tests {
             let bytes  = string.as_bytes();
 
             match decimal(bytes) {
-                Result::Done(_, Literal::Integer(output)) =>
-                    input == output as u32,
+                Result::Done(_, Literal::Integer(output)) => {
+                    input == output as u32
+                },
 
-                _ =>
+                _ => {
                     false
+                }
             }
         }
     }
