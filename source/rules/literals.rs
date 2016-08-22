@@ -334,7 +334,7 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
-    offset = 2;
+    offset = 1;
 
     for (index, item) in next_input[offset..].iter().enumerate() {
         if *item == '\n' as u8 {
@@ -357,9 +357,16 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
             }
 
             if next_input[lookahead_offset] == '\n' as u8 {
+                if index == 0 {
+                    return Result::Done(
+                        &next_input[lookahead_offset + 1..],
+                        Literal::String(Vec::new())
+                    );
+                }
+
                 return Result::Done(
                     &next_input[lookahead_offset + 1..],
-                    Literal::String(next_input[offset..offset + index].to_vec())
+                    Literal::String(next_input[offset + 1..offset + index].to_vec())
                 );
             }
         }
@@ -1033,7 +1040,7 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_empty() {
-        let input  = b"<<<'FOO'\n\nFOO\n";
+        let input  = b"<<<'FOO'\nFOO\n";
         let output = Result::Done(&b""[..], Literal::String(Vec::new()));
 
         assert_eq!(string_nowdoc(input), output);
