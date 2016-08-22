@@ -75,7 +75,7 @@ named!(
 named!(
     pub boolean<Literal>,
     map_res!(
-        alt!(itag!("true".as_bytes()) | itag!("false".as_bytes())),
+        alt!(itag!(&b"true"[..]) | itag!(&b"false"[..])),
         |bytes: &[u8]| -> StdResult<Literal, ()> {
             Ok(Literal::Boolean(bytes[0] == 't' as u8))
         }
