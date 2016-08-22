@@ -278,7 +278,7 @@ fn string_single_quoted(input: &[u8]) -> Result<&[u8], Literal> {
     Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
 }
 
-const STRING_NOWDOC_OPENING: &'static [u8] = &['<' as u8, '<' as u8, '<' as u8, '\'' as u8];
+const STRING_NOWDOC_OPENING: &'static [u8] = &['<' as u8, '<' as u8, '<' as u8];
 
 fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
     let input_length = input.len();
@@ -300,10 +300,26 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
+    let mut offset = 3;
+
+    for item in input[offset..].iter() {
+        if *item != ' ' as u8 && *item != '\t' as u8 {
+            break;
+        }
+
+        offset += 1;
+    }
+
+    if input[offset] != '\'' as u8 {
+        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+    }
+
+    offset += 1;
+
     let name;
     let next_input;
 
-    if let Result::Done(i, n) = tokens::name(&input[4..]) {
+    if let Result::Done(i, n) = tokens::name(&input[offset..]) {
         name       = n;
         next_input = i;
     } else {
@@ -318,10 +334,9 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
-    let offset       = 2;
-    let mut iterator = next_input[offset..].iter().enumerate();
+    offset = 2;
 
-    while let Some((index, item)) = iterator.next() {
+    for (index, item) in next_input[offset..].iter().enumerate() {
         if *item == '\n' as u8 {
             if !next_input[offset + index + 1..].starts_with(name) {
                 continue;
@@ -1020,6 +1035,16 @@ mod tests {
     fn case_string_nowdoc_empty() {
         let input  = b"<<<'FOO'\n\nFOO\n";
         let output = Result::Done(&b""[..], Literal::String(Vec::new()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_nowdoc_with_whitespaces_before_identifier() {
+        let input  = b"<<<   \t  'FOO'\nhello \n  world \nFOO\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
