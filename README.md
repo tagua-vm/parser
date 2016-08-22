@@ -1,20 +1,21 @@
-# Tagua VM
+# Tagua Parser
 
 [![Chat on Freenode](https://img.shields.io/badge/chat-on_%23taguavm-ff0066.svg)](https://webchat.freenode.net/?channels=#taguavm)
 [![Chat on Gitter](https://img.shields.io/badge/chat-on_gitter-ff0066.svg)](https://gitter.im/tagua-vm/tagua-vm)
 [![Build status](https://api.travis-ci.org/tagua-vm/parser.svg?branch=master)](https://travis-ci.org/tagua-vm/parser)
 [![Coverage](https://img.shields.io/coveralls/tagua-vm/parser/master.svg)](https://coveralls.io/github/tagua-vm/parser?branch=master)
 
-Tagua VM is an experimental [PHP](http://php.net/) Virtual Machine written with
+Tagua VM is an experimental [PHP](http://php.net/) Virtual Machine written with
 [the Rust language](https://www.rust-lang.org/) and [the LLVM Compiler
 Infrastructure](http://llvm.org/).
 
-The Virtual Machine is composed of several libraries. This library contains the
-lexical and syntactic analysers, aka the parser, for the PHP language.
+The Virtual Machine is composed of several libraries. This library,
+Tagua Parser, contains the lexical and syntactic analysers, aka the parser,
+for the PHP language.
 
 ## Installing
 
-To install Tagua VM, you must have Rust (see [the Rust installation
+To install Tagua Parser, you must have Rust (see [the Rust installation
 page](https://www.rust-lang.org/downloads.html)) installed.
 [Cargo](http://doc.crates.io/guide.html) is the Rust package manager.
 
@@ -32,19 +33,19 @@ $ cargo build
 
 ### Using Docker
 
-If installing Rust and LLVM on your machine is too much, Docker might be an
-alternative: It provides everything needed to build, test and run Tagua VM.
+If installing Rust on your machine is too much, Docker might be an alternative:
+It provides everything needed to build, test and run the Tagua Parser.
 
 First, build the Docker image:
 
 ```sh
-$ docker build -t tagua-vm-parser-dev .
+$ docker build -t tagua-parser-dev .
 ```
 
 Now, it is possible to run a container from this image:
 
 ```sh
-$ docker run --rm -it -v $(pwd):/source tagua-vm-parser-dev
+$ docker run --rm -it -v $(pwd):/source tagua-parser-dev
 ```
 
 If this command succeeds, you are inside a fresh container. To see if
@@ -89,7 +90,7 @@ is a [mirrored room on Gitter](https://gitter.im/tagua-vm/tagua-vm).
 
 ## License
 
-Tagua VM is under the New BSD License (BSD-3-Clause):
+Tagua VM is under the New BSD License (BSD-3-Clause):
 
 ```
                                 New BSD License
