@@ -339,15 +339,12 @@ mod tests {
         named!(
             test,
             exclude!(
-                is_a!("abcdef"),
-                alt!(
-                    tag!("abcdefgh")
-                  | tag!("ace")
-                )
+                take!(3),
+                take!(5)
             )
         );
 
-        assert_eq!(test(&b"acebdf"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
+        assert_eq!(test(&b"abcdef"[..]), Result::Done(&b"def"[..], &b"abc"[..]));
     }
 
     #[test]
