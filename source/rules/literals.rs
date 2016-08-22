@@ -329,7 +329,7 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
 
             let mut lookahead_offset = offset + index + name.len() + 1;
 
-            if lookahead_offset > next_input_length {
+            if lookahead_offset >= next_input_length {
                 return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
             }
 
@@ -337,7 +337,7 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
                 lookahead_offset += 1;
             }
 
-            if lookahead_offset > next_input_length {
+            if lookahead_offset >= next_input_length {
                 return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
             }
 
@@ -1107,6 +1107,26 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character() {
         let input  = b"<<<'FOO'\nhello \n  world \nFO;\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_nowdoc_closing_character_no_semi_colon_no_newline() {
+        let input  = b"<<<'FOO'\nhello \n  world \nFOO";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_nowdoc_closing_character_no_newline() {
+        let input  = b"<<<'FOO'\nhello \n  world \nFOO;";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
