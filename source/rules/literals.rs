@@ -327,14 +327,19 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
     }
 
     let next_input_length = next_input.len();
+    let name_length       = name.len();
 
-    if next_input_length < 3 + name.len() ||
-       next_input[0] != '\'' as u8 ||
-       next_input[1] != '\n' as u8 {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+    if next_input_length < 3 + name_length || next_input[0] != '\'' as u8 || next_input[1] != '\n' as u8 {
+        if next_input[1] != '\r' as u8 || next_input[2] != '\n' as u8 {
+            return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+        }
     }
 
-    offset = 1;
+    if next_input[1] == '\r' as u8 {
+        offset = 2;
+    } else {
+        offset = 1;
+    }
 
     for (index, item) in next_input[offset..].iter().enumerate() {
         if *item == '\n' as u8 {
@@ -342,7 +347,7 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
                 continue;
             }
 
-            let mut lookahead_offset = offset + index + name.len() + 1;
+            let mut lookahead_offset = offset + index + name_length + 1;
 
             if lookahead_offset >= next_input_length {
                 return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
@@ -356,6 +361,17 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
                 return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
             }
 
+            let mut ending_offset = 0;
+
+            if next_input[lookahead_offset] == '\r' as u8 {
+                if lookahead_offset + 1 >= next_input_length {
+                    return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+                }
+
+                ending_offset     = 1;
+                lookahead_offset += 1;
+            }
+
             if next_input[lookahead_offset] == '\n' as u8 {
                 if index == 0 {
                     return Result::Done(
@@ -366,7 +382,7 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
 
                 return Result::Done(
                     &next_input[lookahead_offset + 1..],
-                    Literal::String(next_input[offset + 1..offset + index].to_vec())
+                    Literal::String(next_input[offset + 1..offset - ending_offset + index].to_vec())
                 );
             }
         }
@@ -1029,6 +1045,16 @@ mod tests {
     }
 
     #[test]
+    fn case_string_nowdoc_crlf() {
+        let input  = b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \r\n  world ".to_vec()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_string_nowdoc_without_semi_colon() {
         let input  = b"<<<'FOO'\nhello \n  world \nFOO\n";
         let output = Result::Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
@@ -1039,8 +1065,28 @@ mod tests {
     }
 
     #[test]
+    fn case_string_nowdoc_without_semi_colon_crlf() {
+        let input  = b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \r\n  world ".to_vec()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_string_nowdoc_empty() {
         let input  = b"<<<'FOO'\nFOO\n";
+        let output = Result::Done(&b""[..], Literal::String(Vec::new()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_nowdoc_empty_crlf() {
+        let input  = b"<<<'FOO'\r\nFOO\r\n";
         let output = Result::Done(&b""[..], Literal::String(Vec::new()));
 
         assert_eq!(string_nowdoc(input), output);
@@ -1059,6 +1105,16 @@ mod tests {
     }
 
     #[test]
+    fn case_string_nowdoc_with_whitespaces_before_identifier_crlf() {
+        let input  = b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \r\n  world ".to_vec()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_string_binary_nowdoc() {
         let input  = b"b<<<'FOO'\nhello \n  world \nFOO\n";
         let output = Result::Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
@@ -1069,9 +1125,29 @@ mod tests {
     }
 
     #[test]
+    fn case_string_binary_nowdoc_crlf() {
+        let input  = b"b<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \r\n  world ".to_vec()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_string_binary_uppercase_nowdoc() {
         let input  = b"B<<<'FOO'\nhello \n  world \nFOO\n";
         let output = Result::Done(&b""[..], Literal::String(b"hello \n  world ".to_vec()));
+
+        assert_eq!(string_nowdoc(input), output);
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_binary_uppercase_nowdoc_crlf() {
+        let input  = b"B<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n";
+        let output = Result::Done(&b""[..], Literal::String(b"hello \r\n  world ".to_vec()));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1169,8 +1245,38 @@ mod tests {
     }
 
     #[test]
+    fn case_invalid_string_nowdoc_closing_character_no_semi_colon_no_newline_crlf() {
+        let input  = b"<<<'FOO'\r\nhello \r\n  world \r\nFOO";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
     fn case_invalid_string_nowdoc_closing_character_no_newline() {
         let input  = b"<<<'FOO'\nhello \n  world \nFOO;";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_nowdoc_closing_character_no_newline_crlf() {
+        let input  = b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_nowdoc_closing_character_missing_lf_in_crlf() {
+        let input  = b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
 
         assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
