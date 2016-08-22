@@ -221,7 +221,9 @@ pub enum StringError {
     /// The string close character is not correct.
     InvalidClosingCharacter,
     /// The string is not correctly encoded (expect UTF-8).
-    InvalidEncoding
+    InvalidEncoding,
+    /// The string delimiter identifier is syntactically invalid.
+    InvalidDelimiterIdentifier
 }
 
 named!(
@@ -305,7 +307,7 @@ fn string_nowdoc(input: &[u8]) -> Result<&[u8], Literal> {
         name       = n;
         next_input = i;
     } else {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))
+        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32)))
     }
 
     let next_input_length = next_input.len();
@@ -1074,6 +1076,16 @@ mod tests {
 
     #[test]
     fn case_invalid_string_nowdoc_invalid_identifier() {
+        let input  = b"<<<'42'\nhello \n  world \n42\n";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
+
+        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))));
+        assert_eq!(string(input), output);
+        assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_invalid_string_nowdoc_partially_invalid_identifier() {
         let input  = b"<<<'F O O'\nhello \n  world \nF O O\n";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &input[..]));
 
