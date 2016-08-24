@@ -5,7 +5,7 @@ authors     = ["Ivan Enderlin <ivan.enderlin@tagua.io>"]
 repository  = "https://github.com/tagua-vm/parser"
 description = "Safe, fast and memory efficient PHP parser (lexical and syntactic analysers)."
 readme      = "README.md"
-keywords    = ["php", "virtual machine", "parser", "lexical", "syntactic", "analyser"]
+keywords    = ["php", "virtual_machine", "parser", "lexical", "syntactics", "analyser"]
 license     = "BSD-3-Clause"
 
 [lib]
