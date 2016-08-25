@@ -43,8 +43,8 @@ pub mod whitespaces;
 use super::ast;
 use super::internal::*;
 
-pub fn root(input: &[u8]) -> ast::Addition {
-    match expressions::expr(input) {
+pub fn root(input: &[u8]) -> ast::Expression {
+    match expressions::expression(input) {
         Result::Done(_, ast) => ast,
         _ => panic!("Youhouuu")
     }
@@ -57,23 +57,18 @@ mod tests {
     use super::super::ast;
 
     #[test]
-    fn case_expr() {
+    fn case_root() {
         assert_eq!(
-            root(b"1+2"),
-            ast::Addition {
-                a: ast::Term {
-                    t: ast::Literal::Integer(1i64)
-                },
-                b: ast::Term {
-                    t: ast::Literal::Integer(2i64)
-                }
-            }
+            root(b"'Hello, World!'"),
+            ast::Expression::Literal(
+                ast::Literal::String(b"Hello, World!".to_vec())
+            )
         );
     }
 
     #[test]
     #[should_panic(expected = "Youhouuu")]
-    fn case_expr_panic() {
-        root(b"panic!");
+    fn case_root_panic() {
+        root(b"!");
     }
 }

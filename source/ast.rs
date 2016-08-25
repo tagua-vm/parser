@@ -250,3 +250,64 @@ pub enum Name<'a> {
     /// Note that the leading `\` part is not present.
     FullyQualified(Vec<&'a [u8]>)
 }
+
+/// An expression.
+#[derive(Debug, PartialEq)]
+pub enum Expression<'a> {
+    /// A variable. See `Variable`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"$foo"),
+    ///     Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])))
+    /// );
+    /// # }
+    /// ```
+    Variable(Variable<'a>),
+
+    /// A name. See `Name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Name};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"Foo\\Bar"),
+    ///     Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])))
+    /// );
+    /// # }
+    /// ```
+    Name(Name<'a>),
+
+    /// A literal. See `Literal`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"'Hello, World!'"),
+    ///     Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())))
+    /// );
+    /// # }
+    /// ```
+    Literal(Literal)
+}
