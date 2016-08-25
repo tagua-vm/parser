@@ -190,6 +190,8 @@ macro_rules! itag(
         {
             use std::ascii::AsciiExt;
 
+            let input = $input as &[u8];
+
             #[inline(always)]
             fn as_bytes<T: ::nom::AsBytes>(datum: &T) -> &[u8] {
                 datum.as_bytes()
@@ -197,19 +199,19 @@ macro_rules! itag(
 
             let expected      = $string;
             let bytes         = as_bytes(&expected);
-            let input_length  = $input.len();
+            let input_length  = input.len();
             let bytes_length  = bytes.len();
             let length        = ::std::cmp::min(input_length, bytes_length);
-            let reduced_input = &$input[..length];
+            let reduced_input = &input[..length];
             let reduced_bytes = &bytes[..length];
 
             let output: $crate::Result<_, _> =
                 if !reduced_input.eq_ignore_ascii_case(reduced_bytes) {
-                    $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), $input))
+                    $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), input))
                 } else if length < bytes_length {
                     $crate::Result::Incomplete($crate::Needed::Size(bytes_length))
                 } else {
-                    $crate::Result::Done(&$input[bytes_length..], $string)
+                    $crate::Result::Done(&input[bytes_length..], $string)
                 };
 
             output
