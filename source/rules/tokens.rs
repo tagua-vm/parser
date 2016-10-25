@@ -76,8 +76,9 @@ named!(
                 tail: preceded!(
                     first!(tag!(tokens::NAMESPACE_SEPARATOR)),
                     exclude!(first!(name), tokens::keywords)
-                ) =>
+                ) => {
                     accumulator.push(tail)
+                }
             )
         ),
         || {
