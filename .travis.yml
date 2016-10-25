@@ -3,18 +3,32 @@ language: rust
 matrix:
   include:
     - rust: 1.9.0
+      os: linux
+    - rust: 1.9.0
+      os: osx
     - rust: 1.10.0
+      os: linux
+    - rust: 1.10.0
+      os: osx
     - rust: 1.11.0
+      os: linux
+    - rust: 1.11.0
+      os: osx
     - rust: stable
+      os: linux
+    - rust: stable
+      os: osx
     - rust: beta
+      os: linux
+    - rust: beta
+      os: osx
     - rust: nightly
+      os: linux
+    - rust: nightly
+      os: osx
   allow_failures:
     - rust: nightly
   fast_finish: true
-
-os:
-  - linux
-  - osx
 
 notifications:
   irc: "chat.freenode.net#taguavm"
