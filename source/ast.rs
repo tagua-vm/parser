@@ -311,5 +311,34 @@ pub enum Expression<'a> {
     /// ```
     Literal(Literal),
 
+    /// An echo.
+    /// Echo converts each of its expression's values into strings,
+    /// concatenates them in order given, and writes the result to the
+    /// output stream.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"echo 'foobar', $bazqux, 42"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Echo(
+    ///             vec![
+    ///                 Expression::Literal(Literal::String(b"foobar".to_vec())),
+    ///                 Expression::Variable(Variable(&b"bazqux"[..])),
+    ///                 Expression::Literal(Literal::Integer(42i64))
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Echo(Vec<Expression<'a>>)
 }
