@@ -309,5 +309,7 @@ pub enum Expression<'a> {
     /// );
     /// # }
     /// ```
-    Literal(Literal)
+    Literal(Literal),
+
+    Echo(Vec<Expression<'a>>)
 }

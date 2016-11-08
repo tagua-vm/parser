@@ -35,7 +35,10 @@
 //! Specification in the [Grammar chapter, Expressions
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#primary-expressions).
 
+use std::result::Result as StdResult;
+use super::expression;
 use super::super::literals::literal;
+use super::super::super::internal::fold_into_vector;
 use super::super::tokens::{
     qualified_name,
     variable
@@ -46,6 +49,7 @@ use super::super::super::ast::{
     Name,
     Variable
 };
+use super::super::super::tokens;
 
 named!(
     pub primary<Expression>,
@@ -71,10 +75,59 @@ fn literal_mapper<'a>(literal: Literal) -> Expression<'a> {
     Expression::Literal(literal)
 }
 
+named!(
+    pub intrinsic<Expression>,
+    call!(intrinsic_construct)
+);
+
+named!(
+    intrinsic_construct<Expression>,
+    alt!(
+        intrinsic_echo
+    )
+);
+
+named!(
+    intrinsic_echo<Expression>,
+    chain!(
+        accumulator: map_res!(
+            preceded!(
+                keyword!(tokens::ECHO),
+                first!(expression)
+            ),
+            echo_into_vector_mapper
+        ) ~
+        result: fold_many0!(
+            preceded!(
+                first!(tag!(tokens::COMMA)),
+                first!(expression)
+            ),
+            accumulator,
+            fold_into_vector
+        ),
+        || { echo_mapper(result) }
+    )
+);
+
+#[inline(always)]
+fn echo_into_vector_mapper(expression: Expression) -> StdResult<Vec<Expression>, ()> {
+    Ok(vec![expression])
+}
+
+#[inline(always)]
+fn echo_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+    Expression::Echo(expressions)
+}
+
 
 #[cfg(test)]
 mod tests {
-    use super::primary;
+    use super::{
+        intrinsic,
+        intrinsic_construct,
+        intrinsic_echo,
+        primary
+    };
     use super::super::expression;
     use super::super::super::super::ast::{
         Expression,
@@ -82,7 +135,11 @@ mod tests {
         Name,
         Variable
     };
-    use super::super::super::super::internal::Result;
+    use super::super::super::super::internal::{
+        Error,
+        ErrorKind,
+        Result
+    };
 
     #[test]
     fn case_primary_variable() {
@@ -109,5 +166,50 @@ mod tests {
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_echo_one_expression() {
+        let input  = b"echo /* baz */ 'foobar'";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Echo(
+                vec![
+                    Expression::Literal(Literal::String(b"foobar".to_vec()))
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_echo_many_expressions() {
+        let input  = b"echo /* baz */ 'foobar',\t $bazqux, \n  42";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Echo(
+                vec![
+                    Expression::Literal(Literal::String(b"foobar".to_vec())),
+                    Expression::Variable(Variable(&b"bazqux"[..])),
+                    Expression::Literal(Literal::Integer(42i64))
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_echo(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_echo_expression_missing() {
+        let input  = b"echo;";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"echo;"[..]));
+
+        assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
     }
 }
