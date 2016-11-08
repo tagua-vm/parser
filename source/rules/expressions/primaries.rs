@@ -57,6 +57,7 @@ named!(
         variable       => { variable_mapper }
       | qualified_name => { qualified_name_mapper }
       | literal        => { literal_mapper }
+      | intrinsic
     )
 );
 
@@ -180,8 +181,10 @@ mod tests {
             )
         );
 
+        assert_eq!(intrinsic_echo(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
     }
 
     #[test]
@@ -201,6 +204,7 @@ mod tests {
         assert_eq!(intrinsic_echo(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
     }
 
     #[test]
@@ -211,5 +215,6 @@ mod tests {
         assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
     }
 }
