@@ -373,7 +373,7 @@ token!(
     "The `LEFT_CURLY_BRACKET` token.\n\nUsed to open a block, e.g. `if (…) { … }`."
 );
 token!(
-    pub LEFT_PARENTHESIS: b"]";
+    pub LEFT_PARENTHESIS: b"(";
     "The `LEFT_PARENTHESIS` token.\n\nUsed to open a group of something, e.g. `if (…)`."
 );
 token!(
