@@ -340,5 +340,33 @@ pub enum Expression<'a> {
     /// );
     /// # }
     /// ```
-    Echo(Vec<Expression<'a>>)
+    Echo(Vec<Expression<'a>>),
+
+    /// Unset.
+    /// Unset the variables designated by each expression.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"unset($foo, $bar)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Unset(
+    ///             vec![
+    ///                 Variable(&b"foo"[..]),
+    ///                 Variable(&b"bar"[..])
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Unset(Vec<Variable<'a>>)
 }

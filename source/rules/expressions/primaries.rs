@@ -85,6 +85,7 @@ named!(
     intrinsic_construct<Expression>,
     alt!(
         intrinsic_echo
+      | intrinsic_unset
     )
 );
 
@@ -120,6 +121,39 @@ fn echo_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Echo(expressions)
 }
 
+named!(
+    intrinsic_unset<Expression>,
+    chain!(
+        accumulator: map_res!(
+            preceded!(
+                keyword!(tokens::UNSET),
+                preceded!(
+                    first!(tag!(tokens::LEFT_PARENTHESIS)),
+                    first!(variable)
+                )
+            ),
+            into_vector_mapper
+        ) ~
+        result: terminated!(
+            fold_many0!(
+                preceded!(
+                    first!(tag!(tokens::COMMA)),
+                    first!(variable)
+                ),
+                accumulator,
+                fold_into_vector
+            ),
+            first!(tag!(tokens::RIGHT_PARENTHESIS))
+        ),
+        || { unset_mapper(result) }
+    )
+);
+
+#[inline(always)]
+fn unset_mapper<'a>(variables: Vec<Variable<'a>>) -> Expression<'a> {
+    Expression::Unset(variables)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -127,6 +161,7 @@ mod tests {
         intrinsic,
         intrinsic_construct,
         intrinsic_echo,
+        intrinsic_unset,
         primary
     };
     use super::super::expression;
@@ -213,6 +248,54 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"echo;"[..]));
 
         assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_unset_one_variable() {
+        let input  = b"unset($foo)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Unset(
+                vec![
+                    Variable(&b"foo"[..])
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_unset(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_unset_many_variables() {
+        let input  = b"unset($foo, $bar)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Unset(
+                vec![
+                    Variable(&b"foo"[..]),
+                    Variable(&b"bar"[..])
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_unset(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_unset_zero_variable() {
+        let input  = b"unset()";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"unset()"[..]));
+
+        assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Tag, &b")"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
