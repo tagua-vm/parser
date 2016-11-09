@@ -96,7 +96,7 @@ named!(
                 keyword!(tokens::ECHO),
                 first!(expression)
             ),
-            echo_into_vector_mapper
+            into_vector_mapper
         ) ~
         result: fold_many0!(
             preceded!(
@@ -111,8 +111,8 @@ named!(
 );
 
 #[inline(always)]
-fn echo_into_vector_mapper(expression: Expression) -> StdResult<Vec<Expression>, ()> {
-    Ok(vec![expression])
+fn into_vector_mapper<T>(item: T) -> StdResult<Vec<T>, ()> {
+    Ok(vec![item])
 }
 
 #[inline(always)]
