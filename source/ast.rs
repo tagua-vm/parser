@@ -342,6 +342,36 @@ pub enum Expression<'a> {
     /// ```
     Echo(Vec<Expression<'a>>),
 
+    /// Empty.
+    /// Returns `TRUE` if the variable or value designated by the
+    /// expression is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"empty('')"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Empty(
+    ///             Box::new(
+    ///                 Expression::Literal(
+    ///                     Literal::String(b"".to_vec())
+    ///                 )
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Empty(Box<Expression<'a>>),
+
     /// Unset.
     /// Unset the variables designated by each expression.
     ///

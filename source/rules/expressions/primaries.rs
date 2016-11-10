@@ -78,7 +78,10 @@ fn literal_mapper<'a>(literal: Literal) -> Expression<'a> {
 
 named!(
     pub intrinsic<Expression>,
-    call!(intrinsic_construct)
+    alt!(
+        intrinsic_construct
+      | intrinsic_operator
+    )
 );
 
 named!(
@@ -87,6 +90,11 @@ named!(
         intrinsic_echo
       | intrinsic_unset
     )
+);
+
+named!(
+    intrinsic_operator<Expression>,
+    call!(intrinsic_empty)
 );
 
 named!(
@@ -154,6 +162,28 @@ fn unset_mapper<'a>(variables: Vec<Variable<'a>>) -> Expression<'a> {
     Expression::Unset(variables)
 }
 
+named!(
+    intrinsic_empty<Expression>,
+    map_res!(
+        preceded!(
+            keyword!(tokens::EMPTY),
+            preceded!(
+                first!(tag!(tokens::LEFT_PARENTHESIS)),
+                terminated!(
+                    first!(expression),
+                    first!(tag!(tokens::RIGHT_PARENTHESIS))
+                )
+            )
+        ),
+        empty_mapper
+    )
+);
+
+#[inline(always)]
+fn empty_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+    Ok(Expression::Empty(Box::new(expression)))
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -161,6 +191,8 @@ mod tests {
         intrinsic,
         intrinsic_construct,
         intrinsic_echo,
+        intrinsic_empty,
+        intrinsic_operator,
         intrinsic_unset,
         primary
     };
@@ -299,5 +331,57 @@ mod tests {
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_empty_string() {
+        let input  = b"empty('foo')";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Empty(
+                Box::new(
+                    Expression::Literal(
+                        Literal::String(b"foo".to_vec())
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_empty(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_empty_integer() {
+        let input  = b"empty(42)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Empty(
+                Box::new(
+                    Expression::Literal(
+                        Literal::Integer(42i64)
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_empty(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_empty_expression_missing() {
+        let input    = b"empty()";
+        let output_a = Result::Error(Error::Position(ErrorKind::Alt, &b")"[..]));
+        let output_b = Result::Error(Error::Position(ErrorKind::Alt, &b"empty()"[..]));
+
+        assert_eq!(intrinsic_empty(input), output_a);
+        assert_eq!(intrinsic_operator(input), output_a);
+        assert_eq!(intrinsic(input), output_b);
+        assert_eq!(expression(input), output_b);
     }
 }
