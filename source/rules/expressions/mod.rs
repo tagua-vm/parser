@@ -30,43 +30,16 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 //! Group of expression rules.
+//!
+//! The list of all expressions is provided by the PHP Language Specification
+//! in the [Grammar chapter, Expressions
+//! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#expressions).
 
-use super::super::ast;
-use super::super::tokens as token;
-use super::literals::decimal;
+pub mod primaries;
+
+use super::super::ast::Expression;
 
 named!(
-    pub expr<ast::Addition>,
-    chain!(
-        left: decimal ~
-        tag!(token::ADD) ~
-        right: decimal,
-        || ast::Addition { a: ast::Term { t: left }, b: ast::Term { t: right } }
-    )
+    pub expression<Expression>,
+    call!(primaries::primary)
 );
-
-
-#[cfg(test)]
-mod tests {
-    use super::expr;
-    use super::super::super::ast;
-    use super::super::super::internal::Result;
-
-    #[test]
-    fn case_expr() {
-        assert_eq!(
-            expr(b"1+2"),
-            Result::Done(
-                &b""[..],
-                ast::Addition {
-                    a: ast::Term {
-                        t: ast::Literal::Integer(1)
-                    },
-                    b: ast::Term {
-                        t: ast::Literal::Integer(2)
-                    }
-                }
-            )
-        );
-    }
-}

@@ -88,28 +88,6 @@ pub use self::internal::*;
 /// let expression = b"1+2";
 /// parser::parse(&expression[..]);
 /// ```
-pub fn parse(input: &[u8]) -> ast::Addition {
+pub fn parse(input: &[u8]) -> ast::Expression {
     rules::root(input)
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::parse;
-    use super::ast;
-
-    #[test]
-    fn case_expr() {
-        assert_eq!(
-            parse(b"1+2"),
-            ast::Addition {
-                a: ast::Term {
-                    t: ast::Literal::Integer(1i64)
-                },
-                b: ast::Term {
-                    t: ast::Literal::Integer(2i64)
-                }
-            }
-        );
-    }
 }

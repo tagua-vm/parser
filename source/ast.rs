@@ -250,3 +250,153 @@ pub enum Name<'a> {
     /// Note that the leading `\` part is not present.
     FullyQualified(Vec<&'a [u8]>)
 }
+
+/// An expression.
+#[derive(Debug, PartialEq)]
+pub enum Expression<'a> {
+    /// A variable. See `Variable`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"$foo"),
+    ///     Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])))
+    /// );
+    /// # }
+    /// ```
+    Variable(Variable<'a>),
+
+    /// A name. See `Name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Name};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"Foo\\Bar"),
+    ///     Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])))
+    /// );
+    /// # }
+    /// ```
+    Name(Name<'a>),
+
+    /// A literal. See `Literal`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"'Hello, World!'"),
+    ///     Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())))
+    /// );
+    /// # }
+    /// ```
+    Literal(Literal),
+
+    /// An echo.
+    /// Echo converts each of its expression's values into strings,
+    /// concatenates them in order given, and writes the result to the
+    /// output stream.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"echo 'foobar', $bazqux, 42"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Echo(
+    ///             vec![
+    ///                 Expression::Literal(Literal::String(b"foobar".to_vec())),
+    ///                 Expression::Variable(Variable(&b"bazqux"[..])),
+    ///                 Expression::Literal(Literal::Integer(42i64))
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Echo(Vec<Expression<'a>>),
+
+    /// Empty.
+    /// Returns `TRUE` if the variable or value designated by the
+    /// expression is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"empty('')"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Empty(
+    ///             Box::new(
+    ///                 Expression::Literal(
+    ///                     Literal::String(b"".to_vec())
+    ///                 )
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Empty(Box<Expression<'a>>),
+
+    /// Unset.
+    /// Unset the variables designated by each expression.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"unset($foo, $bar)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Unset(
+    ///             vec![
+    ///                 Variable(&b"foo"[..]),
+    ///                 Variable(&b"bar"[..])
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Unset(Vec<Variable<'a>>)
+}
