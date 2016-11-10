@@ -35,3 +35,35 @@ pub use nom::Err as Error;
 pub use nom::ErrorKind;
 pub use nom::IResult as Result;
 pub use nom::Needed;
+
+/// Fold an item into a vector.
+/// This is useful when combined with the `fold_many0!` macro for instance.
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
+/// # #[macro_use]
+/// # extern crate tagua_parser;
+/// use tagua_parser::Result;
+/// use tagua_parser::internal::fold_into_vector;
+///
+/// # fn main() {
+/// named!(
+///     test< &[u8], Vec<&[u8]> >,
+///     fold_many0!(
+///         tag!("abc"),
+///         Vec::new(),
+///         fold_into_vector
+///     )
+/// );
+///
+/// assert_eq!(test(&b"abcabc"[..]), Result::Done(&b""[..], vec![&b"abc"[..], &b"abc"[..]]));
+/// # }
+/// ```
+pub fn fold_into_vector<T>(mut accumulator: Vec<T>, item: T) -> Vec<T> {
+    accumulator.push(item);
+
+    accumulator
+}

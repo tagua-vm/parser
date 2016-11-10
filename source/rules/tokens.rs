@@ -35,11 +35,12 @@
 //! the [Grammar chapter, Tokens
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#tokens).
 
-use super::super::tokens;
 use super::super::ast::{
     Name,
     Variable
 };
+use super::super::internal::fold_into_vector;
+use super::super::tokens;
 
 named!(
     pub variable<Variable>,
@@ -67,34 +68,35 @@ named!(
                 first!(tag!(tokens::NAMESPACE_SEPARATOR))
             )
         )? ~
-        mut accumulator: map_res!(
+        accumulator: map_res!(
             exclude!(first!(name), tokens::keywords),
             wrap_into_vector_mapper
         ) ~
-        many0!(
-            tap!(
-                tail: preceded!(
-                    first!(tag!(tokens::NAMESPACE_SEPARATOR)),
-                    exclude!(first!(name), tokens::keywords)
-                ) =>
-                    accumulator.push(tail)
-            )
+        result: fold_many0!(
+            preceded!(
+                first!(tag!(tokens::NAMESPACE_SEPARATOR)),
+                exclude!(first!(name), tokens::keywords)
+            ),
+            accumulator,
+            fold_into_vector
         ),
         || {
             match head {
-                Some(handle) =>
+                Some(handle) => {
                     if handle == tokens::NAMESPACE_SEPARATOR {
-                        Name::FullyQualified(accumulator)
+                        Name::FullyQualified(result)
                     } else {
-                        Name::RelativeQualified(accumulator)
-                    },
-
-                None =>
-                    if accumulator.len() > 1 {
-                        Name::Qualified(accumulator)
-                    } else {
-                        Name::Unqualified(accumulator[0])
+                        Name::RelativeQualified(result)
                     }
+                },
+
+                None => {
+                    if result.len() > 1 {
+                        Name::Qualified(result)
+                    } else {
+                        Name::Unqualified(result[0])
+                    }
+                }
             }
         }
     )
