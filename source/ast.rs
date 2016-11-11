@@ -372,6 +372,35 @@ pub enum Expression<'a> {
     /// ```
     Empty(Box<Expression<'a>>),
 
+    /// Eval.
+    /// Late evaluation of a PHP program represented as a string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"eval('1 + 2;')"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Eval(
+    ///             Box::new(
+    ///                 Expression::Literal(
+    ///                     Literal::String(b"1 + 2;".to_vec())
+    ///                 )
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Eval(Box<Expression<'a>>),
+
     /// Unset.
     /// Unset the variables designated by each expression.
     ///

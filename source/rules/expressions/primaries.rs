@@ -94,7 +94,10 @@ named!(
 
 named!(
     intrinsic_operator<Expression>,
-    call!(intrinsic_empty)
+    alt!(
+        intrinsic_empty
+      | intrinsic_eval
+    )
 );
 
 named!(
@@ -184,6 +187,28 @@ fn empty_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()>
     Ok(Expression::Empty(Box::new(expression)))
 }
 
+named!(
+    intrinsic_eval<Expression>,
+    map_res!(
+        preceded!(
+            keyword!(tokens::EVAL),
+            preceded!(
+                first!(tag!(tokens::LEFT_PARENTHESIS)),
+                terminated!(
+                    first!(expression),
+                    first!(tag!(tokens::RIGHT_PARENTHESIS))
+                )
+            )
+        ),
+        eval_mapper
+    )
+);
+
+#[inline(always)]
+fn eval_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+    Ok(Expression::Eval(Box::new(expression)))
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -192,6 +217,7 @@ mod tests {
         intrinsic_construct,
         intrinsic_echo,
         intrinsic_empty,
+        intrinsic_eval,
         intrinsic_operator,
         intrinsic_unset,
         primary
@@ -375,13 +401,32 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_empty_expression_missing() {
-        let input    = b"empty()";
-        let output_a = Result::Error(Error::Position(ErrorKind::Alt, &b")"[..]));
-        let output_b = Result::Error(Error::Position(ErrorKind::Alt, &b"empty()"[..]));
+        let input  = b"empty()";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"empty()"[..]));
 
-        assert_eq!(intrinsic_empty(input), output_a);
-        assert_eq!(intrinsic_operator(input), output_a);
-        assert_eq!(intrinsic(input), output_b);
-        assert_eq!(expression(input), output_b);
+        assert_eq!(intrinsic_empty(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_eval() {
+        let input  = b"eval('1 + 2;')";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Eval(
+                Box::new(
+                    Expression::Literal(
+                        Literal::String(b"1 + 2;".to_vec())
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_eval(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
     }
 }
