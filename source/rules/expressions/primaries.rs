@@ -49,7 +49,19 @@ use super::super::super::ast::{
     Name,
     Variable
 };
+use super::super::super::internal::{
+    Error,
+    ErrorKind
+};
 use super::super::super::tokens;
+
+/// Intrinsic errors.
+pub enum IntrinsicError {
+    /// The exit code is reserved (only 255 is reserved to PHP).
+    ReservedExitCode,
+    /// The exit code is out of range if greater than 255.
+    OutOfRangeExitCode
+}
 
 named!(
     pub primary<Expression>,
@@ -97,6 +109,7 @@ named!(
     alt!(
         intrinsic_empty
       | intrinsic_eval
+      | intrinsic_exit
     )
 );
 
@@ -209,6 +222,49 @@ fn eval_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> 
     Ok(Expression::Eval(Box::new(expression)))
 }
 
+named!(
+    intrinsic_exit<Expression>,
+    map_res!(
+        preceded!(
+            alt!(
+                keyword!(tokens::EXIT)
+              | keyword!(tokens::DIE)
+            ),
+            opt!(
+                preceded!(
+                    first!(tag!(tokens::LEFT_PARENTHESIS)),
+                    terminated!(
+                        first!(expression),
+                        first!(tag!(tokens::RIGHT_PARENTHESIS))
+                    )
+                )
+            )
+        ),
+        exit_mapper
+    )
+);
+
+#[inline(always)]
+fn exit_mapper<'a>(expression: Option<Expression<'a>>) -> StdResult<Expression<'a>, Error<ErrorKind>> {
+    match expression {
+        Some(expression) => {
+            if let Expression::Literal(Literal::Integer(code)) = expression {
+                if code == 255 {
+                    return Err(Error::Code(ErrorKind::Custom(IntrinsicError::ReservedExitCode as u32)));
+                } else if code > 255 {
+                    return Err(Error::Code(ErrorKind::Custom(IntrinsicError::OutOfRangeExitCode as u32)));
+                }
+            }
+
+            Ok(Expression::Exit(Some(Box::new(expression))))
+        },
+
+        None => {
+            Ok(Expression::Exit(None))
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -218,6 +274,7 @@ mod tests {
         intrinsic_echo,
         intrinsic_empty,
         intrinsic_eval,
+        intrinsic_exit,
         intrinsic_operator,
         intrinsic_unset,
         primary
@@ -436,6 +493,160 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"eval()"[..]));
 
         assert_eq!(intrinsic_eval(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_exit() {
+        let input  = b"exit(42)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Exit(
+                Some(
+                    Box::new(
+                        Expression::Literal(
+                            Literal::Integer(42i64)
+                        )
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_exit(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_exit_with_no_argument() {
+        let input  = b"exit 42";
+        let output = Result::Done(&b" 42"[..], Expression::Exit(None));
+
+        assert_eq!(intrinsic_exit(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_exit_with_a_variable() {
+        let input  = b"exit($foo)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Exit(
+                Some(
+                    Box::new(
+                        Expression::Variable(
+                            Variable(&b"foo"[..])
+                        )
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_exit(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_exit_with_reserved_code_255() {
+        let input  = b"exit(255)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"exit(255)"[..]));
+
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"exit(255)"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_exit_with_out_of_range_code() {
+        let input  = b"exit(256)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"exit(256)"[..]));
+
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"exit(256)"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_die() {
+        let input  = b"die(42)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Exit(
+                Some(
+                    Box::new(
+                        Expression::Literal(
+                            Literal::Integer(42i64)
+                        )
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_exit(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_die_with_no_parenthesis() {
+        let input  = b"die 42";
+        let output = Result::Done(&b" 42"[..], Expression::Exit(None));
+
+        assert_eq!(intrinsic_exit(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_die_with_a_variable() {
+        let input  = b"die($foo)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Exit(
+                Some(
+                    Box::new(
+                        Expression::Variable(
+                            Variable(&b"foo"[..])
+                        )
+                    )
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_exit(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_die_with_reserved_code_255() {
+        let input  = b"die(255)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"die(255)"[..]));
+
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(255)"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_die_with_out_of_range_code() {
+        let input  = b"die(256)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"die(256)"[..]));
+
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(256)"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);

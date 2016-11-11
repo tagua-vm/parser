@@ -401,6 +401,37 @@ pub enum Expression<'a> {
     /// ```
     Eval(Box<Expression<'a>>),
 
+    /// Exit.
+    /// Terminate the current script.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"exit(42)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Exit(
+    ///             Some(
+    ///                 Box::new(
+    ///                     Expression::Literal(
+    ///                         Literal::Integer(42i64)
+    ///                     )
+    ///                 )
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Exit(Option<Box<Expression<'a>>>),
+
     /// Unset.
     /// Unset the variables designated by each expression.
     ///
