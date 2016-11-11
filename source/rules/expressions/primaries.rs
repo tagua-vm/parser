@@ -429,4 +429,15 @@ mod tests {
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
     }
+
+    #[test]
+    fn case_invalid_intrinsic_eval_expression_missing() {
+        let input  = b"eval()";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"eval()"[..]));
+
+        assert_eq!(intrinsic_eval(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
 }
