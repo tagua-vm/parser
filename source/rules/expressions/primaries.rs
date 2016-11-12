@@ -154,7 +154,7 @@ named!(
                 keyword!(tokens::UNSET),
                 preceded!(
                     first!(tag!(tokens::LEFT_PARENTHESIS)),
-                    first!(variable)
+                    first!(expression)
                 )
             ),
             into_vector_mapper
@@ -163,7 +163,7 @@ named!(
             fold_many0!(
                 preceded!(
                     first!(tag!(tokens::COMMA)),
-                    first!(variable)
+                    first!(expression)
                 ),
                 accumulator,
                 fold_into_vector
@@ -175,8 +175,8 @@ named!(
 );
 
 #[inline(always)]
-fn unset_mapper<'a>(variables: Vec<Variable<'a>>) -> Expression<'a> {
-    Expression::Unset(variables)
+fn unset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+    Expression::Unset(expressions)
 }
 
 named!(
@@ -410,7 +410,7 @@ mod tests {
             &b""[..],
             Expression::Unset(
                 vec![
-                    Variable(&b"foo"[..])
+                    Expression::Variable(Variable(&b"foo"[..]))
                 ]
             )
         );
@@ -428,8 +428,8 @@ mod tests {
             &b""[..],
             Expression::Unset(
                 vec![
-                    Variable(&b"foo"[..]),
-                    Variable(&b"bar"[..])
+                    Expression::Variable(Variable(&b"foo"[..])),
+                    Expression::Variable(Variable(&b"bar"[..]))
                 ]
             )
         );
@@ -445,7 +445,7 @@ mod tests {
         let input  = b"unset()";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"unset()"[..]));
 
-        assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Tag, &b")"[..])));
+        assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);

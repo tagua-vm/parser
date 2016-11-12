@@ -477,13 +477,13 @@ pub enum Expression<'a> {
     ///         &b""[..],
     ///         Expression::Unset(
     ///             vec![
-    ///                 Variable(&b"foo"[..]),
-    ///                 Variable(&b"bar"[..])
+    ///                 Expression::Variable(Variable(&b"foo"[..])),
+    ///                 Expression::Variable(Variable(&b"bar"[..]))
     ///             ]
     ///         )
     ///     )
     /// );
     /// # }
     /// ```
-    Unset(Vec<Variable<'a>>)
+    Unset(Vec<Expression<'a>>)
 }
