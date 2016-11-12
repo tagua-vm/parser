@@ -100,7 +100,6 @@ named!(
     intrinsic_construct<Expression>,
     alt!(
         intrinsic_echo
-      | intrinsic_isset
       | intrinsic_unset
     )
 );
@@ -111,6 +110,7 @@ named!(
         intrinsic_empty
       | intrinsic_eval
       | intrinsic_exit
+      | intrinsic_isset
     )
 );
 
@@ -700,7 +700,7 @@ mod tests {
         );
 
         assert_eq!(intrinsic_isset(input), output);
-        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
     }
@@ -719,7 +719,7 @@ mod tests {
         );
 
         assert_eq!(intrinsic_isset(input), output);
-        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
     }
@@ -730,7 +730,7 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"isset()"[..]));
 
         assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
-        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
     }
