@@ -433,6 +433,8 @@ pub enum Expression<'a> {
     Exit(Option<Box<Expression<'a>>>),
 
     /// Isset.
+    /// Return `TRUE` if all expressions set and their values are not
+    /// `NULL`. Otherwise, it returns `FALSE`.
     ///
     /// # Examples
     ///
