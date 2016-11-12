@@ -311,6 +311,45 @@ pub enum Expression<'a> {
     /// ```
     Literal(Literal),
 
+    /// Array.
+    /// A collection of heterogeneous pairs (key, value). The key is
+    /// optional.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"['foo', 42 => 'bar', 'baz' => $qux]"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Array(
+    ///             vec![
+    ///                 (
+    ///                     None,
+    ///                     Expression::Literal(Literal::String(b"foo".to_vec()))
+    ///                 ),
+    ///                 (
+    ///                     Some(Expression::Literal(Literal::Integer(42i64))),
+    ///                     Expression::Literal(Literal::String(b"bar".to_vec()))
+    ///                 ),
+    ///                 (
+    ///                     Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+    ///                     Expression::Variable(Variable(&b"qux"[..]))
+    ///                 )
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Array(Vec<(Option<Expression<'a>>, Expression<'a>)>),
+
     /// An echo.
     /// Echo converts each of its expression's values into strings,
     /// concatenates them in order given, and writes the result to the

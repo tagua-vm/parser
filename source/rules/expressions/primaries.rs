@@ -107,7 +107,8 @@ named!(
 named!(
     intrinsic_operator<Expression>,
     alt!(
-        intrinsic_empty
+        intrinsic_array
+      | intrinsic_empty
       | intrinsic_eval
       | intrinsic_exit
       | intrinsic_isset
@@ -178,6 +179,61 @@ named!(
 #[inline(always)]
 fn unset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Unset(expressions)
+}
+
+named!(
+    intrinsic_array<Expression>,
+    alt!(
+        map_res!(
+            preceded!(
+                tag!(tokens::LEFT_SQUARE_BRACKET),
+                first!(tag!(tokens::RIGHT_SQUARE_BRACKET))
+            ),
+            empty_array_mapper
+        )
+      | chain!(
+            tag!(tokens::LEFT_SQUARE_BRACKET) ~
+            accumulator: map_res!(
+                first!(intrinsic_array_pair),
+                into_vector_mapper
+            ) ~
+            result: fold_many0!(
+                preceded!(
+                    first!(tag!(tokens::COMMA)),
+                    first!(intrinsic_array_pair)
+                ),
+                accumulator,
+                fold_into_vector
+            ) ~
+            opt!(tag!(tokens::COMMA)) ~
+            tag!(tokens::RIGHT_SQUARE_BRACKET),
+            || { array_mapper(result) }
+        )
+    )
+);
+
+named!(
+    intrinsic_array_pair<(Option<Expression>, Expression)>,
+    chain!(
+        key: opt!(
+            terminated!(
+                expression,
+                first!(tag!(tokens::MAP))
+            )
+        ) ~
+        value: first!(expression),
+        || { (key, value) }
+    )
+);
+
+#[inline(always)]
+fn empty_array_mapper<'a>(_: &[u8]) -> StdResult<Expression<'a>, ()> {
+    Ok(Expression::Array(vec![]))
+}
+
+#[inline(always)]
+fn array_mapper<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) -> Expression<'a> {
+    Expression::Array(expressions)
 }
 
 named!(
@@ -321,6 +377,7 @@ fn print_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()>
 mod tests {
     use super::{
         intrinsic,
+        intrinsic_array,
         intrinsic_construct,
         intrinsic_echo,
         intrinsic_empty,
@@ -777,6 +834,84 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"print;"[..]));
 
         assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_array_empty() {
+        let input  = b"[]";
+        let output = Result::Done(&b""[..], Expression::Array(vec![]));
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_array_one_value() {
+        let input  = b"['foo']";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![(
+                    None,
+                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                )]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_array_one_pair() {
+        let input  = b"[42 => 'foo']";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![(
+                    Some(Expression::Literal(Literal::Integer(42i64))),
+                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                )]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_array_many_pairs() {
+        let input  = b"['foo', 42 => 'bar', 'baz' => $qux]";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![
+                    (
+                        None,
+                        Expression::Literal(Literal::String(b"foo".to_vec()))
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::Integer(42i64))),
+                        Expression::Literal(Literal::String(b"bar".to_vec()))
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                        Expression::Variable(Variable(&b"qux"[..]))
+                    )
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);

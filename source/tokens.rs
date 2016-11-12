@@ -393,6 +393,10 @@ token!(
     "The `LIST` token.\n\nRepresent the destructuring operator, e.g. `list($x, $y) = $a`."
 );
 token!(
+    pub MAP: b"=>";
+    "The `MAP` token.\n\nRepresent the mapping operator in an array, e.g. `[42 => 'foo']`."
+);
+token!(
     pub MODULO: b"%";
     "The `MODULO` token.\n\nRepresent the modulus operator, e.g. `$x % $y`."
 );
