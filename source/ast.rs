@@ -461,6 +461,34 @@ pub enum Expression<'a> {
     /// ```
     Isset(Vec<Expression<'a>>),
 
+    /// Print.
+    /// Unlike `echo`, `print` can be used in any context allowing an
+    /// expression. It always returns the value `1`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"print $foo"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Print(
+    ///             Box::new(
+    ///                 Expression::Variable(Variable(&b"foo"[..])),
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Print(Box<Expression<'a>>),
+
     /// Unset.
     /// Unset the variables designated by each expression.
     ///

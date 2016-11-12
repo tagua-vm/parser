@@ -111,6 +111,7 @@ named!(
       | intrinsic_eval
       | intrinsic_exit
       | intrinsic_isset
+      | intrinsic_print
     )
 );
 
@@ -299,6 +300,22 @@ fn isset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Isset(expressions)
 }
 
+named!(
+    intrinsic_print<Expression>,
+    map_res!(
+        preceded!(
+            keyword!(tokens::PRINT),
+            first!(expression)
+        ),
+        print_mapper
+    )
+);
+
+#[inline(always)]
+fn print_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+    Ok(Expression::Print(Box::new(expression)))
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -311,6 +328,7 @@ mod tests {
         intrinsic_exit,
         intrinsic_isset,
         intrinsic_operator,
+        intrinsic_print,
         intrinsic_unset,
         primary
     };
@@ -730,6 +748,35 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"isset()"[..]));
 
         assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_print() {
+        let input  = b"print /* baz */ 'foobar'";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Print(
+                Box::new(
+                    Expression::Literal(Literal::String(b"foobar".to_vec()))
+                )
+            )
+        );
+
+        assert_eq!(intrinsic_print(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_print_expression_missing() {
+        let input  = b"print;";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"print;"[..]));
+
+        assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
