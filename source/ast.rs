@@ -432,6 +432,33 @@ pub enum Expression<'a> {
     /// ```
     Exit(Option<Box<Expression<'a>>>),
 
+    /// Isset.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"isset($foo, $bar)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Isset(
+    ///             vec![
+    ///                 Expression::Variable(Variable(&b"foo"[..])),
+    ///                 Expression::Variable(Variable(&b"bar"[..]))
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Isset(Vec<Expression<'a>>),
+
     /// Unset.
     /// Unset the variables designated by each expression.
     ///

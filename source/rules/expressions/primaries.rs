@@ -100,6 +100,7 @@ named!(
     intrinsic_construct<Expression>,
     alt!(
         intrinsic_echo
+      | intrinsic_isset
       | intrinsic_unset
     )
 );
@@ -265,6 +266,39 @@ fn exit_mapper<'a>(expression: Option<Expression<'a>>) -> StdResult<Expression<'
     }
 }
 
+named!(
+    intrinsic_isset<Expression>,
+    chain!(
+        accumulator: map_res!(
+            preceded!(
+                keyword!(tokens::ISSET),
+                preceded!(
+                    first!(tag!(tokens::LEFT_PARENTHESIS)),
+                    first!(expression)
+                )
+            ),
+            into_vector_mapper
+        ) ~
+        result: terminated!(
+            fold_many0!(
+                preceded!(
+                    first!(tag!(tokens::COMMA)),
+                    first!(expression)
+                ),
+                accumulator,
+                fold_into_vector
+            ),
+            first!(tag!(tokens::RIGHT_PARENTHESIS))
+        ),
+        || { isset_mapper(result) }
+    )
+);
+
+#[inline(always)]
+fn isset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+    Expression::Isset(expressions)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -275,6 +309,7 @@ mod tests {
         intrinsic_empty,
         intrinsic_eval,
         intrinsic_exit,
+        intrinsic_isset,
         intrinsic_operator,
         intrinsic_unset,
         primary
@@ -648,6 +683,54 @@ mod tests {
 
         assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(256)"[..])));
         assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_isset_one_variable() {
+        let input  = b"isset($foo)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Isset(
+                vec![
+                    Expression::Variable(Variable(&b"foo"[..]))
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_isset(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_isset_many_variables() {
+        let input  = b"isset($foo, $bar)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Isset(
+                vec![
+                    Expression::Variable(Variable(&b"foo"[..])),
+                    Expression::Variable(Variable(&b"bar"[..]))
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_isset(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_isset_zero_variable() {
+        let input  = b"isset()";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"isset()"[..]));
+
+        assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
     }
