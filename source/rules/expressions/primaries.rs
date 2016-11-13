@@ -205,8 +205,8 @@ named!(
                 accumulator,
                 fold_into_vector
             ) ~
-            opt!(tag!(tokens::COMMA)) ~
-            tag!(tokens::RIGHT_SQUARE_BRACKET),
+            opt!(first!(tag!(tokens::COMMA))) ~
+            first!(tag!(tokens::RIGHT_SQUARE_BRACKET)),
             || { array_mapper(result) }
         )
     )
