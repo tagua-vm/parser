@@ -942,6 +942,35 @@ mod tests {
     }
 
     #[test]
+    fn case_intrinsic_array_trailing_comma() {
+        let input  = b"[1, 2, 3, /* foo */]";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(1i64))
+                    ),
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(2i64))
+                    ),
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(3i64))
+                    )
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
     fn case_intrinsic_array_recursive() {
         let input  = b"['foo', 42 => [3 => 5, 7 => [11 => '13']], 'baz' => $qux]";
         let output = Result::Done(
@@ -981,6 +1010,28 @@ mod tests {
         );
 
         assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_array_trailing_commas() {
+        let input  = b"[1, 2, 3,,]";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"[1, 2, 3,,]"[..]));
+
+        assert_eq!(intrinsic_array(input), Result::Error(Error::Position(ErrorKind::Alt, &b"[1, 2, 3,,]"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_array_empty_trailing_comma() {
+        let input  = b"[,]";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"[,]"[..]));
+
+        assert_eq!(intrinsic_array(input), Result::Error(Error::Position(ErrorKind::Alt, &b"[,]"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
@@ -1053,6 +1104,35 @@ mod tests {
                     (
                         Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
                         Expression::Variable(Variable(&b"qux"[..]))
+                    )
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_array_long_syntax_trailing_comma() {
+        let input  = b"array(1, 2, 3, /* foo */)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(1i64))
+                    ),
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(2i64))
+                    ),
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(3i64))
                     )
                 ]
             )
