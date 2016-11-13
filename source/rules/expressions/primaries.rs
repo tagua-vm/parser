@@ -916,4 +916,49 @@ mod tests {
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
     }
+
+    #[test]
+    fn case_intrinsic_array_recursive() {
+        let input  = b"['foo', 42 => [3 => 5, 7 => [11 => '13']], 'baz' => $qux]";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![
+                    (
+                        None,
+                        Expression::Literal(Literal::String(b"foo".to_vec()))
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::Integer(42i64))),
+                        Expression::Array(
+                            vec![
+                                (
+                                    Some(Expression::Literal(Literal::Integer(3i64))),
+                                    Expression::Literal(Literal::Integer(5i64))
+                                ),
+                                (
+                                    Some(Expression::Literal(Literal::Integer(7i64))),
+                                    Expression::Array(
+                                        vec![(
+                                            Some(Expression::Literal(Literal::Integer(11i64))),
+                                            Expression::Literal(Literal::String(b"13".to_vec()))
+                                        )]
+                                    )
+                                )
+                            ]
+                        )
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                        Expression::Variable(Variable(&b"qux"[..]))
+                    )
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
 }
