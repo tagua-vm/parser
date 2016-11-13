@@ -183,31 +183,30 @@ fn unset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
 
 named!(
     intrinsic_array<Expression>,
-    alt!(
-        map_res!(
-            preceded!(
-                tag!(tokens::LEFT_SQUARE_BRACKET),
-                first!(tag!(tokens::RIGHT_SQUARE_BRACKET))
-            ),
-            empty_array_mapper
-        )
-      | chain!(
-            tag!(tokens::LEFT_SQUARE_BRACKET) ~
-            accumulator: map_res!(
-                first!(intrinsic_array_pair),
-                into_vector_mapper
-            ) ~
-            result: fold_many0!(
-                preceded!(
-                    first!(tag!(tokens::COMMA)),
-                    first!(intrinsic_array_pair)
-                ),
-                accumulator,
-                fold_into_vector
-            ) ~
-            opt!(first!(tag!(tokens::COMMA))) ~
-            first!(tag!(tokens::RIGHT_SQUARE_BRACKET)),
-            || { array_mapper(result) }
+    preceded!(
+        tag!(tokens::LEFT_SQUARE_BRACKET),
+        alt!(
+            map_res!(
+                first!(tag!(tokens::RIGHT_SQUARE_BRACKET)),
+                empty_array_mapper
+            )
+            | chain!(
+                accumulator: map_res!(
+                    first!(intrinsic_array_pair),
+                    into_vector_mapper
+                ) ~
+                result: fold_many0!(
+                    preceded!(
+                        first!(tag!(tokens::COMMA)),
+                        first!(intrinsic_array_pair)
+                    ),
+                    accumulator,
+                    fold_into_vector
+                ) ~
+                opt!(first!(tag!(tokens::COMMA))) ~
+                first!(tag!(tokens::RIGHT_SQUARE_BRACKET)),
+                || { array_mapper(result) }
+            )
         )
     )
 );
