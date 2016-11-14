@@ -254,63 +254,6 @@ pub enum Name<'a> {
 /// An expression.
 #[derive(Debug, PartialEq)]
 pub enum Expression<'a> {
-    /// A variable. See `Variable`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Variable};
-    /// use tagua_parser::rules::expressions::expression;
-    ///
-    /// # fn main () {
-    /// assert_eq!(
-    ///     expression(b"$foo"),
-    ///     Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])))
-    /// );
-    /// # }
-    /// ```
-    Variable(Variable<'a>),
-
-    /// A name. See `Name`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Name};
-    /// use tagua_parser::rules::expressions::expression;
-    ///
-    /// # fn main () {
-    /// assert_eq!(
-    ///     expression(b"Foo\\Bar"),
-    ///     Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])))
-    /// );
-    /// # }
-    /// ```
-    Name(Name<'a>),
-
-    /// A literal. See `Literal`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal};
-    /// use tagua_parser::rules::expressions::expression;
-    ///
-    /// # fn main () {
-    /// assert_eq!(
-    ///     expression(b"'Hello, World!'"),
-    ///     Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())))
-    /// );
-    /// # }
-    /// ```
-    Literal(Literal),
-
     /// Array.
     /// A collection of heterogeneous pairs (key, value). The key is
     /// optional.
@@ -500,6 +443,44 @@ pub enum Expression<'a> {
     /// ```
     Isset(Vec<Expression<'a>>),
 
+    /// A literal. See `Literal`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"'Hello, World!'"),
+    ///     Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())))
+    /// );
+    /// # }
+    /// ```
+    Literal(Literal),
+
+    /// A name. See `Name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Name};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"Foo\\Bar"),
+    ///     Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])))
+    /// );
+    /// # }
+    /// ```
+    Name(Name<'a>),
+
     /// Print.
     /// Unlike `echo`, `print` can be used in any context allowing an
     /// expression. It always returns the value `1`.
@@ -586,5 +567,24 @@ pub enum Expression<'a> {
     /// );
     /// # }
     /// ```
-    Unset(Vec<Expression<'a>>)
+    Unset(Vec<Expression<'a>>),
+
+    /// A variable. See `Variable`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"$foo"),
+    ///     Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])))
+    /// );
+    /// # }
+    /// ```
+    Variable(Variable<'a>)
 }
