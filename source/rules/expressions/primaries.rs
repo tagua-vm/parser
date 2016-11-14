@@ -785,7 +785,7 @@ mod tests {
     }
 
     #[test]
-    fn case_primary_variable() {
+    fn case_variable() {
         let input  = b"$foo";
         let output = Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])));
 
@@ -794,7 +794,7 @@ mod tests {
     }
 
     #[test]
-    fn case_primary_qualified_name() {
+    fn case_qualified_name() {
         let input  = b"Foo\\Bar";
         let output = Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
 
@@ -803,7 +803,7 @@ mod tests {
     }
 
     #[test]
-    fn case_primary_literal() {
+    fn case_literal() {
         let input  = b"'Hello, World!'";
         let output = Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())));
 
