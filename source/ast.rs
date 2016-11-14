@@ -50,22 +50,6 @@ pub struct Addition {
 /// A literal represents a fixed value, aka an atom.
 #[derive(Debug, PartialEq)]
 pub enum Literal {
-    /// A null value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::Literal;
-    /// use tagua_parser::rules::literals::literal;
-    ///
-    /// # fn main () {
-    /// assert_eq!(literal(b"null"), Result::Done(&b""[..], Literal::Null));
-    /// # }
-    /// ```
-    Null,
-
     /// A boolean, either `true` or `false`.
     ///
     /// # Examples
@@ -103,6 +87,22 @@ pub enum Literal {
     /// # }
     /// ```
     Integer(i64),
+
+    /// A null value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::Literal;
+    /// use tagua_parser::rules::literals::literal;
+    ///
+    /// # fn main () {
+    /// assert_eq!(literal(b"null"), Result::Done(&b""[..], Literal::Null));
+    /// # }
+    /// ```
+    Null,
 
     /// A real, for instance an exponential number.
     ///
