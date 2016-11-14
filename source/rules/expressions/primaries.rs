@@ -245,7 +245,16 @@ named!(
                 first!(tag!(tokens::MAP))
             )
         ) ~
-        value: first!(expression),
+        value: alt!(
+            map_res!(
+                preceded!(
+                    first!(tag!(tokens::REFERENCE)),
+                    first!(expression)
+                ),
+                value_by_reference_array_mapper
+            )
+          | first!(expression)
+        ),
         || { (key, value) }
     )
 );
@@ -253,6 +262,11 @@ named!(
 #[inline(always)]
 fn empty_array_mapper<'a>(_: &[u8]) -> StdResult<Expression<'a>, ()> {
     Ok(Expression::Array(vec![]))
+}
+
+#[inline(always)]
+fn value_by_reference_array_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+    Ok(Expression::Reference(Box::new(expression)))
 }
 
 #[inline(always)]
@@ -1016,6 +1030,33 @@ mod tests {
     }
 
     #[test]
+    fn case_intrinsic_array_value_by_reference() {
+        let input  = b"[7 => &$foo, 42 => $bar]";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![
+                    (
+                        Some(Expression::Literal(Literal::Integer(7i64))),
+                        Expression::Reference(
+                            Box::new(Expression::Variable(Variable(&b"foo"[..])))
+                        )
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::Integer(42i64))),
+                        Expression::Variable(Variable(&b"bar"[..]))
+                    )
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
     fn case_invalid_intrinsic_array_trailing_commas() {
         let input  = b"[1, 2, 3,,]";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"[1, 2, 3,,]"[..]));
@@ -1178,6 +1219,33 @@ mod tests {
                     (
                         Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
                         Expression::Variable(Variable(&b"qux"[..]))
+                    )
+                ]
+            )
+        );
+
+        assert_eq!(intrinsic_array(input), output);
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_array_long_syntax_value_by_reference() {
+        let input  = b"array(7 => &$foo, 42 => $bar)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::Array(
+                vec![
+                    (
+                        Some(Expression::Literal(Literal::Integer(7i64))),
+                        Expression::Reference(
+                            Box::new(Expression::Variable(Variable(&b"foo"[..])))
+                        )
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::Integer(42i64))),
+                        Expression::Variable(Variable(&b"bar"[..]))
                     )
                 ]
             )

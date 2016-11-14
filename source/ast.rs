@@ -528,6 +528,38 @@ pub enum Expression<'a> {
     /// ```
     Print(Box<Expression<'a>>),
 
+    /// Reference.
+    /// Describe an expression assignment by reference.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"[7 => &$foo]"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::Array(
+    ///             vec![
+    ///                 (
+    ///                     Some(Expression::Literal(Literal::Integer(7i64))),
+    ///                     Expression::Reference(
+    ///                         Box::new(Expression::Variable(Variable(&b"foo"[..])))
+    ///                     )
+    ///                 )
+    ///             ]
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    Reference(Box<Expression<'a>>),
+
     /// Unset.
     /// Unset the variables designated by each expression.
     ///
