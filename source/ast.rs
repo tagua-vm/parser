@@ -443,6 +443,9 @@ pub enum Expression<'a> {
     /// ```
     Isset(Vec<Expression<'a>>),
 
+    /// List.
+    List(Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>),
+
     /// A literal. See `Literal`.
     ///
     /// # Examples
