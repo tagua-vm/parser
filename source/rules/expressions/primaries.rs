@@ -71,6 +71,13 @@ named!(
       | literal        => { literal_mapper }
       | array
       | intrinsic
+      | preceded!(
+            tag!(tokens::LEFT_PARENTHESIS),
+            terminated!(
+                first!(expression),
+                first!(tag!(tokens::RIGHT_PARENTHESIS))
+            )
+        )
     )
 );
 
@@ -1216,6 +1223,17 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"print;"[..]));
 
         assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_operator(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_grouped_by_parenthesis() {
+        let input  = b"print (((('foobar'))))";
+        let output = intrinsic_print(b"print 'foobar'");
+
+        assert_eq!(intrinsic_print(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
