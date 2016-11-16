@@ -114,7 +114,7 @@ named!(
         )
       | preceded!(
             preceded!(
-                tag!(tokens::ARRAY),
+                keyword!(tokens::ARRAY),
                 first!(tag!(tokens::LEFT_PARENTHESIS))
             ),
             alt!(
