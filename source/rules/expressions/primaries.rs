@@ -149,7 +149,7 @@ named!(
             fold_into_vector
         ) ~
         opt!(first!(tag!(tokens::COMMA))),
-        || { array_mapper(result) }
+        || { into_array(result) }
     )
 );
 
@@ -187,7 +187,7 @@ fn value_by_reference_array_mapper<'a>(expression: Expression<'a>) -> StdResult<
 }
 
 #[inline(always)]
-fn array_mapper<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) -> Expression<'a> {
+fn into_array<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) -> Expression<'a> {
     Expression::Array(expressions)
 }
 
@@ -237,7 +237,7 @@ named!(
             accumulator,
             fold_into_vector
         ),
-        || { echo_mapper(result) }
+        || { into_echo(result) }
     )
 );
 
@@ -247,7 +247,7 @@ fn into_vector_mapper<T>(item: T) -> StdResult<Vec<T>, ()> {
 }
 
 #[inline(always)]
-fn echo_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+fn into_echo<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Echo(expressions)
 }
 
@@ -287,7 +287,7 @@ named!(
             fold_into_vector
         ) ~
         opt!(first!(tag!(tokens::COMMA))),
-        || { into_intrinsic_list(result) }
+        || { into_list(result) }
     )
 );
 
@@ -306,7 +306,7 @@ named!(
             accumulator,
             fold_into_vector
         ),
-        || { into_intrinsic_list(result) }
+        || { into_list(result) }
     )
 );
 
@@ -331,7 +331,7 @@ named!(
 );
 
 #[inline(always)]
-fn into_intrinsic_list<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>) -> Expression<'a> {
+fn into_list<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>) -> Expression<'a> {
     Expression::List(expressions)
 }
 
@@ -376,12 +376,12 @@ named!(
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
-        || { unset_mapper(result) }
+        || { into_unset(result) }
     )
 );
 
 #[inline(always)]
-fn unset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+fn into_unset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Unset(expressions)
 }
 
@@ -496,12 +496,12 @@ named!(
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
-        || { isset_mapper(result) }
+        || { into_isset(result) }
     )
 );
 
 #[inline(always)]
-fn isset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+fn into_isset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Isset(expressions)
 }
 
