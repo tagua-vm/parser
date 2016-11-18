@@ -60,7 +60,9 @@ pub enum IntrinsicError {
     /// The exit code is reserved (only 255 is reserved to PHP).
     ReservedExitCode,
     /// The exit code is out of range if greater than 255.
-    OutOfRangeExitCode
+    OutOfRangeExitCode,
+    /// The list constructor must contain at least one item.
+    ListIsEmpty
 }
 
 named!(
@@ -251,18 +253,21 @@ fn echo_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
 
 named!(
     pub intrinsic_list<Expression>,
-    preceded!(
+    map_res!(
         preceded!(
-            keyword!(tokens::LIST),
-            first!(tag!(tokens::LEFT_PARENTHESIS))
-        ),
-        terminated!(
-            alt!(
-                intrinsic_keyed_list
-              | intrinsic_unkeyed_list
+            preceded!(
+                keyword!(tokens::LIST),
+                first!(tag!(tokens::LEFT_PARENTHESIS))
             ),
-            first!(tag!(tokens::RIGHT_PARENTHESIS))
-        )
+            terminated!(
+                alt!(
+                    intrinsic_keyed_list
+                | intrinsic_unkeyed_list
+                ),
+                first!(tag!(tokens::RIGHT_PARENTHESIS))
+            )
+        ),
+        intrinsic_list_mapper
     )
 );
 
@@ -282,7 +287,7 @@ named!(
             fold_into_vector
         ) ~
         opt!(first!(tag!(tokens::COMMA))),
-        || { intrinsic_list_mapper(result) }
+        || { into_intrinsic_list(result) }
     )
 );
 
@@ -301,7 +306,7 @@ named!(
             accumulator,
             fold_into_vector
         ),
-        || { intrinsic_list_mapper(result) }
+        || { into_intrinsic_list(result) }
     )
 );
 
@@ -326,8 +331,25 @@ named!(
 );
 
 #[inline(always)]
-fn intrinsic_list_mapper<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>) -> Expression<'a> {
+fn into_intrinsic_list<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>) -> Expression<'a> {
     Expression::List(expressions)
+}
+
+#[inline(always)]
+fn intrinsic_list_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, Error<ErrorKind>> {
+    match expression {
+        Expression::List(items) => {
+            if items.iter().any(|ref item| item.is_some()) {
+                Ok(Expression::List(items))
+            } else {
+                Err(Error::Code(ErrorKind::Custom(IntrinsicError::ListIsEmpty as u32)))
+            }
+        },
+
+        _ => {
+            Ok(expression)
+        }
+    }
 }
 
 named!(
@@ -951,21 +973,7 @@ mod tests {
     }
 
     #[test]
-    fn case_intrinsic_list_empty() {
-        let input  = b"list()";
-        let output = Result::Done(
-            &b""[..],
-            Expression::List(vec![None])
-        );
-
-        assert_eq!(intrinsic_list(input), output);
-        assert_eq!(intrinsic_construct(input), output);
-        assert_eq!(intrinsic(input), output);
-        assert_eq!(expression(input), output);
-    }
-
-    #[test]
-    fn case_intrinsic_list_keyed_one_matching() {
+    fn case_intrinsic_list_keyed_one_pattern() {
         let input  = b"list('foo' => $foo)";
         let output = Result::Done(
             &b""[..],
@@ -984,7 +992,7 @@ mod tests {
     }
 
     #[test]
-    fn case_intrinsic_list_keyed_many_matchings() {
+    fn case_intrinsic_list_keyed_many_patterns() {
         let input  = b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)";
         let output = Result::Done(
             &b""[..],
@@ -1068,7 +1076,7 @@ mod tests {
     }
 
     #[test]
-    fn case_intrinsic_list_unkeyed_one_matching() {
+    fn case_intrinsic_list_unkeyed_one_pattern() {
         let input  = b"list($foo)";
         let output = Result::Done(
             &b""[..],
@@ -1087,7 +1095,7 @@ mod tests {
     }
 
     #[test]
-    fn case_intrinsic_list_unkeyed_many_matchings() {
+    fn case_intrinsic_list_unkeyed_many_patterns() {
         let input  = b"list($foo, $bar, $baz)";
         let output = Result::Done(
             &b""[..],
@@ -1114,7 +1122,7 @@ mod tests {
     }
 
     #[test]
-    fn case_intrinsic_list_unkeyed_free_matchings() {
+    fn case_intrinsic_list_unkeyed_free_patterns() {
         let input  = b"list($foo, , $bar, , , $baz,)";
         let output = Result::Done(
             &b""[..],
@@ -1187,6 +1195,28 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list('foo' => $foo, $bar)"[..]));
 
         assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, &b"$bar)"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_list_empty() {
+        let input  = b"list()";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list()"[..]));
+
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list()"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_list_only_free_patterns() {
+        let input  = b"list(,,,)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list(,,,)"[..]));
+
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list(,,,)"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
