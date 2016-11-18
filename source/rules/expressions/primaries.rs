@@ -262,7 +262,7 @@ named!(
             terminated!(
                 alt!(
                     intrinsic_keyed_list
-                | intrinsic_unkeyed_list
+                  | intrinsic_unkeyed_list
                 ),
                 first!(tag!(tokens::RIGHT_PARENTHESIS))
             )
