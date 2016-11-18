@@ -60,7 +60,9 @@ pub enum IntrinsicError {
     /// The exit code is reserved (only 255 is reserved to PHP).
     ReservedExitCode,
     /// The exit code is out of range if greater than 255.
-    OutOfRangeExitCode
+    OutOfRangeExitCode,
+    /// The list constructor must contain at least one item.
+    ListIsEmpty
 }
 
 named!(
@@ -147,7 +149,7 @@ named!(
             fold_into_vector
         ) ~
         opt!(first!(tag!(tokens::COMMA))),
-        || { array_mapper(result) }
+        || { into_array(result) }
     )
 );
 
@@ -185,7 +187,7 @@ fn value_by_reference_array_mapper<'a>(expression: Expression<'a>) -> StdResult<
 }
 
 #[inline(always)]
-fn array_mapper<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) -> Expression<'a> {
+fn into_array<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) -> Expression<'a> {
     Expression::Array(expressions)
 }
 
@@ -201,6 +203,7 @@ named!(
     intrinsic_construct<Expression>,
     alt!(
         intrinsic_echo
+      | intrinsic_list
       | intrinsic_unset
     )
 );
@@ -234,7 +237,7 @@ named!(
             accumulator,
             fold_into_vector
         ),
-        || { echo_mapper(result) }
+        || { into_echo(result) }
     )
 );
 
@@ -244,8 +247,109 @@ fn into_vector_mapper<T>(item: T) -> StdResult<Vec<T>, ()> {
 }
 
 #[inline(always)]
-fn echo_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+fn into_echo<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Echo(expressions)
+}
+
+named!(
+    pub intrinsic_list<Expression>,
+    map_res!(
+        preceded!(
+            preceded!(
+                keyword!(tokens::LIST),
+                first!(tag!(tokens::LEFT_PARENTHESIS))
+            ),
+            terminated!(
+                alt!(
+                    intrinsic_keyed_list
+                  | intrinsic_unkeyed_list
+                ),
+                first!(tag!(tokens::RIGHT_PARENTHESIS))
+            )
+        ),
+        intrinsic_list_mapper
+    )
+);
+
+named!(
+    intrinsic_keyed_list<Expression>,
+    chain!(
+        accumulator: map_res!(
+            first!(intrinsic_keyed_list_item),
+            into_vector_mapper
+        ) ~
+        result: fold_many0!(
+            preceded!(
+                first!(tag!(tokens::COMMA)),
+                first!(intrinsic_keyed_list_item)
+            ),
+            accumulator,
+            fold_into_vector
+        ) ~
+        opt!(first!(tag!(tokens::COMMA))),
+        || { into_list(result) }
+    )
+);
+
+named!(
+    intrinsic_unkeyed_list<Expression>,
+    chain!(
+        accumulator: map_res!(
+            opt!(first!(intrinsic_unkeyed_list_item)),
+            into_vector_mapper
+        ) ~
+        result: fold_many0!(
+            preceded!(
+                first!(tag!(tokens::COMMA)),
+                opt!(first!(intrinsic_unkeyed_list_item))
+            ),
+            accumulator,
+            fold_into_vector
+        ),
+        || { into_list(result) }
+    )
+);
+
+named!(
+    intrinsic_keyed_list_item< Option<(Option<Expression>, Expression)> >,
+    chain!(
+        key: terminated!(
+            expression,
+            first!(tag!(tokens::MAP))
+        ) ~
+        value: first!(expression),
+        || { Some((Some(key), value)) }
+    )
+);
+
+named!(
+    intrinsic_unkeyed_list_item<(Option<Expression>, Expression)>,
+    chain!(
+        value: expression,
+        || { (None, value) }
+    )
+);
+
+#[inline(always)]
+fn into_list<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>) -> Expression<'a> {
+    Expression::List(expressions)
+}
+
+#[inline(always)]
+fn intrinsic_list_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, Error<ErrorKind>> {
+    match expression {
+        Expression::List(items) => {
+            if items.iter().any(|ref item| item.is_some()) {
+                Ok(Expression::List(items))
+            } else {
+                Err(Error::Code(ErrorKind::Custom(IntrinsicError::ListIsEmpty as u32)))
+            }
+        },
+
+        _ => {
+            Ok(expression)
+        }
+    }
 }
 
 named!(
@@ -272,12 +376,12 @@ named!(
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
-        || { unset_mapper(result) }
+        || { into_unset(result) }
     )
 );
 
 #[inline(always)]
-fn unset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+fn into_unset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Unset(expressions)
 }
 
@@ -392,12 +496,12 @@ named!(
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
-        || { isset_mapper(result) }
+        || { into_isset(result) }
     )
 );
 
 #[inline(always)]
-fn isset_mapper<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+fn into_isset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Isset(expressions)
 }
 
@@ -429,6 +533,7 @@ mod tests {
         intrinsic_eval,
         intrinsic_exit,
         intrinsic_isset,
+        intrinsic_list,
         intrinsic_operator,
         intrinsic_print,
         intrinsic_unset,
@@ -862,6 +967,256 @@ mod tests {
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"echo;"[..]));
 
         assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_keyed_one_pattern() {
+        let input  = b"list('foo' => $foo)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                    Expression::Variable(Variable(&b"foo"[..]))
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_keyed_many_patterns() {
+        let input  = b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                    Expression::Variable(Variable(&b"foo"[..]))
+                )),
+                Some((
+                    Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
+                    Expression::Variable(Variable(&b"bar"[..]))
+                )),
+                Some((
+                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                    Expression::Variable(Variable(&b"baz"[..]))
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_keyed_trailing_comma() {
+        let input  = b"list('foo' => $foo, 'bar' => $bar,)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                    Expression::Variable(Variable(&b"foo"[..]))
+                )),
+                Some((
+                    Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
+                    Expression::Variable(Variable(&b"bar"[..]))
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_keyed_recursive() {
+        let input  = b"list('foo' => list('bar' => $bar), 'baz' => list(, $qux))";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                    Expression::List(vec![
+                        Some((
+                            Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
+                            Expression::Variable(Variable(&b"bar"[..]))
+                        ))
+                    ])
+                )),
+                Some((
+                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                    Expression::List(vec![
+                        None,
+                        Some((
+                            None,
+                            Expression::Variable(Variable(&b"qux"[..]))
+                        ))
+                    ])
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_unkeyed_one_pattern() {
+        let input  = b"list($foo)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"foo"[..]))
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_unkeyed_many_patterns() {
+        let input  = b"list($foo, $bar, $baz)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"foo"[..]))
+                )),
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"bar"[..]))
+                )),
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"baz"[..]))
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_unkeyed_free_patterns() {
+        let input  = b"list($foo, , $bar, , , $baz,)";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"foo"[..]))
+                )),
+                None,
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"bar"[..]))
+                )),
+                None,
+                None,
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"baz"[..]))
+                )),
+                None
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_unkeyed_recursive() {
+        let input  = b"list($foo, list($bar), list('baz' => $baz))";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"foo"[..]))
+                )),
+                Some((
+                    None,
+                    Expression::List(vec![
+                        Some((
+                            None,
+                            Expression::Variable(Variable(&b"bar"[..]))
+                        ))
+                    ])
+                )),
+                Some((
+                    None,
+                    Expression::List(vec![
+                        Some((
+                            Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                            Expression::Variable(Variable(&b"baz"[..]))
+                        ))
+                    ])
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_list_mixed_pairs() {
+        let input  = b"list('foo' => $foo, $bar)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list('foo' => $foo, $bar)"[..]));
+
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, &b"$bar)"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_list_empty() {
+        let input  = b"list()";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list()"[..]));
+
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list()"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_invalid_intrinsic_list_only_free_patterns() {
+        let input  = b"list(,,,)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list(,,,)"[..]));
+
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list(,,,)"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);

@@ -443,6 +443,78 @@ pub enum Expression<'a> {
     /// ```
     Isset(Vec<Expression<'a>>),
 
+    /// List.
+    /// Match and assign one or more elements of the source array to
+    /// the target variables.
+    ///
+    /// # Examples
+    ///
+    /// A keyed list:
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::List(vec![
+    ///             Some((
+    ///                 Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+    ///                 Expression::Variable(Variable(&b"foo"[..]))
+    ///             )),
+    ///             Some((
+    ///                 Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
+    ///                 Expression::Variable(Variable(&b"bar"[..]))
+    ///             )),
+    ///             Some((
+    ///                 Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+    ///                 Expression::Variable(Variable(&b"baz"[..]))
+    ///             ))
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    /// An unkeyed list:
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main () {
+    /// assert_eq!(
+    ///     expression(b"list($foo, , , $bar, $baz)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::List(vec![
+    ///             Some((
+    ///                 None,
+    ///                 Expression::Variable(Variable(&b"foo"[..]))
+    ///             )),
+    ///             None,
+    ///             None,
+    ///             Some((
+    ///                 None,
+    ///                 Expression::Variable(Variable(&b"bar"[..]))
+    ///             )),
+    ///             Some((
+    ///                 None,
+    ///                 Expression::Variable(Variable(&b"baz"[..]))
+    ///             ))
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    List(Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>),
+
     /// A literal. See `Literal`.
     ///
     /// # Examples
