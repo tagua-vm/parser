@@ -1034,6 +1034,40 @@ mod tests {
     }
 
     #[test]
+    fn case_intrinsic_list_keyed_recursive() {
+        let input  = b"list('foo' => list('bar' => $bar), 'baz' => list(, $qux))";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                    Expression::List(vec![
+                        Some((
+                            Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
+                            Expression::Variable(Variable(&b"bar"[..]))
+                        ))
+                    ])
+                )),
+                Some((
+                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                    Expression::List(vec![
+                        None,
+                        Some((
+                            None,
+                            Expression::Variable(Variable(&b"qux"[..]))
+                        ))
+                    ])
+                ))
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
     fn case_intrinsic_list_unkeyed_one_matching() {
         let input  = b"list($foo)";
         let output = Result::Done(
@@ -1101,6 +1135,43 @@ mod tests {
                     Expression::Variable(Variable(&b"baz"[..]))
                 )),
                 None
+            ])
+        );
+
+        assert_eq!(intrinsic_list(input), output);
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_unkeyed_recursive() {
+        let input  = b"list($foo, list($bar), list('baz' => $baz))";
+        let output = Result::Done(
+            &b""[..],
+            Expression::List(vec![
+                Some((
+                    None,
+                    Expression::Variable(Variable(&b"foo"[..]))
+                )),
+                Some((
+                    None,
+                    Expression::List(vec![
+                        Some((
+                            None,
+                            Expression::Variable(Variable(&b"bar"[..]))
+                        ))
+                    ])
+                )),
+                Some((
+                    None,
+                    Expression::List(vec![
+                        Some((
+                            Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                            Expression::Variable(Variable(&b"baz"[..]))
+                        ))
+                    ])
+                ))
             ])
         );
 
