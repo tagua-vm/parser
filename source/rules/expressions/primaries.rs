@@ -1111,6 +1111,17 @@ mod tests {
     }
 
     #[test]
+    fn case_invalid_intrinsic_list_mixed_pairs() {
+        let input  = b"list('foo' => $foo, $bar)";
+        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list('foo' => $foo, $bar)"[..]));
+
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, &b"$bar)"[..])));
+        assert_eq!(intrinsic_construct(input), output);
+        assert_eq!(intrinsic(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
     fn case_intrinsic_unset_one_variable() {
         let input  = b"unset($foo)";
         let output = Result::Done(
