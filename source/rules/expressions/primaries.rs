@@ -38,14 +38,20 @@
 use std::result::Result as StdResult;
 use super::expression;
 use super::super::literals::literal;
+use super::super::statements::compound_statement;
 use super::super::tokens::{
     qualified_name,
     variable
 };
 use super::super::super::ast::{
     Expression,
+    Function,
     Literal,
     Name,
+    Parameter,
+    Scope,
+    Statement,
+    Ty,
     Variable
 };
 use super::super::super::internal::{
@@ -98,6 +104,7 @@ named_attr!(
       | literal        => { literal_mapper }
       | array
       | intrinsic
+      | anonymous_function
       | preceded!(
             tag!(tokens::LEFT_PARENTHESIS),
             terminated!(
@@ -804,10 +811,187 @@ fn print_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()>
     Ok(Expression::Print(Box::new(expression)))
 }
 
+named_attr!(
+    #[doc="
+        Recognize an anonymous function.
+    "],
+    pub anonymous_function<Expression>,
+    do_parse!(
+        static_scope: opt!(keyword!(tokens::STATIC)) >>
+        first!(keyword!(tokens::FUNCTION)) >>
+        output_is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
+        first!(tag!(tokens::LEFT_PARENTHESIS)) >>
+        inputs: first!(parameters) >>
+        first!(tag!(tokens::RIGHT_PARENTHESIS)) >>
+        output_type: opt!(
+            preceded!(
+                first!(tag!(tokens::FUNCTION_OUTPUT)),
+                first!(qualified_name)
+            )
+        ) >>
+        declarative_scope: opt!(first!(anonymous_function_use)) >>
+        body: first!(compound_statement) >>
+        (
+            into_anonymous_function(
+                match static_scope {
+                    Some(_) => {
+                        Scope::Static
+                    },
+
+                    None => {
+                        Scope::Dynamic
+                    }
+                },
+                output_is_a_reference.is_some(),
+                inputs,
+                output_type,
+                declarative_scope,
+                body
+            )
+        )
+    )
+);
+
+named!(
+    parameters< Vec<Parameter> >,
+    do_parse!(
+        accumulator: map_res!(
+            parameter,
+            into_vector_mapper
+        ) >>
+        result: fold_into_vector_many0!(
+            preceded!(
+                first!(tag!(tokens::COMMA)),
+                first!(parameter)
+            ),
+            accumulator
+        ) >>
+        (result)
+    )
+);
+
+named!(
+    parameter<Parameter>,
+    do_parse!(
+        ty: opt!(qualified_name) >>
+        is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
+        name: first!(variable) >>
+        (into_parameter(ty, is_a_reference.is_some(), name))
+    )
+);
+
+#[inline(always)]
+fn into_parameter<'a>(ty: Option<Name<'a>>, is_a_reference: bool, name: Variable<'a>) -> Parameter<'a> {
+    let ty = match ty {
+        Some(ty) => {
+            if is_a_reference {
+                Some(Ty::Reference(ty))
+            } else {
+                Some(Ty::Copy(ty))
+            }
+        },
+
+        None => {
+            None
+        }
+    };
+
+    Parameter {
+        ty   : ty,
+        name : name,
+        value: None
+    }
+}
+
+named!(
+    anonymous_function_use< Vec<Expression> >,
+    terminated!(
+        preceded!(
+            keyword!(tokens::USE),
+            preceded!(
+                first!(tag!(tokens::LEFT_PARENTHESIS)),
+                first!(anonymous_function_use_list)
+            )
+        ),
+        first!(tag!(tokens::RIGHT_PARENTHESIS))
+    )
+);
+
+named!(
+    anonymous_function_use_list< Vec<Expression> >,
+    do_parse!(
+        accumulator: map_res!(
+            anonymous_function_use_list_item,
+            into_vector_mapper
+        ) >>
+        result: fold_into_vector_many0!(
+            preceded!(
+                first!(tag!(tokens::COMMA)),
+                first!(anonymous_function_use_list_item)
+            ),
+            accumulator
+        ) >>
+        (result)
+    )
+);
+
+named!(
+    anonymous_function_use_list_item<Expression>,
+    do_parse!(
+        reference: opt!(first!(tag!(tokens::REFERENCE))) >>
+        name: first!(variable) >>
+        (into_anonymous_function_use_list_item(reference.is_some(), name))
+    )
+);
+
+#[inline(always)]
+fn into_anonymous_function_use_list_item<'a>(reference: bool, name: Variable<'a>) -> Expression<'a> {
+    if reference {
+        Expression::Reference(Box::new(Expression::Variable(name)))
+    } else {
+        Expression::Variable(name)
+    }
+}
+
+#[inline(always)]
+fn into_anonymous_function<'a>(
+    declaration_scope    : Scope,
+    output_is_a_reference: bool,
+    inputs               : Vec<Parameter<'a>>,
+    output_type          : Option<Name<'a>>,
+    declarative_scope    : Option<Vec<Expression<'a>>>,
+    body                 : Vec<Statement>
+) -> Expression<'a> {
+    let output = match output_type {
+        Some(output_type) => {
+            if output_is_a_reference {
+                Some(Ty::Reference(output_type))
+            } else {
+                Some(Ty::Copy(output_type))
+            }
+        },
+
+        None => {
+            None
+        }
+    };
+
+    Expression::AnonymousFunction(
+        Function {
+            declaration_scope : declaration_scope,
+            inputs            : inputs,
+            output            : output,
+            declarative_scope : declarative_scope,
+            body              : body
+        }
+    )
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::{
+        anonymous_function,
         array,
         intrinsic,
         intrinsic_construct,
@@ -825,8 +1009,13 @@ mod tests {
     use super::super::expression;
     use super::super::super::super::ast::{
         Expression,
+        Function,
         Literal,
         Name,
+        Parameter,
+        Scope,
+        Statement,
+        Ty,
         Variable
     };
     use super::super::super::super::internal::{
@@ -1229,6 +1418,7 @@ mod tests {
         assert_eq!(intrinsic_echo(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1247,6 +1437,7 @@ mod tests {
         assert_eq!(intrinsic_echo(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1268,6 +1459,7 @@ mod tests {
         assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1287,6 +1479,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1314,6 +1507,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1347,6 +1541,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1381,6 +1576,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1400,6 +1596,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1427,6 +1624,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1468,6 +1666,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1505,6 +1704,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1516,6 +1716,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, &b"$bar)"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1527,6 +1728,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list()"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1538,6 +1740,7 @@ mod tests {
         assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list(,,,)"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1554,6 +1757,7 @@ mod tests {
         assert_eq!(intrinsic_unset(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1572,6 +1776,7 @@ mod tests {
         assert_eq!(intrinsic_unset(input), output);
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1593,6 +1798,7 @@ mod tests {
         assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1613,6 +1819,7 @@ mod tests {
         assert_eq!(intrinsic_empty(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1633,6 +1840,7 @@ mod tests {
         assert_eq!(intrinsic_empty(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1644,6 +1852,7 @@ mod tests {
         assert_eq!(intrinsic_empty(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1664,6 +1873,7 @@ mod tests {
         assert_eq!(intrinsic_eval(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1675,6 +1885,7 @@ mod tests {
         assert_eq!(intrinsic_eval(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1697,6 +1908,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1708,6 +1920,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1730,6 +1943,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1741,6 +1955,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"exit(255)"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1752,6 +1967,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"exit(256)"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1774,6 +1990,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1785,6 +2002,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1807,6 +2025,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1818,6 +2037,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(255)"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1829,6 +2049,7 @@ mod tests {
         assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(256)"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1845,6 +2066,7 @@ mod tests {
         assert_eq!(intrinsic_isset(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1863,6 +2085,7 @@ mod tests {
         assert_eq!(intrinsic_isset(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1884,6 +2107,7 @@ mod tests {
         assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1902,6 +2126,7 @@ mod tests {
         assert_eq!(intrinsic_print(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1913,6 +2138,7 @@ mod tests {
         assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
@@ -1924,6 +2150,39 @@ mod tests {
         assert_eq!(intrinsic_print(input), output);
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function() {
+        let input  = b"function (I $x, J &$y): O use ($z) { return; }";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : vec![
+                        Parameter {
+                            ty   : Some(Ty::Copy(Name::Unqualified(&b"I"[..]))),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        },
+                        Parameter {
+                            ty   : Some(Ty::Reference(Name::Unqualified(&b"J"[..]))),
+                            name : Variable(&b"y"[..]),
+                            value: None
+                        },
+                    ],
+                    output           : Some(Ty::Copy(Name::Unqualified(&b"O"[..]))),
+                    declarative_scope: Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 }

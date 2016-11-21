@@ -29,47 +29,27 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! The grammar as a set of rules.
+//! Group of statement rules.
 //!
-//! The grammar is splitted into group of rules for the sake of clarity.
+//! The list of all statements is provided by the PHP Language Specification
+//! in the [Grammar chapter, Statements
+//! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#statements).
 
-pub mod comments;
-pub mod expressions;
-pub mod literals;
-pub mod skip;
-pub mod statements;
-pub mod tokens;
-pub mod whitespaces;
+use super::super::ast::Statement;
+use super::super::tokens;
 
-use super::ast;
-use super::internal::*;
-
-pub fn root(input: &[u8]) -> ast::Expression {
-    match expressions::expression(input) {
-        Result::Done(_, ast) => ast,
-        _ => panic!("Youhouuu")
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::root;
-    use super::super::ast;
-
-    #[test]
-    fn case_root() {
-        assert_eq!(
-            root(b"'Hello, World!'"),
-            ast::Expression::Literal(
-                ast::Literal::String(b"Hello, World!".to_vec())
-            )
-        );
-    }
-
-    #[test]
-    #[should_panic(expected = "Youhouuu")]
-    fn case_root_panic() {
-        root(b"!");
-    }
-}
+named!(
+    pub compound_statement< Vec<Statement> >,
+    map_res!(
+        terminated!(
+            preceded!(
+                tag!(tokens::LEFT_CURLY_BRACKET),
+                opt!(first!(tag!("return;")))
+            ),
+            first!(tag!(tokens::RIGHT_CURLY_BRACKET))
+        ),
+        |_| -> Result<Vec<Statement>, ()> {
+            Ok(vec![Statement::Return])
+        }
+    )
+);

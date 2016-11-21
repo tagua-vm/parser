@@ -481,7 +481,7 @@ token!(
     "The `RETURN` token.\n\nRepresent the return operator, e.g. `return $x;`."
 );
 token!(
-    pub RIGHT_CURLY_BRACKET: b"{";
+    pub RIGHT_CURLY_BRACKET: b"}";
     "The `RIGHT_CURLY_BRACKET` token.\n\nUsed to close a block, e.g. `if (…) { … }`."
 );
 token!(
@@ -542,7 +542,7 @@ token!(
 );
 token!(
     pub USE: b"use";
-    "The `USE` token.\n\nRepresent the importing operator (for namespaces or traits for instance), e.g. `use C\\D;`."
+    "The `USE` token.\n\nRepresent the importing operator (for namespaces or traits for instance, or variable in the scope), e.g. `use C\\D;` or `function () use ($x) { … }`."
 );
 token!(
     pub VAR: b"var";

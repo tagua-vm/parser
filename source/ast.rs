@@ -144,7 +144,6 @@ pub enum Literal {
     String(Vec<u8>)
 }
 
-
 /// A variable.
 ///
 /// # Examples
@@ -254,6 +253,9 @@ pub enum Name<'a> {
 /// An expression.
 #[derive(Debug, PartialEq)]
 pub enum Expression<'a> {
+    /// Anonymous function.
+    AnonymousFunction(Function<'a>),
+
     /// Array.
     /// A collection of heterogeneous pairs (key, value). The key is
     /// optional.
@@ -649,4 +651,53 @@ pub enum Expression<'a> {
     /// # }
     /// ```
     Variable(Variable<'a>)
+}
+
+/// A type declaration.
+#[derive(Debug, PartialEq)]
+pub enum Ty<'a> {
+    /// A type representing a data passed by copy.
+    Copy(Name<'a>),
+
+    /// A type representing a data passed by reference.
+    Reference(Name<'a>)
+}
+
+/// A parameter (of a function, or a method).
+#[derive(Debug, PartialEq)]
+pub struct Parameter<'a> {
+    pub ty   : Option<Ty<'a>>,
+    pub name : Variable<'a>,
+    pub value: Option<Expression<'a>>
+}
+
+/// A function.
+#[derive(Debug, PartialEq)]
+pub struct Function<'a> {
+    pub declaration_scope: Scope,
+    pub inputs           : Vec<Parameter<'a>>,
+    pub output           : Option<Ty<'a>>,
+    pub declarative_scope: Option<Vec<Expression<'a>>>,
+    pub body             : Vec<Statement>
+}
+
+/// A statement.
+#[derive(Debug, PartialEq)]
+pub enum Statement {
+    Return
+}
+
+/// A scope.
+#[derive(Debug, PartialEq)]
+pub enum Scope {
+    Dynamic,
+    Static
+}
+
+/// A visibility.
+#[derive(Debug, PartialEq)]
+pub enum Visibility {
+    Public,
+    Protected,
+    Private
 }
