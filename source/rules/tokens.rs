@@ -39,7 +39,6 @@ use super::super::ast::{
     Name,
     Variable
 };
-use super::super::internal::fold_into_vector;
 use super::super::tokens;
 
 named!(
@@ -72,13 +71,12 @@ named!(
             exclude!(first!(name), tokens::keywords),
             wrap_into_vector_mapper
         ) ~
-        result: fold_many0!(
+        result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::NAMESPACE_SEPARATOR)),
                 exclude!(first!(name), tokens::keywords)
             ),
-            accumulator,
-            fold_into_vector
+            accumulator
         ),
         || {
             match head {
@@ -168,6 +166,16 @@ mod tests {
     }
 
     #[test]
+    fn case_qualified_name_vector_capacity() {
+        if let Result::Done(_, Name::Qualified(vector)) = qualified_name(b"Foo\\Bar\\Baz") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
     fn case_qualified_name_with_skip_tokens() {
         assert_eq!(qualified_name(b"Foo\n/* baz */ \\ Bar /* qux */\\"), Result::Done(&b" /* qux */\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
     }
@@ -181,6 +189,16 @@ mod tests {
     #[test]
     fn case_relative_qualified_name() {
         assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_relative_qualified_name_vector_capacity() {
+        if let Result::Done(_, Name::RelativeQualified(vector)) = qualified_name(b"namespace\\Foo\\Bar\\Baz") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
@@ -208,6 +226,16 @@ mod tests {
     #[test]
     fn case_fully_qualified_name() {
         assert_eq!(qualified_name(b"\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+    }
+
+    #[test]
+    fn case_fully_qualified_name_vector_capacity() {
+        if let Result::Done(_, Name::FullyQualified(vector)) = qualified_name(b"\\Foo\\Bar\\Baz") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
