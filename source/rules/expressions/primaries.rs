@@ -38,7 +38,6 @@
 use std::result::Result as StdResult;
 use super::expression;
 use super::super::literals::literal;
-use super::super::super::internal::fold_into_vector;
 use super::super::tokens::{
     qualified_name,
     variable
@@ -140,13 +139,12 @@ named!(
             first!(array_pair),
             into_vector_mapper
         ) ~
-        result: fold_many0!(
+        result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 first!(array_pair)
             ),
-            accumulator,
-            fold_into_vector
+            accumulator
         ) ~
         opt!(first!(tag!(tokens::COMMA))),
         || { into_array(result) }
@@ -229,13 +227,12 @@ named!(
             ),
             into_vector_mapper
         ) ~
-        result: fold_many0!(
+        result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 first!(expression)
             ),
-            accumulator,
-            fold_into_vector
+            accumulator
         ),
         || { into_echo(result) }
     )
@@ -278,13 +275,12 @@ named!(
             first!(intrinsic_keyed_list_item),
             into_vector_mapper
         ) ~
-        result: fold_many0!(
+        result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 first!(intrinsic_keyed_list_item)
             ),
-            accumulator,
-            fold_into_vector
+            accumulator
         ) ~
         opt!(first!(tag!(tokens::COMMA))),
         || { into_list(result) }
@@ -298,13 +294,12 @@ named!(
             opt!(first!(intrinsic_unkeyed_list_item)),
             into_vector_mapper
         ) ~
-        result: fold_many0!(
+        result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 opt!(first!(intrinsic_unkeyed_list_item))
             ),
-            accumulator,
-            fold_into_vector
+            accumulator
         ),
         || { into_list(result) }
     )
@@ -366,13 +361,12 @@ named!(
             into_vector_mapper
         ) ~
         result: terminated!(
-            fold_many0!(
+            fold_into_vector_many0!(
                 preceded!(
                     first!(tag!(tokens::COMMA)),
                     first!(expression)
                 ),
-                accumulator,
-                fold_into_vector
+                accumulator
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
@@ -486,13 +480,12 @@ named!(
             into_vector_mapper
         ) ~
         result: terminated!(
-            fold_many0!(
+            fold_into_vector_many0!(
                 preceded!(
                     first!(tag!(tokens::COMMA)),
                     first!(expression)
                 ),
-                accumulator,
-                fold_into_vector
+                accumulator
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
@@ -622,6 +615,16 @@ mod tests {
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_array_vector_capacity() {
+        if let Result::Done(_, Expression::Array(vector)) = array(b"[1, 2, 3]") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
@@ -962,6 +965,16 @@ mod tests {
     }
 
     #[test]
+    fn case_intrinsic_echo_vector_capacity() {
+        if let Result::Done(_, Expression::Echo(vector)) = intrinsic_echo(b"echo 'foobar', $bazqux, 42") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
     fn case_invalid_intrinsic_echo_expression_missing() {
         let input  = b"echo;";
         let output = Result::Error(Error::Position(ErrorKind::Alt, &b"echo;"[..]));
@@ -1016,6 +1029,16 @@ mod tests {
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_keyed_vector_capacity() {
+        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
@@ -1119,6 +1142,16 @@ mod tests {
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_list_unkeyed_vector_capacity() {
+        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(b"list($foo, $bar, $baz)") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
@@ -1242,13 +1275,14 @@ mod tests {
 
     #[test]
     fn case_intrinsic_unset_many_variables() {
-        let input  = b"unset($foo, $bar)";
+        let input  = b"unset($foo, $bar, $baz)";
         let output = Result::Done(
             &b""[..],
             Expression::Unset(
                 vec![
                     Expression::Variable(Variable(&b"foo"[..])),
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Expression::Variable(Variable(&b"bar"[..])),
+                    Expression::Variable(Variable(&b"baz"[..]))
                 ]
             )
         );
@@ -1257,6 +1291,16 @@ mod tests {
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_unset_vector_capacity() {
+        if let Result::Done(_, Expression::Unset(vector)) = intrinsic_unset(b"unset($foo, $bar, $baz)") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
@@ -1526,13 +1570,14 @@ mod tests {
 
     #[test]
     fn case_intrinsic_isset_many_variables() {
-        let input  = b"isset($foo, $bar)";
+        let input  = b"isset($foo, $bar, $baz)";
         let output = Result::Done(
             &b""[..],
             Expression::Isset(
                 vec![
                     Expression::Variable(Variable(&b"foo"[..])),
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Expression::Variable(Variable(&b"bar"[..])),
+                    Expression::Variable(Variable(&b"baz"[..]))
                 ]
             )
         );
@@ -1541,6 +1586,16 @@ mod tests {
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_intrinsic_isset_vector_capacity() {
+        if let Result::Done(_, Expression::Isset(vector)) = intrinsic_isset(b"isset($foo, $bar, $baz)") {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
