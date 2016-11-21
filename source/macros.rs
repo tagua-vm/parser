@@ -261,6 +261,65 @@ macro_rules! keyword(
     );
 );
 
+/// `fold_into_vector_many0!(I -> IResult<I,O>, R) => I -> IResult<I, R>`
+/// is a wrapper around `fold_many0!` specifically designed for vectors.
+///
+/// This is strictly equivalent to `fold_many0!(submacro!(…),
+/// Vec::new(), fold_into_vector)` but it shrinks the capacity of the
+/// vector to fit the current length.
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate nom;
+/// # #[macro_use]
+/// # extern crate tagua_parser;
+/// use tagua_parser::{
+///     Result,
+///     tokens
+/// };
+///
+/// # fn main() {
+/// named!(
+///     test< Vec<&[u8]> >,
+///     fold_into_vector_many0!(
+///         tag!("abc"),
+///         Vec::new()
+///     )
+/// );
+///
+/// if let Result::Done(_, vector) = test(&b"abcabcabc"[..]) {
+///     assert_eq!(vector.capacity(), vector.len());
+/// }
+/// # }
+/// ```
+#[macro_export]
+macro_rules! fold_into_vector_many0(
+    ($input:expr, $submacro:ident!($($arguments:tt)*), $init:expr) => (
+        {
+            let result = fold_many0!(
+                $input,
+                $submacro!($($arguments)*),
+                $init,
+                $crate::internal::fold_into_vector
+            );
+
+            if let ::nom::IResult::Done(input, mut output) = result {
+                output.shrink_to_fit();
+
+                ::nom::IResult::Done(input, output)
+            } else {
+                result
+            }
+        }
+    );
+
+    ($input:expr, $function:expr, $init:expr) => (
+        fold_many0!($input, call!($function), $init);
+    );
+);
+
 
 #[cfg(test)]
 mod tests {
@@ -446,5 +505,23 @@ mod tests {
         named!(test<&str>, keyword!("foobar"));
 
         assert_eq!(test(&b"BaZQuX"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
+    }
+
+    #[test]
+    fn case_fold_into_vector_many0() {
+        named!(
+            test< Vec<&[u8]> >,
+            fold_into_vector_many0!(
+                tag!("abc"),
+                Vec::new()
+            )
+        );
+
+        if let Result::Done(_, vector) = test(&b"abcabcabc"[..]) {
+            assert_eq!(vector.capacity(), vector.len());
+            assert_eq!(vector.len(), 3);
+        } else {
+            assert!(false);
+        }
     }
 }
