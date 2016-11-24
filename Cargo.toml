@@ -46,8 +46,8 @@ lazy_static = "~0.1"
 regex       = "~0.1"
 
 [dependencies.nom]
-version  = "^1.2.4"
-features = ["regexp", "regexp_macros"]
+version  = "^2.0.0"
+features = ["regexp", "regexp_macros", "verbose-errors"]
 
 [dev-dependencies]
 quickcheck = "~0.3"
