@@ -201,7 +201,23 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an integer with the octal notation.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::octal;
+
+        # fn main () {
+        assert_eq!(octal(b\"052\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        # }
+        ```
+    "],
     pub octal<Literal>,
     map_res!(
         preceded!(tag!("0"), opt!(complete!(oct_digit))),
