@@ -58,8 +58,10 @@ use super::super::super::tokens;
 pub enum IntrinsicError {
     /// The exit code is reserved (only 255 is reserved to PHP).
     ReservedExitCode,
+
     /// The exit code is out of range if greater than 255.
     OutOfRangeExitCode,
+
     /// The list constructor must contain at least one item.
     ListIsEmpty
 }
