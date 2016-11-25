@@ -120,7 +120,7 @@ named!(
 named!(
     pub octal<Literal>,
     map_res!(
-        preceded!(tag!("0"), opt!(oct_digit)),
+        preceded!(tag!("0"), opt!(complete!(oct_digit))),
         |value: Option<&[u8]>| {
             match value {
                 Some(bytes) =>
@@ -178,7 +178,7 @@ named!(
             tag!("0"),
             preceded!(
                 is_a!("xX"),
-                hex_digit
+                complete!(hex_digit)
             )
         ),
         |bytes: &[u8]| {
@@ -723,7 +723,7 @@ mod tests {
         let input  = b"0x";
         let output = Result::Done(&b"x"[..], Literal::Integer(0i64));
 
-        assert_eq!(hexadecimal(input), Result::Error(Error::Position(ErrorKind::HexDigit, &b""[..])));
+        assert_eq!(hexadecimal(input), Result::Error(Error::Position(ErrorKind::Complete, &b""[..])));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
