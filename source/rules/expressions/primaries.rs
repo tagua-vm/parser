@@ -352,7 +352,37 @@ fn into_echo<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Echo(expressions)
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a list.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal, Variable};
+        use tagua_parser::rules::expressions::primaries::intrinsic_list;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_list(b\"list('foo' => $foo, 'bar' => $bar)\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::List(vec![
+                    Some((
+                        Some(Expression::Literal(Literal::String(b\"foo\".to_vec()))),
+                        Expression::Variable(Variable(&b\"foo\"[..]))
+                    )),
+                    Some((
+                        Some(Expression::Literal(Literal::String(b\"bar\".to_vec()))),
+                        Expression::Variable(Variable(&b\"bar\"[..]))
+                    ))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_list<Expression>,
     map_res!(
         preceded!(
