@@ -586,7 +586,34 @@ fn empty_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()>
     Ok(Expression::Empty(Box::new(expression)))
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an lazy evaluation.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::intrinsic_eval;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_eval(b\"eval('1 + 2')\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Eval(
+                    Box::new(
+                        Expression::Literal(
+                            Literal::String(b\"1 + 2\".to_vec())
+                        )
+                    )
+                )
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_eval<Expression>,
     map_res!(
         preceded!(
