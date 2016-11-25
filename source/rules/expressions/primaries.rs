@@ -1390,11 +1390,9 @@ mod tests {
         let input  = b"unset($foo)";
         let output = Result::Done(
             &b""[..],
-            Expression::Unset(
-                vec![
-                    Expression::Variable(Variable(&b"foo"[..]))
-                ]
-            )
+            Expression::Unset(vec![
+                Expression::Variable(Variable(&b"foo"[..]))
+            ])
         );
 
         assert_eq!(intrinsic_unset(input), output);
@@ -1408,13 +1406,11 @@ mod tests {
         let input  = b"unset($foo, $bar, $baz)";
         let output = Result::Done(
             &b""[..],
-            Expression::Unset(
-                vec![
-                    Expression::Variable(Variable(&b"foo"[..])),
-                    Expression::Variable(Variable(&b"bar"[..])),
-                    Expression::Variable(Variable(&b"baz"[..]))
-                ]
-            )
+            Expression::Unset(vec![
+                Expression::Variable(Variable(&b"foo"[..])),
+                Expression::Variable(Variable(&b"bar"[..])),
+                Expression::Variable(Variable(&b"baz"[..]))
+            ])
         );
 
         assert_eq!(intrinsic_unset(input), output);
