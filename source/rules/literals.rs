@@ -132,7 +132,25 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an integer.
+
+        An integer is either a binary, a decimal, an hexadecimal or an octal representation.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::integer;
+
+        # fn main () {
+        assert_eq!(integer(b\"0b101010\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        # }
+        ```
+    "],
     pub integer<Literal>,
     alt_complete!(
         binary
