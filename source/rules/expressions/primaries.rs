@@ -537,7 +537,34 @@ fn into_unset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Unset(expressions)
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an empty.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::intrinsic_empty;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_empty(b\"empty('foo')\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Empty(
+                    Box::new(
+                        Expression::Literal(
+                            Literal::String(b\"foo\".to_vec())
+                        )
+                    )
+                )
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_empty<Expression>,
     map_res!(
         preceded!(
