@@ -578,7 +578,28 @@ token!(
     "The `QUESTION_MARK` private token.\n\nSee `NULLABLE` and `TERNARY_THEN`."
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all keywords.
+
+        Note that most PHP keywords are case-insensitives. This parser satisfies this constraint.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::tokens;
+
+        # fn main () {
+        let output = Result::Done(&b\"\"[..], tokens::ECHO);
+
+        assert_eq!(tokens::keywords(b\"echo\"), output);
+        assert_eq!(tokens::keywords(b\"ECHO\"), output);
+        assert_eq!(tokens::keywords(b\"EcHo\"), output);
+        # }
+        ```
+    "],
     pub keywords,
     alt_complete!(
         keyword!(ABSTRACT)
