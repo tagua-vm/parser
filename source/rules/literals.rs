@@ -106,7 +106,23 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a boolean.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::boolean;
+
+        # fn main () {
+        assert_eq!(boolean(b\"true\"), Result::Done(&b\"\"[..], Literal::Boolean(true)));
+        # }
+        ```
+    "],
     pub boolean<Literal>,
     map_res!(
         alt!(itag!(&b"true"[..]) | itag!(&b"false"[..])),
