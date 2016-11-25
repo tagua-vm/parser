@@ -931,11 +931,9 @@ mod tests {
         let input  = b"echo /* baz */ 'foobar'";
         let output = Result::Done(
             &b""[..],
-            Expression::Echo(
-                vec![
-                    Expression::Literal(Literal::String(b"foobar".to_vec()))
-                ]
-            )
+            Expression::Echo(vec![
+                Expression::Literal(Literal::String(b"foobar".to_vec()))
+            ])
         );
 
         assert_eq!(intrinsic_echo(input), output);
@@ -949,13 +947,11 @@ mod tests {
         let input  = b"echo /* baz */ 'foobar',\t $bazqux, \n  42";
         let output = Result::Done(
             &b""[..],
-            Expression::Echo(
-                vec![
-                    Expression::Literal(Literal::String(b"foobar".to_vec())),
-                    Expression::Variable(Variable(&b"bazqux"[..])),
-                    Expression::Literal(Literal::Integer(42i64))
-                ]
-            )
+            Expression::Echo(vec![
+                Expression::Literal(Literal::String(b"foobar".to_vec())),
+                Expression::Variable(Variable(&b"bazqux"[..])),
+                Expression::Literal(Literal::Integer(42i64))
+            ])
         );
 
         assert_eq!(intrinsic_echo(input), output);
