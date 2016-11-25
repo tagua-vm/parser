@@ -587,7 +587,7 @@ fn empty_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()>
 }
 
 named!(
-    intrinsic_eval<Expression>,
+    pub intrinsic_eval<Expression>,
     map_res!(
         preceded!(
             keyword!(tokens::EVAL),
