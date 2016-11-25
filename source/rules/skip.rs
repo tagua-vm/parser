@@ -38,7 +38,28 @@
 use super::comments::comment;
 use super::whitespaces::whitespace;
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all tokens to skip.
+
+        A skip token is a token that is not relevant for the understanding of
+        the language. It is present for comestic reasons only.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::rules::skip::skip;
+
+        # fn main () {
+        assert_eq!(
+            skip(b\"/* foo */ \\n\\thello\"),
+            Result::Done(&b\"hello\"[..], vec![&b\" foo \"[..], &b\" \\n\\t\"[..]])
+        );
+        # }
+        ```
+    "],
     pub skip< Vec<&[u8]> >,
     many0!(
         alt!(
