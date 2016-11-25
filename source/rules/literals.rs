@@ -366,12 +366,16 @@ named_attr!(
 pub enum StringError {
     /// The datum starts as a string but is too short to be a string.
     TooShort,
+
     /// The string open character is not correct.
     InvalidOpeningCharacter,
+
     /// The string close character is not correct.
     InvalidClosingCharacter,
+
     /// The string is not correctly encoded (expect UTF-8).
     InvalidEncoding,
+
     /// The string delimiter identifier is syntactically invalid.
     InvalidDelimiterIdentifier
 }
