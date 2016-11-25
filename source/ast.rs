@@ -61,7 +61,7 @@ pub enum Literal {
     /// use tagua_parser::rules::literals::literal;
     ///
     /// # fn main () {
-    /// assert_eq!(literal(b"true"),  Result::Done(&b""[..], Literal::Boolean(true)));
+    /// assert_eq!(literal(b"true"), Result::Done(&b""[..], Literal::Boolean(true)));
     /// assert_eq!(literal(b"false"), Result::Done(&b""[..], Literal::Boolean(false)));
     /// # }
     /// ```
