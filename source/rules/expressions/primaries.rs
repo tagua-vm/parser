@@ -481,7 +481,31 @@ fn intrinsic_list_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression
     }
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an unset.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Variable};
+        use tagua_parser::rules::expressions::primaries::intrinsic_unset;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_unset(b\"unset($foo, $bar)\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Unset(vec![
+                    Expression::Variable(Variable(&b\"foo\"[..])),
+                    Expression::Variable(Variable(&b\"bar\"[..]))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_unset<Expression>,
     do_parse!(
         accumulator: map_res!(
