@@ -51,7 +51,25 @@ use super::super::internal::{
 };
 use super::tokens;
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all kind of literals.
+
+        A literal is either a null, a boolean, an expotential, an integer or an integer.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::literal;
+
+        # fn main () {
+        assert_eq!(literal(b\"0x2a\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        # }
+        ```
+    "],
     pub literal<Literal>,
     alt!(
         null
