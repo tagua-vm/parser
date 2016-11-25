@@ -330,7 +330,23 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a real with the exponential notation.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::exponential;
+
+        # fn main () {
+        assert_eq!(exponential(b\"123.456e+78\"), Result::Done(&b\"\"[..], Literal::Real(123.456e78f64)));
+        # }
+        ```
+    "],
     pub exponential<Literal>,
     map_res!(
         re_bytes_find_static!(r"^(([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)"),
