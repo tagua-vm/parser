@@ -380,7 +380,26 @@ pub enum StringError {
     InvalidDelimiterIdentifier
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all kind of strings.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::string;
+
+        # fn main () {
+        assert_eq!(
+            string(b\"'foobar'\"),
+            Result::Done(&b\"\"[..], Literal::String(b\"foobar\".to_vec()))
+        );
+        # }
+        ```
+    "],
     pub string<Literal>,
     alt!(
         string_single_quoted
