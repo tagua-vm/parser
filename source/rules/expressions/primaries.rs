@@ -764,7 +764,7 @@ fn into_isset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
 }
 
 named!(
-    intrinsic_print<Expression>,
+    pub intrinsic_print<Expression>,
     map_res!(
         preceded!(
             keyword!(tokens::PRINT),
