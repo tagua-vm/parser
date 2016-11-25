@@ -90,10 +90,10 @@ named_attr!(
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
-        use tagua_parser::rules::literals::literal;
+        use tagua_parser::rules::literals::null;
 
         # fn main () {
-        assert_eq!(literal(b\"null\"), Result::Done(&b\"\"[..], Literal::Null));
+        assert_eq!(null(b\"null\"), Result::Done(&b\"\"[..], Literal::Null));
         # }
         ```
     "],
