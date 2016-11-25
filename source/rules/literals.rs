@@ -80,7 +80,23 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a null value.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::literal;
+
+        # fn main () {
+        assert_eq!(literal(b\"null\"), Result::Done(&b\"\"[..], Literal::Null));
+        # }
+        ```
+    "],
     pub null<Literal>,
     map_res!(
         itag!("null"),
