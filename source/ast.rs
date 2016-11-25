@@ -271,22 +271,20 @@ pub enum Expression<'a> {
     ///     expression(b"['foo', 42 => 'bar', 'baz' => $qux]"),
     ///     Result::Done(
     ///         &b""[..],
-    ///         Expression::Array(
-    ///             vec![
-    ///                 (
-    ///                     None,
-    ///                     Expression::Literal(Literal::String(b"foo".to_vec()))
-    ///                 ),
-    ///                 (
-    ///                     Some(Expression::Literal(Literal::Integer(42i64))),
-    ///                     Expression::Literal(Literal::String(b"bar".to_vec()))
-    ///                 ),
-    ///                 (
-    ///                     Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-    ///                     Expression::Variable(Variable(&b"qux"[..]))
-    ///                 )
-    ///             ]
-    ///         )
+    ///         Expression::Array(vec![
+    ///             (
+    ///                 None,
+    ///                 Expression::Literal(Literal::String(b"foo".to_vec()))
+    ///             ),
+    ///             (
+    ///                 Some(Expression::Literal(Literal::Integer(42i64))),
+    ///                 Expression::Literal(Literal::String(b"bar".to_vec()))
+    ///             ),
+    ///             (
+    ///                 Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+    ///                 Expression::Variable(Variable(&b"qux"[..]))
+    ///             )
+    ///         ])
     ///     )
     /// );
     /// # }
@@ -311,13 +309,11 @@ pub enum Expression<'a> {
     ///     expression(b"echo 'foobar', $bazqux, 42"),
     ///     Result::Done(
     ///         &b""[..],
-    ///         Expression::Echo(
-    ///             vec![
-    ///                 Expression::Literal(Literal::String(b"foobar".to_vec())),
-    ///                 Expression::Variable(Variable(&b"bazqux"[..])),
-    ///                 Expression::Literal(Literal::Integer(42i64))
-    ///             ]
-    ///         )
+    ///         Expression::Echo(vec![
+    ///             Expression::Literal(Literal::String(b"foobar".to_vec())),
+    ///             Expression::Variable(Variable(&b"bazqux"[..])),
+    ///             Expression::Literal(Literal::Integer(42i64))
+    ///         ])
     ///     )
     /// );
     /// # }
@@ -431,12 +427,10 @@ pub enum Expression<'a> {
     ///     expression(b"isset($foo, $bar)"),
     ///     Result::Done(
     ///         &b""[..],
-    ///         Expression::Isset(
-    ///             vec![
-    ///                 Expression::Variable(Variable(&b"foo"[..])),
-    ///                 Expression::Variable(Variable(&b"bar"[..]))
-    ///             ]
-    ///         )
+    ///         Expression::Isset(vec![
+    ///             Expression::Variable(Variable(&b"foo"[..])),
+    ///             Expression::Variable(Variable(&b"bar"[..]))
+    ///         ])
     ///     )
     /// );
     /// # }
@@ -597,16 +591,14 @@ pub enum Expression<'a> {
     ///     expression(b"[7 => &$foo]"),
     ///     Result::Done(
     ///         &b""[..],
-    ///         Expression::Array(
-    ///             vec![
-    ///                 (
-    ///                     Some(Expression::Literal(Literal::Integer(7i64))),
-    ///                     Expression::Reference(
-    ///                         Box::new(Expression::Variable(Variable(&b"foo"[..])))
-    ///                     )
+    ///         Expression::Array(vec![
+    ///             (
+    ///                 Some(Expression::Literal(Literal::Integer(7i64))),
+    ///                 Expression::Reference(
+    ///                     Box::new(Expression::Variable(Variable(&b"foo"[..])))
     ///                 )
-    ///             ]
-    ///         )
+    ///             )
+    ///         ])
     ///     )
     /// );
     /// # }
@@ -629,12 +621,10 @@ pub enum Expression<'a> {
     ///     expression(b"unset($foo, $bar)"),
     ///     Result::Done(
     ///         &b""[..],
-    ///         Expression::Unset(
-    ///             vec![
-    ///                 Expression::Variable(Variable(&b"foo"[..])),
-    ///                 Expression::Variable(Variable(&b"bar"[..]))
-    ///             ]
-    ///         )
+    ///         Expression::Unset(vec![
+    ///             Expression::Variable(Variable(&b"foo"[..])),
+    ///             Expression::Variable(Variable(&b"bar"[..]))
+    ///         ])
     ///     )
     /// );
     /// # }
