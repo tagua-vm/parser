@@ -708,7 +708,7 @@ fn exit_mapper<'a>(expression: Option<Expression<'a>>) -> StdResult<Expression<'
 }
 
 named!(
-    intrinsic_isset<Expression>,
+    pub intrinsic_isset<Expression>,
     do_parse!(
         accumulator: map_res!(
             preceded!(
