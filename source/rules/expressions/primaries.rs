@@ -635,7 +635,36 @@ fn eval_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> 
     Ok(Expression::Eval(Box::new(expression)))
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an exit.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::intrinsic_exit;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_exit(b\"exit(7)\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Exit(
+                    Some(
+                        Box::new(
+                            Expression::Literal(
+                                Literal::Integer(7i64)
+                            )
+                        )
+                    )
+                )
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_exit<Expression>,
     map_res!(
         preceded!(
