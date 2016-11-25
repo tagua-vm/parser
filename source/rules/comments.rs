@@ -35,7 +35,24 @@
 //! the [Grammar chapter, Comments
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#comments).
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all kind of comments.
+
+        A comment can be a single line (`//` or `#`) or a delimited block (`/* … */`).
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::rules::comments::comment;
+
+        # fn main () {
+        assert_eq!(comment(b\"/* foo */ bar\"), Result::Done(&b\" bar\"[..], &b\" foo \"[..]));
+        # }
+        ```
+    "],
     pub comment,
     alt!(
         comment_single_line
