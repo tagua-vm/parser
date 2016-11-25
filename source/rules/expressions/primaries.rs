@@ -297,7 +297,31 @@ named!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an echo.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::intrinsic_echo;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_echo(b\"echo 'Hello,', ' World!'\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Echo(vec![
+                    Expression::Literal(Literal::String(b\"Hello,\".to_vec())),
+                    Expression::Literal(Literal::String(b\" World!\".to_vec()))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_echo<Expression>,
     do_parse!(
         accumulator: map_res!(
