@@ -538,7 +538,7 @@ fn into_unset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
 }
 
 named!(
-    intrinsic_empty<Expression>,
+    pub intrinsic_empty<Expression>,
     map_res!(
         preceded!(
             keyword!(tokens::EMPTY),
