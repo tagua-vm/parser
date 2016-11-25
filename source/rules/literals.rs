@@ -242,7 +242,23 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an integer with the decimal notation.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::decimal;
+
+        # fn main () {
+        assert_eq!(decimal(b\"42\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        # }
+        ```
+    "],
     pub decimal<Literal>,
     map_res!(
         re_bytes_find_static!(r"^[1-9][0-9]*"),
