@@ -246,6 +246,8 @@ named_attr!(
     #[doc="
         Recognize an integer with the decimal notation.
 
+        If the integer is too large to fit in an `i64`, then it will be a `f64`.
+
         # Examples
 
         ```
