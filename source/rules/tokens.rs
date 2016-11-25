@@ -73,7 +73,26 @@ fn variable_mapper(string: &[u8]) -> Result<Variable, ()> {
     Ok(Variable(string))
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a qualified name.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Name;
+        use tagua_parser::rules::tokens::qualified_name;
+
+        # fn main () {
+        assert_eq!(
+            qualified_name(b\"Foo\\\\Bar\\\\Baz\"),
+            Result::Done(&b\"\"[..], Name::Qualified(vec![&b\"Foo\"[..], &b\"Bar\"[..], &b\"Baz\"[..]]))
+       );
+        # }
+        ```
+    "],
     pub qualified_name<Name>,
     do_parse!(
         head: opt!(
