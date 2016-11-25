@@ -246,7 +246,30 @@ fn into_array<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) ->
     Expression::Array(expressions)
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all kind of intrinsics.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::intrinsic;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic(b\"echo 'Hello, World!'\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Echo(vec![
+                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic<Expression>,
     alt!(
         intrinsic_construct
