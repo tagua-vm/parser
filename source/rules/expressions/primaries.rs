@@ -66,7 +66,31 @@ pub enum IntrinsicError {
     ListIsEmpty
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all kind of primary expressions.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::primary;
+
+        # fn main () {
+        assert_eq!(
+            primary(b\"echo 'Hello, World!'\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Echo(vec![
+                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub primary<Expression>,
     alt!(
         variable       => { variable_mapper }
