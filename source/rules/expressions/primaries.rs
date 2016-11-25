@@ -123,7 +123,38 @@ fn literal_mapper<'a>(literal: Literal) -> Expression<'a> {
     Expression::Literal(literal)
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an array.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal, Variable};
+        use tagua_parser::rules::expressions::primaries::array;
+
+        # fn main () {
+        assert_eq!(
+            array(b\"[42, 'foo' => $bar]\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Array(vec![
+                    (
+                        None,
+                        Expression::Literal(Literal::Integer(42i64))
+                    ),
+                    (
+                        Some(Expression::Literal(Literal::String(b\"foo\".to_vec()))),
+                        Expression::Variable(Variable(&b\"bar\"[..]))
+                    )
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub array<Expression>,
     alt!(
         preceded!(
