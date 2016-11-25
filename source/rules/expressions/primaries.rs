@@ -298,7 +298,7 @@ named!(
 );
 
 named!(
-    intrinsic_echo<Expression>,
+    pub intrinsic_echo<Expression>,
     do_parse!(
         accumulator: map_res!(
             preceded!(
