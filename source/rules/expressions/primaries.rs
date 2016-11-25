@@ -1788,11 +1788,9 @@ mod tests {
         let input  = b"isset($foo)";
         let output = Result::Done(
             &b""[..],
-            Expression::Isset(
-                vec![
-                    Expression::Variable(Variable(&b"foo"[..]))
-                ]
-            )
+            Expression::Isset(vec![
+                Expression::Variable(Variable(&b"foo"[..]))
+            ])
         );
 
         assert_eq!(intrinsic_isset(input), output);
@@ -1806,13 +1804,11 @@ mod tests {
         let input  = b"isset($foo, $bar, $baz)";
         let output = Result::Done(
             &b""[..],
-            Expression::Isset(
-                vec![
-                    Expression::Variable(Variable(&b"foo"[..])),
-                    Expression::Variable(Variable(&b"bar"[..])),
-                    Expression::Variable(Variable(&b"baz"[..]))
-                ]
-            )
+            Expression::Isset(vec![
+                Expression::Variable(Variable(&b"foo"[..])),
+                Expression::Variable(Variable(&b"bar"[..])),
+                Expression::Variable(Variable(&b"baz"[..]))
+            ])
         );
 
         assert_eq!(intrinsic_isset(input), output);
