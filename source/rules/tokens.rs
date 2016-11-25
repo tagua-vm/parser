@@ -41,7 +41,23 @@ use super::super::ast::{
 };
 use super::super::tokens;
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a variable.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Variable;
+        use tagua_parser::rules::tokens::variable;
+
+        # fn main () {
+        assert_eq!(variable(b\"$foo\"), Result::Done(&b\"\"[..], Variable(&b\"foo\"[..])));
+        # }
+        ```
+    "],
     pub variable<Variable>,
     map_res!(
         preceded!(
