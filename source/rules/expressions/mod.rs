@@ -39,7 +39,31 @@ pub mod primaries;
 
 use super::super::ast::Expression;
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all kind of expressions.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::expression;
+
+        # fn main () {
+        assert_eq!(
+            expression(b\"echo 'Hello, World!'\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Echo(vec![
+                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub expression<Expression>,
     call!(primaries::primary)
 );
