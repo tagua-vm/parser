@@ -636,7 +636,7 @@ fn eval_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> 
 }
 
 named!(
-    intrinsic_exit<Expression>,
+    pub intrinsic_exit<Expression>,
     map_res!(
         preceded!(
             alt!(
