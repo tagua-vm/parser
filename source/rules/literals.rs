@@ -160,7 +160,23 @@ named_attr!(
     )
 );
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an integer with the binary notation.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::ast::Literal;
+        use tagua_parser::rules::literals::binary;
+
+        # fn main () {
+        assert_eq!(binary(b\"0b101010\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        # }
+        ```
+    "],
     pub binary<Literal>,
     map_res!(
         preceded!(
@@ -179,7 +195,7 @@ named!(
                 .and_then(
                     |binary| {
                         Ok(Literal::Integer(binary))
-                   }
+                    }
                 )
         }
     )
