@@ -482,7 +482,7 @@ fn intrinsic_list_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression
 }
 
 named!(
-    intrinsic_unset<Expression>,
+    pub intrinsic_unset<Expression>,
     do_parse!(
         accumulator: map_res!(
             preceded!(
