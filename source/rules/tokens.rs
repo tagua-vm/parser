@@ -142,7 +142,22 @@ fn wrap_into_vector_mapper(string: &[u8]) -> Result<Vec<&[u8]>, ()> {
     Ok(vec![string])
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a name.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::rules::tokens::name;
+
+        # fn main () {
+        assert_eq!(name(b\"foo\"), Result::Done(&b\"\"[..], &b\"foo\"[..]));
+        # }
+        ```
+    "],
     pub name,
     re_bytes_find_static!(r"^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*")
 );
