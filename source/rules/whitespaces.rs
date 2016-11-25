@@ -35,7 +35,22 @@
 //! in the [Grammar chapter, White Space
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#white-space).
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize all whitespaces.
+
+        # Examples
+
+        ```
+        # extern crate tagua_parser;
+        use tagua_parser::Result;
+        use tagua_parser::rules::whitespaces::whitespace;
+
+        # fn main () {
+        assert_eq!(whitespace(b\"\\n \\r\\tabc\"), Result::Done(&b\"abc\"[..], &b\"\\n \\r\\t\"[..]));
+        # }
+        ```
+    "],
     pub whitespace,
     is_a!(" \t\n\r")
 );
