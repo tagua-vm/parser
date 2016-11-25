@@ -763,7 +763,32 @@ fn into_isset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
     Expression::Isset(expressions)
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a print.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Literal};
+        use tagua_parser::rules::expressions::primaries::intrinsic_print;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_print(b\"print('Hello, World!')\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Print(
+                    Box::new(
+                        Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                    )
+                )
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_print<Expression>,
     map_res!(
         preceded!(
