@@ -646,11 +646,11 @@ named!(
       | keyword!(VAR)
       | keyword!(WHILE)
       | keyword!(XOR)
-      | chain!(
-            keyword!("yield") ~
-            whitespace ~
-            keyword!("from"),
-            || { YIELD_FROM }
+      | do_parse!(
+            keyword!("yield") >>
+            whitespace >>
+            keyword!("from") >>
+            (YIELD_FROM)
         )
       | keyword!(YIELD)
     )

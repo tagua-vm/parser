@@ -59,26 +59,28 @@ fn variable_mapper(string: &[u8]) -> Result<Variable, ()> {
 
 named!(
     pub qualified_name<Name>,
-    chain!(
-        head: alt!(
-            tag!(tokens::NAMESPACE_SEPARATOR)
-          | terminated!(
-                keyword!(tokens::NAMESPACE),
-                first!(tag!(tokens::NAMESPACE_SEPARATOR))
+    do_parse!(
+        head: opt!(
+            alt!(
+                tag!(tokens::NAMESPACE_SEPARATOR)
+              | terminated!(
+                    keyword!(tokens::NAMESPACE),
+                    first!(tag!(tokens::NAMESPACE_SEPARATOR))
+                )
             )
-        )? ~
+        ) >>
         accumulator: map_res!(
             exclude!(first!(name), tokens::keywords),
             wrap_into_vector_mapper
-        ) ~
+        ) >>
         result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::NAMESPACE_SEPARATOR)),
                 exclude!(first!(name), tokens::keywords)
             ),
             accumulator
-        ),
-        || {
+        ) >>
+        (
             match head {
                 Some(handle) => {
                     if handle == tokens::NAMESPACE_SEPARATOR {
@@ -96,7 +98,7 @@ named!(
                     }
                 }
             }
-        }
+        )
     )
 );
 

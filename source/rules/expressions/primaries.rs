@@ -134,32 +134,32 @@ named!(
 
 named!(
     array_pairs<Expression>,
-    chain!(
+    do_parse!(
         accumulator: map_res!(
             first!(array_pair),
             into_vector_mapper
-        ) ~
+        ) >>
         result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 first!(array_pair)
             ),
             accumulator
-        ) ~
-        opt!(first!(tag!(tokens::COMMA))),
-        || { into_array(result) }
+        ) >>
+        opt!(first!(tag!(tokens::COMMA))) >>
+        (into_array(result))
     )
 );
 
 named!(
     array_pair<(Option<Expression>, Expression)>,
-    chain!(
+    do_parse!(
         key: opt!(
             terminated!(
                 expression,
                 first!(tag!(tokens::MAP))
             )
-        ) ~
+        ) >>
         value: alt!(
             map_res!(
                 preceded!(
@@ -169,8 +169,8 @@ named!(
                 value_by_reference_array_mapper
             )
           | first!(expression)
-        ),
-        || { (key, value) }
+        ) >>
+        ((key, value))
     )
 );
 
@@ -219,22 +219,22 @@ named!(
 
 named!(
     intrinsic_echo<Expression>,
-    chain!(
+    do_parse!(
         accumulator: map_res!(
             preceded!(
                 keyword!(tokens::ECHO),
                 first!(expression)
             ),
             into_vector_mapper
-        ) ~
+        ) >>
         result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 first!(expression)
             ),
             accumulator
-        ),
-        || { into_echo(result) }
+        ) >>
+        (into_echo(result))
     )
 );
 
@@ -270,58 +270,58 @@ named!(
 
 named!(
     intrinsic_keyed_list<Expression>,
-    chain!(
+    do_parse!(
         accumulator: map_res!(
             first!(intrinsic_keyed_list_item),
             into_vector_mapper
-        ) ~
+        ) >>
         result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 first!(intrinsic_keyed_list_item)
             ),
             accumulator
-        ) ~
-        opt!(first!(tag!(tokens::COMMA))),
-        || { into_list(result) }
+        ) >>
+        opt!(first!(tag!(tokens::COMMA))) >>
+        (into_list(result))
     )
 );
 
 named!(
     intrinsic_unkeyed_list<Expression>,
-    chain!(
+    do_parse!(
         accumulator: map_res!(
             opt!(first!(intrinsic_unkeyed_list_item)),
             into_vector_mapper
-        ) ~
+        ) >>
         result: fold_into_vector_many0!(
             preceded!(
                 first!(tag!(tokens::COMMA)),
                 opt!(first!(intrinsic_unkeyed_list_item))
             ),
             accumulator
-        ),
-        || { into_list(result) }
+        ) >>
+        (into_list(result))
     )
 );
 
 named!(
     intrinsic_keyed_list_item< Option<(Option<Expression>, Expression)> >,
-    chain!(
+    do_parse!(
         key: terminated!(
             expression,
             first!(tag!(tokens::MAP))
-        ) ~
-        value: first!(expression),
-        || { Some((Some(key), value)) }
+        ) >>
+        value: first!(expression) >>
+        (Some((Some(key), value)))
     )
 );
 
 named!(
     intrinsic_unkeyed_list_item<(Option<Expression>, Expression)>,
-    chain!(
-        value: expression,
-        || { (None, value) }
+    do_parse!(
+        value: expression >>
+        ((None, value))
     )
 );
 
@@ -349,7 +349,7 @@ fn intrinsic_list_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression
 
 named!(
     intrinsic_unset<Expression>,
-    chain!(
+    do_parse!(
         accumulator: map_res!(
             preceded!(
                 keyword!(tokens::UNSET),
@@ -359,7 +359,7 @@ named!(
                 )
             ),
             into_vector_mapper
-        ) ~
+        ) >>
         result: terminated!(
             fold_into_vector_many0!(
                 preceded!(
@@ -369,8 +369,8 @@ named!(
                 accumulator
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
-        ),
-        || { into_unset(result) }
+        ) >>
+        (into_unset(result))
     )
 );
 
@@ -468,7 +468,7 @@ fn exit_mapper<'a>(expression: Option<Expression<'a>>) -> StdResult<Expression<'
 
 named!(
     intrinsic_isset<Expression>,
-    chain!(
+    do_parse!(
         accumulator: map_res!(
             preceded!(
                 keyword!(tokens::ISSET),
@@ -478,7 +478,7 @@ named!(
                 )
             ),
             into_vector_mapper
-        ) ~
+        ) >>
         result: terminated!(
             fold_into_vector_many0!(
                 preceded!(
@@ -488,8 +488,8 @@ named!(
                 accumulator
             ),
             first!(tag!(tokens::RIGHT_PARENTHESIS))
-        ),
-        || { into_isset(result) }
+        ) >>
+        (into_isset(result))
     )
 );
 
