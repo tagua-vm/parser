@@ -707,7 +707,31 @@ fn exit_mapper<'a>(expression: Option<Expression<'a>>) -> StdResult<Expression<'
     }
 }
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize an exit.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{Expression, Variable};
+        use tagua_parser::rules::expressions::primaries::intrinsic_isset;
+
+        # fn main () {
+        assert_eq!(
+            intrinsic_isset(b\"isset($foo, $bar)\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::Isset(vec![
+                    Expression::Variable(Variable(&b\"foo\"[..])),
+                    Expression::Variable(Variable(&b\"bar\"[..]))
+                ])
+            )
+        );
+        # }
+        ```
+    "],
     pub intrinsic_isset<Expression>,
     do_parse!(
         accumulator: map_res!(
