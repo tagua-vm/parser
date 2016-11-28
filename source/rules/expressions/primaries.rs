@@ -2334,4 +2334,46 @@ mod tests {
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
+
+    #[test]
+    fn case_anonymous_function_output_by_copy() {
+        let input  = b"function (): \\O {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Copy(Some(Name::FullyQualified(vec![&b"O"[..]]))),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_output_by_reference() {
+        let input  = b"function &(): int {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
 }
