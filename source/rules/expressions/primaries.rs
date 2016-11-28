@@ -2186,7 +2186,7 @@ mod tests {
     }
 
     #[test]
-    fn case_anonymous_function_arity_one() {
+    fn case_anonymous_function_arity_one_by_copy() {
         let input  = b"function ($x) {}";
         let output = Result::Done(
             &b""[..],
@@ -2224,6 +2224,102 @@ mod tests {
                         Parameter {
                             ty   : Ty::Reference(None),
                             name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output           : Ty::Copy(None),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_arity_one_with_a_copy_type() {
+        let input  = b"function (A\\B\\C $x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : Some(vec![
+                        Parameter {
+                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output           : Ty::Copy(None),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_arity_one_with_a_reference_type() {
+        let input  = b"function (int &$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : Some(vec![
+                        Parameter {
+                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output           : Ty::Copy(None),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_arity_many() {
+        let input  = b"function ($a, I\\J $b, int &$c, \\K $d) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : Some(vec![
+                        Parameter {
+                            ty   : Ty::Copy(None),
+                            name : Variable(&b"a"[..]),
+                            value: None
+                        },
+                        Parameter {
+                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"I"[..], &b"J"[..]]))),
+                            name : Variable(&b"b"[..]),
+                            value: None
+                        },
+                        Parameter {
+                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            name : Variable(&b"c"[..]),
+                            value: None
+                        },
+                        Parameter {
+                            ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b"K"[..]]))),
+                            name : Variable(&b"d"[..]),
                             value: None
                         }
                     ]),
