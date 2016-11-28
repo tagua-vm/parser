@@ -829,7 +829,7 @@ named_attr!(
                 first!(qualified_name)
             )
         ) >>
-        declarative_scope: opt!(first!(anonymous_function_use)) >>
+        enclosing_scope: opt!(first!(anonymous_function_use)) >>
         body: first!(compound_statement) >>
         (
             into_anonymous_function(
@@ -845,7 +845,7 @@ named_attr!(
                 output_is_a_reference.is_some(),
                 inputs,
                 output_type,
-                declarative_scope,
+                enclosing_scope,
                 body
             )
         )
@@ -945,7 +945,7 @@ fn into_anonymous_function<'a>(
     output_is_a_reference: bool,
     inputs               : Option<Vec<Parameter<'a>>>,
     output_type          : Option<Name<'a>>,
-    declarative_scope    : Option<Vec<Expression<'a>>>,
+    enclosing_scope      : Option<Vec<Expression<'a>>>,
     body                 : Vec<Statement>
 ) -> Expression<'a> {
     let output = if output_is_a_reference {
@@ -959,7 +959,7 @@ fn into_anonymous_function<'a>(
             declaration_scope : declaration_scope,
             inputs            : inputs,
             output            : output,
-            declarative_scope : declarative_scope,
+            enclosing_scope   : enclosing_scope,
             body              : body
         }
     )
@@ -2153,7 +2153,7 @@ mod tests {
                         }
                     ]),
                     output           : Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
-                    declarative_scope: Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
+                    enclosing_scope  : Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
                     body             : vec![Statement::Return]
                 }
             )
@@ -2174,7 +2174,7 @@ mod tests {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(None),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2201,7 +2201,7 @@ mod tests {
                         }
                     ]),
                     output           : Ty::Copy(None),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2228,7 +2228,7 @@ mod tests {
                         }
                     ]),
                     output           : Ty::Copy(None),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2255,7 +2255,7 @@ mod tests {
                         }
                     ]),
                     output           : Ty::Copy(None),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2282,7 +2282,7 @@ mod tests {
                         }
                     ]),
                     output           : Ty::Copy(None),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2324,7 +2324,7 @@ mod tests {
                         }
                     ]),
                     output           : Ty::Copy(None),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2345,7 +2345,7 @@ mod tests {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(Some(Name::FullyQualified(vec![&b"O"[..]]))),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )
@@ -2366,7 +2366,7 @@ mod tests {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
-                    declarative_scope: None,
+                    enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
             )

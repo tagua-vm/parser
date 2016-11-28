@@ -677,7 +677,7 @@ pub struct Function<'a> {
     pub declaration_scope: Scope,
     pub inputs           : Option<Vec<Parameter<'a>>>,
     pub output           : Ty<'a>,
-    pub declarative_scope: Option<Vec<Expression<'a>>>,
+    pub enclosing_scope  : Option<Vec<Expression<'a>>>,
     pub body             : Vec<Statement>
 }
 
