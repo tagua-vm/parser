@@ -821,7 +821,7 @@ named_attr!(
         first!(keyword!(tokens::FUNCTION)) >>
         output_is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
         first!(tag!(tokens::LEFT_PARENTHESIS)) >>
-        inputs: first!(parameters) >>
+        inputs: opt!(first!(parameters)) >>
         first!(tag!(tokens::RIGHT_PARENTHESIS)) >>
         output_type: opt!(
             preceded!(
@@ -882,22 +882,8 @@ named!(
 
 #[inline(always)]
 fn into_parameter<'a>(ty: Option<Name<'a>>, is_a_reference: bool, name: Variable<'a>) -> Parameter<'a> {
-    let ty = match ty {
-        Some(ty) => {
-            if is_a_reference {
-                Some(Ty::Reference(ty))
-            } else {
-                Some(Ty::Copy(ty))
-            }
-        },
-
-        None => {
-            None
-        }
-    };
-
     Parameter {
-        ty   : ty,
+        ty   : if is_a_reference { Ty::Reference(ty) } else { Ty::Copy(ty) },
         name : name,
         value: None
     }
@@ -957,23 +943,15 @@ fn into_anonymous_function_use_list_item<'a>(reference: bool, name: Variable<'a>
 fn into_anonymous_function<'a>(
     declaration_scope    : Scope,
     output_is_a_reference: bool,
-    inputs               : Vec<Parameter<'a>>,
+    inputs               : Option<Vec<Parameter<'a>>>,
     output_type          : Option<Name<'a>>,
     declarative_scope    : Option<Vec<Expression<'a>>>,
     body                 : Vec<Statement>
 ) -> Expression<'a> {
-    let output = match output_type {
-        Some(output_type) => {
-            if output_is_a_reference {
-                Some(Ty::Reference(output_type))
-            } else {
-                Some(Ty::Copy(output_type))
-            }
-        },
-
-        None => {
-            None
-        }
+    let output = if output_is_a_reference {
+        Ty::Reference(output_type)
+    } else {
+        Ty::Copy(output_type)
     };
 
     Expression::AnonymousFunction(
@@ -2162,20 +2140,95 @@ mod tests {
             Expression::AnonymousFunction(
                 Function {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : vec![
+                    inputs           : Some(vec![
                         Parameter {
-                            ty   : Some(Ty::Copy(Name::Unqualified(&b"I"[..]))),
+                            ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
                             name : Variable(&b"x"[..]),
                             value: None
                         },
                         Parameter {
-                            ty   : Some(Ty::Reference(Name::Unqualified(&b"J"[..]))),
+                            ty   : Ty::Reference(Some(Name::Unqualified(&b"J"[..]))),
                             name : Variable(&b"y"[..]),
                             value: None
-                        },
-                    ],
-                    output           : Some(Ty::Copy(Name::Unqualified(&b"O"[..]))),
+                        }
+                    ]),
+                    output           : Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
                     declarative_scope: Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_arity_zero() {
+        let input  = b"function () {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Copy(None),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_arity_one() {
+        let input  = b"function ($x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : Some(vec![
+                        Parameter {
+                            ty   : Ty::Copy(None),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output           : Ty::Copy(None),
+                    declarative_scope: None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_arity_one_by_reference() {
+        let input  = b"function (&$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : Some(vec![
+                        Parameter {
+                            ty   : Ty::Reference(None),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output           : Ty::Copy(None),
+                    declarative_scope: None,
                     body             : vec![Statement::Return]
                 }
             )

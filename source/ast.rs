@@ -657,16 +657,16 @@ pub enum Expression<'a> {
 #[derive(Debug, PartialEq)]
 pub enum Ty<'a> {
     /// A type representing a data passed by copy.
-    Copy(Name<'a>),
+    Copy(Option<Name<'a>>),
 
     /// A type representing a data passed by reference.
-    Reference(Name<'a>)
+    Reference(Option<Name<'a>>)
 }
 
 /// A parameter (of a function, or a method).
 #[derive(Debug, PartialEq)]
 pub struct Parameter<'a> {
-    pub ty   : Option<Ty<'a>>,
+    pub ty   : Ty<'a>,
     pub name : Variable<'a>,
     pub value: Option<Expression<'a>>
 }
@@ -675,8 +675,8 @@ pub struct Parameter<'a> {
 #[derive(Debug, PartialEq)]
 pub struct Function<'a> {
     pub declaration_scope: Scope,
-    pub inputs           : Vec<Parameter<'a>>,
-    pub output           : Option<Ty<'a>>,
+    pub inputs           : Option<Vec<Parameter<'a>>>,
+    pub output           : Ty<'a>,
     pub declarative_scope: Option<Vec<Expression<'a>>>,
     pub body             : Vec<Statement>
 }
