@@ -814,6 +814,64 @@ fn print_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()>
 named_attr!(
     #[doc="
         Recognize an anonymous function.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{
+            Expression,
+            Function,
+            Name,
+            Parameter,
+            Scope,
+            Statement,
+            Ty,
+            Variable
+        };
+        use tagua_parser::rules::expressions::primaries::anonymous_function;
+
+        # fn main() {
+        assert_eq!(
+            anonymous_function(b\"function &($x, \\\\I\\\\J $y, int &$z): O use ($a, &$b) { return; }\"),
+            Result::Done(
+                &b\"\"[..],
+                Expression::AnonymousFunction(
+                    Function {
+                        declaration_scope: Scope::Dynamic,
+                        inputs           : Some(vec![
+                            Parameter {
+                                ty   : Ty::Copy(None),
+                                name : Variable(&b\"x\"[..]),
+                                value: None
+                            },
+                            Parameter {
+                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b\"I\"[..], &b\"J\"[..]]))),
+                                name : Variable(&b\"y\"[..]),
+                                value: None
+                            },
+                            Parameter {
+                                ty   : Ty::Reference(Some(Name::Unqualified(&b\"int\"[..]))),
+                                name : Variable(&b\"z\"[..]),
+                                value: None
+                            }
+                        ]),
+                        output         : Ty::Reference(Some(Name::Unqualified(&b\"O\"[..]))),
+                        enclosing_scope: Some(vec![
+                            Expression::Variable(Variable(&b\"a\"[..])),
+                            Expression::Reference(
+                                Box::new(
+                                    Expression::Variable(Variable(&b\"b\"[..]))
+                                )
+                            )
+                        ]),
+                        body: vec![Statement::Return]
+                    }
+                )
+            )
+        );
+        # }
+        ```
     "],
     pub anonymous_function<Expression>,
     do_parse!(
