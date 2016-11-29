@@ -2168,9 +2168,9 @@ mod tests {
                             value: None
                         }
                     ]),
-                    output           : Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
-                    enclosing_scope  : Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
-                    body             : vec![Statement::Return]
+                    output         : Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
+                    enclosing_scope: Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
+                    body           : vec![Statement::Return]
                 }
             )
         );
@@ -2216,9 +2216,9 @@ mod tests {
                             value: None
                         }
                     ]),
-                    output           : Ty::Copy(None),
-                    enclosing_scope  : None,
-                    body             : vec![Statement::Return]
+                    output         : Ty::Copy(None),
+                    enclosing_scope: None,
+                    body           : vec![Statement::Return]
                 }
             )
         );
@@ -2243,9 +2243,9 @@ mod tests {
                             value: None
                         }
                     ]),
-                    output           : Ty::Copy(None),
-                    enclosing_scope  : None,
-                    body             : vec![Statement::Return]
+                    output         : Ty::Copy(None),
+                    enclosing_scope: None,
+                    body           : vec![Statement::Return]
                 }
             )
         );
@@ -2297,9 +2297,9 @@ mod tests {
                             value: None
                         }
                     ]),
-                    output           : Ty::Copy(None),
-                    enclosing_scope  : None,
-                    body             : vec![Statement::Return]
+                    output         : Ty::Copy(None),
+                    enclosing_scope: None,
+                    body           : vec![Statement::Return]
                 }
             )
         );
@@ -2339,9 +2339,9 @@ mod tests {
                             value: None
                         }
                     ]),
-                    output           : Ty::Copy(None),
-                    enclosing_scope  : None,
-                    body             : vec![Statement::Return]
+                    output         : Ty::Copy(None),
+                    enclosing_scope: None,
+                    body           : vec![Statement::Return]
                 }
             )
         );
