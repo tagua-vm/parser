@@ -84,7 +84,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::primary;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             primary(b\"echo 'Hello, World!'\"),
             Result::Done(
@@ -142,7 +142,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal, Variable};
         use tagua_parser::rules::expressions::primaries::array;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             array(b\"[42, 'foo' => $bar]\"),
             Result::Done(
@@ -264,7 +264,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic(b\"echo 'Hello, World!'\"),
             Result::Done(
@@ -315,7 +315,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_echo;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_echo(b\"echo 'Hello,', ' World!'\"),
             Result::Done(
@@ -370,7 +370,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_list;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_list(b\"list('foo' => $foo, 'bar' => $bar)\"),
             Result::Done(
@@ -499,7 +499,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_unset;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_unset(b\"unset($foo, $bar)\"),
             Result::Done(
@@ -555,7 +555,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_empty;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_empty(b\"empty('foo')\"),
             Result::Done(
@@ -604,7 +604,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_eval;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_eval(b\"eval('1 + 2')\"),
             Result::Done(
@@ -653,7 +653,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_exit;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_exit(b\"exit(7)\"),
             Result::Done(
@@ -725,7 +725,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_isset;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_isset(b\"isset($foo, $bar)\"),
             Result::Done(
@@ -781,7 +781,7 @@ named_attr!(
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_print;
 
-        # fn main () {
+        # fn main() {
         assert_eq!(
             intrinsic_print(b\"print('Hello, World!')\"),
             Result::Done(
