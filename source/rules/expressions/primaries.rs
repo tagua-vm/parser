@@ -2392,4 +2392,104 @@ mod tests {
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
+
+    #[test]
+    fn case_anonymous_function_empty_enclosing_scope() {
+        let input  = b"function () use () {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Copy(None),
+                    enclosing_scope  : Some(vec![]),
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_one_enclosed_variable_by_copy() {
+        let input  = b"function () use ($x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Copy(None),
+                    enclosing_scope  : Some(vec![
+                        Expression::Variable(Variable(&b"x"[..]))
+                    ]),
+                    body: vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_one_enclosed_variable_by_reference() {
+        let input  = b"function () use (&$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Copy(None),
+                    enclosing_scope  : Some(vec![
+                        Expression::Reference(
+                            Box::new(
+                                Expression::Variable(Variable(&b"x"[..]))
+                            )
+                        )
+                    ]),
+                    body: vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_anonymous_function_many_enclosed_variables() {
+        let input  = b"function () use ($x, &$y, $z) {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Dynamic,
+                    inputs           : None,
+                    output           : Ty::Copy(None),
+                    enclosing_scope  : Some(vec![
+                        Expression::Variable(Variable(&b"x"[..])),
+                        Expression::Reference(
+                            Box::new(
+                                Expression::Variable(Variable(&b"y"[..]))
+                            )
+                        ),
+                        Expression::Variable(Variable(&b"z"[..]))
+                    ]),
+                    body: vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
 }
