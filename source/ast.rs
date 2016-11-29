@@ -254,6 +254,56 @@ pub enum Name<'a> {
 #[derive(Debug, PartialEq)]
 pub enum Expression<'a> {
     /// Anonymous function.
+    /// An anonymous function is defined like, and behaves like, a
+    /// named function except that the former has no name, and an
+    /// enclosed scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Function,
+    ///     Name,
+    ///     Parameter,
+    ///     Scope,
+    ///     Statement,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::expressions::expression;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     expression(b"function (I $x, J &$y): O use ($z) { return; }"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Expression::AnonymousFunction(
+    ///             Function {
+    ///                 declaration_scope: Scope::Dynamic,
+    ///                 inputs           : Some(vec![
+    ///                     Parameter {
+    ///                         ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
+    ///                         name : Variable(&b"x"[..]),
+    ///                         value: None
+    ///                     },
+    ///                     Parameter {
+    ///                         ty   : Ty::Reference(Some(Name::Unqualified(&b"J"[..]))),
+    ///                         name : Variable(&b"y"[..]),
+    ///                         value: None
+    ///                     }
+    ///                 ]),
+    ///                 output         : Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
+    ///                 enclosing_scope: Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
+    ///                 body           : vec![Statement::Return]
+    ///             }
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     AnonymousFunction(Function<'a>),
 
     /// Array.
