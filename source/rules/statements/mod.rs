@@ -35,6 +35,8 @@
 //! in the [Grammar chapter, Statements
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#statements).
 
+pub mod function;
+
 use super::super::ast::Statement;
 use super::super::tokens;
 
@@ -51,5 +53,12 @@ named!(
         |_| -> Result<Vec<Statement>, ()> {
             Ok(vec![Statement::Return])
         }
+    )
+);
+
+named!(
+    pub statement<Statement>,
+    alt!(
+        call!(function::function)
     )
 );

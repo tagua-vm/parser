@@ -44,8 +44,8 @@ use super::super::tokens::{
     variable
 };
 use super::super::super::ast::{
+    AnonymousFunction,
     Expression,
-    Function,
     Literal,
     Name,
     Parameter,
@@ -820,8 +820,8 @@ named_attr!(
         ```
         use tagua_parser::Result;
         use tagua_parser::ast::{
+            AnonymousFunction,
             Expression,
-            Function,
             Name,
             Parameter,
             Scope,
@@ -837,7 +837,7 @@ named_attr!(
             Result::Done(
                 &b\"\"[..],
                 Expression::AnonymousFunction(
-                    Function {
+                    AnonymousFunction {
                         declaration_scope: Scope::Dynamic,
                         inputs           : Some(vec![
                             Parameter {
@@ -1020,7 +1020,7 @@ fn into_anonymous_function<'a>(
     inputs               : Option<Vec<Parameter<'a>>>,
     output_type          : Option<Name<'a>>,
     enclosing_scope      : Option<Vec<Expression<'a>>>,
-    body                 : Vec<Statement>
+    body                 : Vec<Statement<'a>>
 ) -> Expression<'a> {
     let output = if output_is_a_reference {
         Ty::Reference(output_type)
@@ -1029,7 +1029,7 @@ fn into_anonymous_function<'a>(
     };
 
     Expression::AnonymousFunction(
-        Function {
+        AnonymousFunction {
             declaration_scope : declaration_scope,
             inputs            : inputs,
             output            : output,
@@ -1060,8 +1060,8 @@ mod tests {
     };
     use super::super::expression;
     use super::super::super::super::ast::{
+        AnonymousFunction,
         Expression,
-        Function,
         Literal,
         Name,
         Parameter,
@@ -2212,7 +2212,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Some(vec![
                         Parameter {
@@ -2244,7 +2244,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(None),
@@ -2265,7 +2265,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Some(vec![
                         Parameter {
@@ -2292,7 +2292,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Some(vec![
                         Parameter {
@@ -2319,7 +2319,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Some(vec![
                         Parameter {
@@ -2346,7 +2346,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Some(vec![
                         Parameter {
@@ -2373,7 +2373,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Some(vec![
                         Parameter {
@@ -2415,7 +2415,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(Some(Name::FullyQualified(vec![&b"O"[..]]))),
@@ -2436,7 +2436,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
@@ -2457,7 +2457,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(None),
@@ -2478,7 +2478,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(None),
@@ -2501,7 +2501,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(None),
@@ -2528,7 +2528,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : None,
                     output           : Ty::Copy(None),
@@ -2557,7 +2557,7 @@ mod tests {
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
-                Function {
+                AnonymousFunction {
                     declaration_scope: Scope::Static,
                     inputs           : None,
                     output           : Ty::Copy(None),

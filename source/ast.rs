@@ -264,8 +264,8 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
+    ///     AnonymousFunction,
     ///     Expression,
-    ///     Function,
     ///     Name,
     ///     Parameter,
     ///     Scope,
@@ -281,7 +281,7 @@ pub enum Expression<'a> {
     ///     Result::Done(
     ///         &b""[..],
     ///         Expression::AnonymousFunction(
-    ///             Function {
+    ///             AnonymousFunction {
     ///                 declaration_scope: Scope::Dynamic,
     ///                 inputs           : Some(vec![
     ///                     Parameter {
@@ -304,7 +304,7 @@ pub enum Expression<'a> {
     /// );
     /// # }
     /// ```
-    AnonymousFunction(Function<'a>),
+    AnonymousFunction(AnonymousFunction<'a>),
 
     /// Array.
     /// A collection of heterogeneous pairs (key, value). The key is
@@ -561,7 +561,7 @@ pub enum Expression<'a> {
     /// ```
     List(Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>),
 
-    /// A literal. See `Literal`.
+    /// A literal.
     ///
     /// # Examples
     ///
@@ -580,7 +580,7 @@ pub enum Expression<'a> {
     /// ```
     Literal(Literal),
 
-    /// A name. See `Name`.
+    /// A name.
     ///
     /// # Examples
     ///
@@ -683,7 +683,7 @@ pub enum Expression<'a> {
     /// ```
     Unset(Vec<Expression<'a>>),
 
-    /// A variable. See `Variable`.
+    /// A variable.
     ///
     /// # Examples
     ///
@@ -724,16 +724,29 @@ pub struct Parameter<'a> {
 /// A function.
 #[derive(Debug, PartialEq)]
 pub struct Function<'a> {
+    pub name  : &'a [u8],
+    pub inputs: Option<Vec<Parameter<'a>>>,
+    pub output: Ty<'a>,
+    pub body  : Vec<Statement<'a>>
+}
+
+/// An anonymous function.
+#[derive(Debug, PartialEq)]
+pub struct AnonymousFunction<'a> {
     pub declaration_scope: Scope,
     pub inputs           : Option<Vec<Parameter<'a>>>,
     pub output           : Ty<'a>,
     pub enclosing_scope  : Option<Vec<Expression<'a>>>,
-    pub body             : Vec<Statement>
+    pub body             : Vec<Statement<'a>>
 }
 
 /// A statement.
 #[derive(Debug, PartialEq)]
-pub enum Statement {
+pub enum Statement<'a> {
+    /// A function.
+    Function(Function<'a>),
+
+    /// A return.
     Return
 }
 
