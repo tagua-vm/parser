@@ -2492,4 +2492,25 @@ mod tests {
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
+
+    #[test]
+    fn case_anonymous_function_static_scope() {
+        let input  = b"static function () {}";
+        let output = Result::Done(
+            &b""[..],
+            Expression::AnonymousFunction(
+                Function {
+                    declaration_scope: Scope::Static,
+                    inputs           : None,
+                    output           : Ty::Copy(None),
+                    enclosing_scope  : None,
+                    body             : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(anonymous_function(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
 }
