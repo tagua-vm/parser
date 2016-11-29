@@ -60,7 +60,7 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(literal(b"true"), Result::Done(&b""[..], Literal::Boolean(true)));
     /// assert_eq!(literal(b"false"), Result::Done(&b""[..], Literal::Boolean(false)));
     /// # }
@@ -77,7 +77,7 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// let output = Result::Done(&b""[..], Literal::Integer(42i64));
     ///
     /// assert_eq!(literal(b"0b101010"), output);
@@ -98,7 +98,7 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(literal(b"null"), Result::Done(&b""[..], Literal::Null));
     /// # }
     /// ```
@@ -114,7 +114,7 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// let output = Result::Done(&b""[..], Literal::Real(4.2f64));
     ///
     /// assert_eq!(literal(b"4.2"), output);
@@ -134,7 +134,7 @@ pub enum Literal {
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     literal(b"'foo\\'bar'"),
     ///     Result::Done(&b""[..], Literal::String(b"foo'bar".to_vec()))
@@ -154,7 +154,7 @@ pub enum Literal {
 /// use tagua_parser::ast::Variable;
 /// use tagua_parser::rules::tokens::variable;
 ///
-/// # fn main () {
+/// # fn main() {
 /// assert_eq!(
 ///     variable(b"$foo"),
 ///     Result::Done(&b""[..], Variable(&b"foo"[..]))
@@ -178,7 +178,7 @@ pub enum Name<'a> {
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(b"Bar"),
     ///     Result::Done(&b""[..], Name::Unqualified(&b"Bar"[..]))
@@ -198,7 +198,7 @@ pub enum Name<'a> {
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(b"Foo\\Bar"),
     ///     Result::Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]]))
@@ -218,7 +218,7 @@ pub enum Name<'a> {
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(b"namespace\\Foo\\Bar"),
     ///     Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
@@ -239,7 +239,7 @@ pub enum Name<'a> {
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(b"\\Foo\\Bar"),
     ///     Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..]]))
@@ -268,7 +268,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"['foo', 42 => 'bar', 'baz' => $qux]"),
     ///     Result::Done(
@@ -306,7 +306,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"echo 'foobar', $bazqux, 42"),
     ///     Result::Done(
@@ -334,7 +334,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"empty('')"),
     ///     Result::Done(
@@ -363,7 +363,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"eval('1 + 2;')"),
     ///     Result::Done(
@@ -392,7 +392,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"exit(42)"),
     ///     Result::Done(
@@ -424,7 +424,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"isset($foo, $bar)"),
     ///     Result::Done(
@@ -453,7 +453,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)"),
     ///     Result::Done(
@@ -484,7 +484,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"list($foo, , , $bar, $baz)"),
     ///     Result::Done(
@@ -521,7 +521,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"'Hello, World!'"),
     ///     Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())))
@@ -540,7 +540,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Name};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"Foo\\Bar"),
     ///     Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])))
@@ -561,7 +561,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"print $foo"),
     ///     Result::Done(
@@ -588,7 +588,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"[7 => &$foo]"),
     ///     Result::Done(
@@ -618,7 +618,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"unset($foo, $bar)"),
     ///     Result::Done(
@@ -643,7 +643,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::ast::{Expression, Variable};
     /// use tagua_parser::rules::expressions::expression;
     ///
-    /// # fn main () {
+    /// # fn main() {
     /// assert_eq!(
     ///     expression(b"$foo"),
     ///     Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])))
