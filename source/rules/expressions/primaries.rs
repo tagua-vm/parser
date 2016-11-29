@@ -39,6 +39,7 @@ use std::result::Result as StdResult;
 use super::expression;
 use super::super::literals::literal;
 use super::super::statements::compound_statement;
+use super::super::statements::function::parameters;
 use super::super::tokens::{
     qualified_name,
     variable
@@ -909,43 +910,6 @@ named_attr!(
         )
     )
 );
-
-named!(
-    parameters< Vec<Parameter> >,
-    do_parse!(
-        accumulator: map_res!(
-            parameter,
-            into_vector_mapper
-        ) >>
-        result: fold_into_vector_many0!(
-            preceded!(
-                first!(tag!(tokens::COMMA)),
-                first!(parameter)
-            ),
-            accumulator
-        ) >>
-        (result)
-    )
-);
-
-named!(
-    parameter<Parameter>,
-    do_parse!(
-        ty: opt!(qualified_name) >>
-        is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
-        name: first!(variable) >>
-        (into_parameter(ty, is_a_reference.is_some(), name))
-    )
-);
-
-#[inline(always)]
-fn into_parameter<'a>(ty: Option<Name<'a>>, is_a_reference: bool, name: Variable<'a>) -> Parameter<'a> {
-    Parameter {
-        ty   : if is_a_reference { Ty::Reference(ty) } else { Ty::Copy(ty) },
-        name : name,
-        value: None
-    }
-}
 
 named!(
     anonymous_function_use< Vec<Expression> >,
