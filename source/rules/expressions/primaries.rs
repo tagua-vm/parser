@@ -891,17 +891,33 @@ fn into_parameter<'a>(ty: Option<Name<'a>>, is_a_reference: bool, name: Variable
 
 named!(
     anonymous_function_use< Vec<Expression> >,
-    terminated!(
-        preceded!(
-            keyword!(tokens::USE),
+    map_res!(
+        terminated!(
             preceded!(
-                first!(tag!(tokens::LEFT_PARENTHESIS)),
-                first!(anonymous_function_use_list)
-            )
+                keyword!(tokens::USE),
+                preceded!(
+                    first!(tag!(tokens::LEFT_PARENTHESIS)),
+                    opt!(first!(anonymous_function_use_list))
+                )
+            ),
+            first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
-        first!(tag!(tokens::RIGHT_PARENTHESIS))
+        anonymous_function_use_mapper
     )
 );
+
+#[inline(always)]
+fn anonymous_function_use_mapper<'a>(enclosing_list: Option<Vec<Expression<'a>>>) -> StdResult<Vec<Expression<'a>>, ()> {
+    match enclosing_list {
+        Some(enclosing_list) => {
+            Ok(enclosing_list)
+        },
+
+        None => {
+            Ok(vec![])
+        }
+    }
+}
 
 named!(
     anonymous_function_use_list< Vec<Expression> >,
