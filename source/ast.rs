@@ -265,6 +265,7 @@ pub enum Expression<'a> {
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     AnonymousFunction,
+    ///     Arity,
     ///     Expression,
     ///     Name,
     ///     Parameter,
@@ -283,7 +284,7 @@ pub enum Expression<'a> {
     ///         Expression::AnonymousFunction(
     ///             AnonymousFunction {
     ///                 declaration_scope: Scope::Dynamic,
-    ///                 inputs           : Some(vec![
+    ///                 inputs           : Arity::Finite(vec![
     ///                     Parameter {
     ///                         ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
     ///                         name : Variable(&b"x"[..]),
@@ -721,11 +722,24 @@ pub struct Parameter<'a> {
     pub value: Option<Expression<'a>>
 }
 
+/// Arity of a function.
+#[derive(Debug, PartialEq)]
+pub enum Arity<'a> {
+    /// A function with no parameter.
+    Constant,
+
+    /// A function with a finite number of parameters.
+    Finite(Vec<Parameter<'a>>),
+
+    /// A variadic function.
+    Infinite(Vec<Parameter<'a>>)
+}
+
 /// A function.
 #[derive(Debug, PartialEq)]
 pub struct Function<'a> {
     pub name  : &'a [u8],
-    pub inputs: Option<Vec<Parameter<'a>>>,
+    pub inputs: Arity<'a>,
     pub output: Ty<'a>,
     pub body  : Vec<Statement<'a>>
 }
@@ -734,7 +748,7 @@ pub struct Function<'a> {
 #[derive(Debug, PartialEq)]
 pub struct AnonymousFunction<'a> {
     pub declaration_scope: Scope,
-    pub inputs           : Option<Vec<Parameter<'a>>>,
+    pub inputs           : Arity<'a>,
     pub output           : Ty<'a>,
     pub enclosing_scope  : Option<Vec<Expression<'a>>>,
     pub body             : Vec<Statement<'a>>

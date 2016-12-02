@@ -46,6 +46,7 @@ use super::super::tokens::{
 };
 use super::super::super::ast::{
     AnonymousFunction,
+    Arity,
     Expression,
     Literal,
     Name,
@@ -822,6 +823,7 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{
             AnonymousFunction,
+            Arity,
             Expression,
             Name,
             Parameter,
@@ -840,7 +842,7 @@ named_attr!(
                 Expression::AnonymousFunction(
                     AnonymousFunction {
                         declaration_scope: Scope::Dynamic,
-                        inputs           : Some(vec![
+                        inputs           : Arity::Finite(vec![
                             Parameter {
                                 ty   : Ty::Copy(None),
                                 name : Variable(&b\"x\"[..]),
@@ -986,6 +988,16 @@ fn into_anonymous_function<'a>(
     enclosing_scope      : Option<Vec<Expression<'a>>>,
     body                 : Vec<Statement<'a>>
 ) -> Expression<'a> {
+    let inputs = match inputs {
+        Some(inputs) => {
+            Arity::Finite(inputs)
+        },
+
+        None => {
+            Arity::Constant
+        }
+    };
+
     let output = if output_is_a_reference {
         Ty::Reference(output_type)
     } else {
@@ -1025,6 +1037,7 @@ mod tests {
     use super::super::expression;
     use super::super::super::super::ast::{
         AnonymousFunction,
+        Arity,
         Expression,
         Literal,
         Name,
@@ -2178,7 +2191,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : Some(vec![
+                    inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
                             name : Variable(&b"x"[..]),
@@ -2210,7 +2223,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]
@@ -2231,7 +2244,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : Some(vec![
+                    inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
                             name : Variable(&b"x"[..]),
@@ -2258,7 +2271,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : Some(vec![
+                    inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(None),
                             name : Variable(&b"x"[..]),
@@ -2285,7 +2298,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : Some(vec![
+                    inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
                             name : Variable(&b"x"[..]),
@@ -2312,7 +2325,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : Some(vec![
+                    inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
                             name : Variable(&b"x"[..]),
@@ -2339,7 +2352,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : Some(vec![
+                    inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
                             name : Variable(&b"a"[..]),
@@ -2381,7 +2394,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(Some(Name::FullyQualified(vec![&b"O"[..]]))),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]
@@ -2402,7 +2415,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]
@@ -2423,7 +2436,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![]),
                     body             : vec![Statement::Return]
@@ -2444,7 +2457,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
                         Expression::Variable(Variable(&b"x"[..]))
@@ -2467,7 +2480,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
                         Expression::Reference(
@@ -2494,7 +2507,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
                         Expression::Variable(Variable(&b"x"[..])),
@@ -2523,7 +2536,7 @@ mod tests {
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Static,
-                    inputs           : None,
+                    inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]

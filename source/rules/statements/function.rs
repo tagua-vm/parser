@@ -43,6 +43,7 @@ use super::super::tokens::{
     variable
 };
 use super::super::super::ast::{
+    Arity,
     Function,
     Name,
     Parameter,
@@ -61,6 +62,7 @@ named_attr!(
         ```
         use tagua_parser::Result;
         use tagua_parser::ast::{
+            Arity,
             Function,
             Name,
             Parameter,
@@ -78,7 +80,7 @@ named_attr!(
                 Statement::Function(
                     Function {
                         name  : &b\"f\"[..],
-                        inputs: Some(vec![
+                        inputs: Arity::Finite(vec![
                             Parameter {
                                 ty   : Ty::Copy(None),
                                 name : Variable(&b\"x\"[..]),
@@ -223,6 +225,16 @@ fn into_function<'a>(
     output_type          : Option<Name<'a>>,
     body                 : Vec<Statement<'a>>
 ) -> Statement<'a> {
+    let inputs = match inputs {
+        Some(inputs) => {
+            Arity::Finite(inputs)
+        },
+
+        None => {
+            Arity::Constant
+        }
+    };
+
     let output = if output_is_a_reference {
         Ty::Reference(output_type)
     } else {
@@ -245,6 +257,7 @@ mod tests {
     use super::function;
     use super::super::statement;
     use super::super::super::super::ast::{
+        Arity,
         Function,
         Name,
         Parameter,
@@ -262,7 +275,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: Some(vec![
+                    inputs: Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
                             name : Variable(&b"x"[..]),
@@ -292,7 +305,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: None,
+                    inputs: Arity::Constant,
                     output: Ty::Copy(None),
                     body  : vec![Statement::Return]
                 }
@@ -311,7 +324,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: Some(vec![
+                    inputs: Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
                             name : Variable(&b"x"[..]),
@@ -336,7 +349,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: Some(vec![
+                    inputs: Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(None),
                             name : Variable(&b"x"[..]),
@@ -361,7 +374,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: Some(vec![
+                    inputs: Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
                             name : Variable(&b"x"[..]),
@@ -386,7 +399,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: Some(vec![
+                    inputs: Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
                             name : Variable(&b"x"[..]),
@@ -411,7 +424,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: Some(vec![
+                    inputs: Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
                             name : Variable(&b"a"[..]),
@@ -451,7 +464,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: None,
+                    inputs: Arity::Constant,
                     output: Ty::Copy(Some(Name::FullyQualified(vec![&b"O"[..]]))),
                     body  : vec![Statement::Return]
                 }
@@ -470,7 +483,7 @@ mod tests {
             Statement::Function(
                 Function {
                     name  : &b"f"[..],
-                    inputs: None,
+                    inputs: Arity::Constant,
                     output: Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
                     body  : vec![Statement::Return]
                 }
