@@ -571,6 +571,56 @@ mod tests {
     }
 
     #[test]
+    fn case_variadic_function_arity_one_with_a_copy_type() {
+        let input  = b"function f(A\\B\\C ...$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Statement::Function(
+                Function {
+                    name  : &b"f"[..],
+                    inputs: Arity::Infinite(vec![
+                        Parameter {
+                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output: Ty::Copy(None),
+                    body  : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(function(input), output);
+        assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_variadic_function_arity_one_with_a_reference_type() {
+        let input  = b"function f(int &...$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Statement::Function(
+                Function {
+                    name  : &b"f"[..],
+                    inputs: Arity::Infinite(vec![
+                        Parameter {
+                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output: Ty::Copy(None),
+                    body  : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(function(input), output);
+        assert_eq!(statement(input), output);
+    }
+
+    #[test]
     fn case_variadic_function_arity_many() {
         let input  = b"function f($a, I\\J $b, int &...$c) {}";
         let output = Result::Done(
