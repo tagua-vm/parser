@@ -272,10 +272,10 @@ fn into_vector_mapper<T>(item: T) -> StdResult<Vec<T>, ()> {
 
 #[inline(always)]
 fn into_parameter<'a>(
-    ty: Option<Name<'a>>,
+    ty            : Option<Name<'a>>,
     is_a_reference: bool,
-    is_variadic: bool,
-    name: Variable<'a>
+    is_variadic   : bool,
+    name          : Variable<'a>
 ) -> (Parameter<'a>, bool) {
     (
         Parameter {
