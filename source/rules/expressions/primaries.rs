@@ -50,7 +50,6 @@ use super::super::super::ast::{
     Expression,
     Literal,
     Name,
-    Parameter,
     Scope,
     Statement,
     Ty,
@@ -904,7 +903,15 @@ named_attr!(
                     }
                 },
                 output_is_a_reference.is_some(),
-                inputs,
+                match inputs {
+                    Some(inputs) => {
+                        inputs
+                    },
+
+                    None => {
+                        Arity::Constant
+                    }
+                },
                 output_type,
                 enclosing_scope,
                 body
@@ -983,21 +990,11 @@ fn into_anonymous_function_use_list_item<'a>(reference: bool, name: Variable<'a>
 fn into_anonymous_function<'a>(
     declaration_scope    : Scope,
     output_is_a_reference: bool,
-    inputs               : Option<Vec<Parameter<'a>>>,
+    inputs               : Arity<'a>,
     output_type          : Option<Name<'a>>,
     enclosing_scope      : Option<Vec<Expression<'a>>>,
     body                 : Vec<Statement<'a>>
 ) -> Expression<'a> {
-    let inputs = match inputs {
-        Some(inputs) => {
-            Arity::Finite(inputs)
-        },
-
-        None => {
-            Arity::Constant
-        }
-    };
-
     let output = if output_is_a_reference {
         Ty::Reference(output_type)
     } else {

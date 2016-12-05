@@ -51,7 +51,19 @@ use super::super::super::ast::{
     Ty,
     Variable
 };
+use super::super::super::internal::{
+    Error,
+    ErrorKind
+};
 use super::super::super::tokens;
+
+/// Function errors.
+pub enum FunctionError {
+    /// A variadic function has a `...parameter` at an invalid
+    /// position. It must be the latest one.
+    InvalidVariadicParameterPosition
+}
+
 
 named_attr!(
     #[doc="
@@ -124,7 +136,15 @@ named_attr!(
         (
             into_function(
                 name,
-                inputs,
+                match inputs {
+                    Some(inputs) => {
+                        inputs
+                    },
+
+                    None => {
+                        Arity::Constant
+                    }
+                },
                 output_is_a_reference.is_some(),
                 output_type,
                 body
@@ -176,30 +196,71 @@ named_attr!(
         # }
         ```
     "],
-    pub parameters< Vec<Parameter> >,
-    do_parse!(
-        accumulator: map_res!(
-            parameter,
-            into_vector_mapper
-        ) >>
-        result: fold_into_vector_many0!(
-            preceded!(
-                first!(tag!(tokens::COMMA)),
-                first!(parameter)
-            ),
-            accumulator
-        ) >>
-        (result)
+    pub parameters<Arity>,
+    map_res!(
+        do_parse!(
+            accumulator: map_res!(
+                parameter,
+                into_vector_mapper
+            ) >>
+            result: fold_into_vector_many0!(
+                preceded!(
+                    first!(tag!(tokens::COMMA)),
+                    first!(parameter)
+                ),
+                accumulator
+            ) >>
+            (result)
+        ),
+        parameters_mapper
     )
 );
 
+#[inline(always)]
+fn parameters_mapper<'a>(mut pairs: Vec<(Parameter<'a>, bool)>) -> StdResult<Arity, Error<ErrorKind>> {
+    let last_pair      = pairs.pop();
+    let mut parameters = Vec::new();
+
+    for (parameter, is_variadic) in pairs {
+        if is_variadic {
+            return Err(Error::Code(ErrorKind::Custom(FunctionError::InvalidVariadicParameterPosition as u32)));
+        }
+
+        parameters.push(parameter);
+    }
+
+    match last_pair {
+        Some((last_parameter, is_variadic)) => {
+            parameters.push(last_parameter);
+
+            if is_variadic {
+                Ok(Arity::Infinite(parameters))
+            } else {
+                Ok(Arity::Finite(parameters))
+            }
+        },
+
+        None => {
+            Ok(Arity::Constant)
+        }
+    }
+}
+
 named!(
-    parameter<Parameter>,
+    parameter< (Parameter, bool) >,
     do_parse!(
         ty: opt!(qualified_name) >>
         is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
+        is_variadic: opt!(first!(tag!(tokens::ELLIPSIS))) >>
         name: first!(variable) >>
-        (into_parameter(ty, is_a_reference.is_some(), name))
+        (
+            into_parameter(
+                ty,
+                is_a_reference.is_some(),
+                is_variadic.is_some(),
+                name
+            )
+        )
     )
 );
 
@@ -209,32 +270,30 @@ fn into_vector_mapper<T>(item: T) -> StdResult<Vec<T>, ()> {
 }
 
 #[inline(always)]
-fn into_parameter<'a>(ty: Option<Name<'a>>, is_a_reference: bool, name: Variable<'a>) -> Parameter<'a> {
-    Parameter {
-        ty   : if is_a_reference { Ty::Reference(ty) } else { Ty::Copy(ty) },
-        name : name,
-        value: None
-    }
+fn into_parameter<'a>(
+    ty: Option<Name<'a>>,
+    is_a_reference: bool,
+    is_variadic: bool,
+    name: Variable<'a>
+) -> (Parameter<'a>, bool) {
+    (
+        Parameter {
+            ty   : if is_a_reference { Ty::Reference(ty) } else { Ty::Copy(ty) },
+            name : name,
+            value: None
+        },
+        is_variadic
+    )
 }
 
 #[inline(always)]
 fn into_function<'a>(
     name                 : &'a [u8],
-    inputs               : Option<Vec<Parameter<'a>>>,
+    inputs               : Arity<'a>,
     output_is_a_reference: bool,
     output_type          : Option<Name<'a>>,
     body                 : Vec<Statement<'a>>
 ) -> Statement<'a> {
-    let inputs = match inputs {
-        Some(inputs) => {
-            Arity::Finite(inputs)
-        },
-
-        None => {
-            Arity::Constant
-        }
-    };
-
     let output = if output_is_a_reference {
         Ty::Reference(output_type)
     } else {
