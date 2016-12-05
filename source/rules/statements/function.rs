@@ -325,7 +325,11 @@ mod tests {
         Ty,
         Variable
     };
-    use super::super::super::super::internal::Result;
+    use super::super::super::super::internal::{
+        Error,
+        ErrorKind,
+        Result
+    };
 
     #[test]
     fn case_function() {
@@ -514,6 +518,99 @@ mod tests {
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_variadic_function_arity_one_by_copy() {
+        let input  = b"function f(...$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Statement::Function(
+                Function {
+                    name  : &b"f"[..],
+                    inputs: Arity::Infinite(vec![
+                        Parameter {
+                            ty   : Ty::Copy(None),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output: Ty::Copy(None),
+                    body  : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(function(input), output);
+        assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_variadic_function_arity_one_by_reference() {
+        let input  = b"function f(&...$x) {}";
+        let output = Result::Done(
+            &b""[..],
+            Statement::Function(
+                Function {
+                    name  : &b"f"[..],
+                    inputs: Arity::Infinite(vec![
+                        Parameter {
+                            ty   : Ty::Reference(None),
+                            name : Variable(&b"x"[..]),
+                            value: None
+                        }
+                    ]),
+                    output: Ty::Copy(None),
+                    body  : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(function(input), output);
+        assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_variadic_function_arity_many() {
+        let input  = b"function f($a, I\\J $b, int &...$c) {}";
+        let output = Result::Done(
+            &b""[..],
+            Statement::Function(
+                Function {
+                    name  : &b"f"[..],
+                    inputs: Arity::Infinite(vec![
+                        Parameter {
+                            ty   : Ty::Copy(None),
+                            name : Variable(&b"a"[..]),
+                            value: None
+                        },
+                        Parameter {
+                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"I"[..], &b"J"[..]]))),
+                            name : Variable(&b"b"[..]),
+                            value: None
+                        },
+                        Parameter {
+                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            name : Variable(&b"c"[..]),
+                            value: None
+                        }
+                    ]),
+                    output: Ty::Copy(None),
+                    body  : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(function(input), output);
+        assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_invalid_variadic_function_parameter_position() {
+        let input  = b"function f(...$x, $y) {}";
+
+        assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::Tag, &b"...$x, $y) {}"[..])));
+        assert_eq!(statement(input), Result::Error(Error::Position(ErrorKind::Alt, &b"function f(...$x, $y) {}"[..])));
     }
 
     #[test]
