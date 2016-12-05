@@ -71,6 +71,19 @@ named_attr!(
 
         # Examples
 
+        A function with 3 inputs, aka parameters:
+
+        1. `$x`, untyped and passed by copy,
+        2. `$y`, typed with a fully-qualified name, and passed by
+           an implicit reference (this is a copy type, but the type
+           is an object, so this is always a reference),
+        3. `$z`, typed with a primite type, and passed by reference.
+
+        The output is also typed with a unqualified name, and
+        explicitly passed by reference.
+
+        The arity of this function is finite.
+
         ```
         use tagua_parser::Result;
         use tagua_parser::ast::{
@@ -110,6 +123,52 @@ named_attr!(
                             }
                         ]),
                         output: Ty::Reference(Some(Name::Unqualified(&b\"O\"[..]))),
+                        body  : vec![Statement::Return]
+                    }
+                )
+            )
+        );
+        # }
+        ```
+
+        This function has an infinite arity. This is also called a
+        variadic function. The last parameter receives all extra
+        arguments.
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::{
+            Arity,
+            Function,
+            Name,
+            Parameter,
+            Statement,
+            Ty,
+            Variable
+        };
+        use tagua_parser::rules::statements::function::function;
+
+        # fn main() {
+        assert_eq!(
+            function(b\"function f($x, int ...$y) { return; }\"),
+            Result::Done(
+                &b\"\"[..],
+                Statement::Function(
+                    Function {
+                        name  : &b\"f\"[..],
+                        inputs: Arity::Infinite(vec![
+                            Parameter {
+                                ty   : Ty::Copy(None),
+                                name : Variable(&b\"x\"[..]),
+                                value: None
+                            },
+                            Parameter {
+                                ty   : Ty::Copy(Some(Name::Unqualified(&b\"int\"[..]))),
+                                name : Variable(&b\"y\"[..]),
+                                value: None
+                            }
+                        ]),
+                        output: Ty::Copy(None),
                         body  : vec![Statement::Return]
                     }
                 )
