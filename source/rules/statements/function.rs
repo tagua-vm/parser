@@ -162,6 +162,7 @@ named_attr!(
         ```
         use tagua_parser::Result;
         use tagua_parser::ast::{
+            Arity,
             Name,
             Parameter,
             Ty,
@@ -174,7 +175,7 @@ named_attr!(
             parameters(b\"$x, \\\\I\\\\J $y, int &$z\"),
             Result::Done(
                 &b\"\"[..],
-                vec![
+                Arity::Finite(vec![
                     Parameter {
                         ty   : Ty::Copy(None),
                         name : Variable(&b\"x\"[..]),
@@ -190,7 +191,7 @@ named_attr!(
                         name : Variable(&b\"z\"[..]),
                         value: None
                     }
-                ]
+                ])
             )
         );
         # }
