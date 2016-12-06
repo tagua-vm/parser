@@ -373,7 +373,10 @@ fn into_function<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::function;
+    use super::{
+        function,
+        parameters
+    };
     use super::super::statement;
     use super::super::super::super::ast::{
         Arity,
@@ -758,5 +761,168 @@ mod tests {
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_by_copy() {
+        let input  = b"$x";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Copy(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_by_reference() {
+        let input  = b"&$x";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Reference(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_with_a_copy_type() {
+        let input  = b"A\\B\\C $x";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_with_a_reference_type() {
+        let input  = b"int &$x";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_variadic() {
+        let input  = b"...$x";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Copy(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_variadic_with_a_reference_type() {
+        let input  = b"I &...$x";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Reference(Some(Name::Unqualified(&b"I"[..]))),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_many() {
+        let input  = b"&$x, int $y, I\\J $z";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Reference(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                },
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::Unqualified(&b"int"[..]))),
+                    name : Variable(&b"y"[..]),
+                    value: None
+                },
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::Qualified(vec![&b"I"[..], &b"J"[..]]))),
+                    name : Variable(&b"z"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_many_variadic() {
+        let input  = b"&$x, int $y, I\\J ...$z";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Reference(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                },
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::Unqualified(&b"int"[..]))),
+                    name : Variable(&b"y"[..]),
+                    value: None
+                },
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::Qualified(vec![&b"I"[..], &b"J"[..]]))),
+                    name : Variable(&b"z"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_invalid_parameters_variadic_position() {
+        let input  = b"...$x, $y";
+
+        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"...$x, $y"[..])));
     }
 }
