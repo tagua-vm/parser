@@ -37,6 +37,7 @@
 
 use std::result::Result as StdResult;
 use super::compound_statement;
+use super::super::expressions::constant::constant_expression;
 use super::super::tokens::{
     name,
     qualified_name,
@@ -44,6 +45,7 @@ use super::super::tokens::{
 };
 use super::super::super::ast::{
     Arity,
+    Expression,
     Function,
     Name,
     Parameter,
@@ -321,12 +323,19 @@ named!(
         is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
         is_variadic: opt!(first!(tag!(tokens::ELLIPSIS))) >>
         name: first!(variable) >>
+        default_value: opt!(
+            preceded!(
+                first!(tag!(tokens::ASSIGN)),
+                first!(constant_expression)
+            )
+        ) >>
         (
             into_parameter(
                 ty,
                 is_a_reference.is_some(),
                 is_variadic.is_some(),
-                name
+                name,
+                default_value
             )
         )
     )
@@ -342,13 +351,14 @@ fn into_parameter<'a>(
     ty            : Option<Name<'a>>,
     is_a_reference: bool,
     is_variadic   : bool,
-    name          : Variable<'a>
+    name          : Variable<'a>,
+    default_value : Option<Expression<'a>>
 ) -> (Parameter<'a>, bool) {
     (
         Parameter {
             ty   : if is_a_reference { Ty::Reference(ty) } else { Ty::Copy(ty) },
             name : name,
-            value: None
+            value: default_value
         },
         is_variadic
     )
@@ -388,7 +398,9 @@ mod tests {
     use super::super::statement;
     use super::super::super::super::ast::{
         Arity,
+        Expression,
         Function,
+        Literal,
         Name,
         Parameter,
         Statement,
@@ -538,6 +550,31 @@ mod tests {
                             ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
                             name : Variable(&b"x"[..]),
                             value: None
+                        }
+                    ]),
+                    output: Ty::Copy(None),
+                    body  : vec![Statement::Return]
+                }
+            )
+        );
+
+        assert_eq!(function(input), output);
+        assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_function_arity_one_by_copy_with_a_default_value() {
+        let input  = b"function f($x = 42) {}";
+        let output = Result::Done(
+            &b""[..],
+            Statement::Function(
+                Function {
+                    name  : &b"f"[..],
+                    inputs: Arity::Finite(vec![
+                        Parameter {
+                            ty   : Ty::Copy(None),
+                            name : Variable(&b"x"[..]),
+                            value: Some(Expression::Literal(Literal::Integer(42i64)))
                         }
                     ]),
                     output: Ty::Copy(None),
