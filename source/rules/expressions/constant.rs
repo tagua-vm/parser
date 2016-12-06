@@ -29,42 +29,45 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! Group of expression rules.
+//! Group of constant expression rules.
 //!
-//! The list of all expressions is provided by the PHP Language Specification
-//! in the [Grammar chapter, Expressions
-//! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#expressions).
+//! The list of all constant expressions is provided by the PHP Language
+//! Specification in the [Grammar chapter, Expressions
+//! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#constant-expressions).
 
-pub mod constant;
-pub mod primaries;
-
-use super::super::ast::Expression;
+use super::primaries::array;
+use super::super::literals::literal;
+use super::super::super::ast::{
+    Expression,
+    Literal
+};
 
 named_attr!(
     #[doc="
-        Recognize all kind of expressions.
-
-        # Examples
-
-        ```
-        # extern crate tagua_parser;
-        use tagua_parser::Result;
-        use tagua_parser::ast::{Expression, Literal};
-        use tagua_parser::rules::expressions::expression;
-
-        # fn main () {
-        assert_eq!(
-            expression(b\"echo 'Hello, World!'\"),
-            Result::Done(
-                &b\"\"[..],
-                Expression::Echo(vec![
-                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
-                ])
-            )
-        );
-        # }
-        ```
+        Recognize all kind of constant expressions.
     "],
-    pub expression<Expression>,
-    call!(primaries::primary)
+    pub constant_expression<Expression>,
+    alt!(
+        literal => { literal_mapper }
+      | array
+    )
 );
+
+#[inline(always)]
+fn literal_mapper<'a>(literal: Literal) -> Expression<'a> {
+    Expression::Literal(literal)
+}
+
+
+/*
+#[cfg(test)]
+mod tests {
+    use super::constant;
+    use super::super::expression;
+    use super::super::super::super::ast::{
+        Expression,
+        Literal
+    };
+    use super::super::super::super::internal::Result;
+}
+*/
