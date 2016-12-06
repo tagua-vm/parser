@@ -880,9 +880,7 @@ named_attr!(
         static_scope: opt!(keyword!(tokens::STATIC)) >>
         first!(keyword!(tokens::FUNCTION)) >>
         output_is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
-        first!(tag!(tokens::LEFT_PARENTHESIS)) >>
-        inputs: opt!(first!(parameters)) >>
-        first!(tag!(tokens::RIGHT_PARENTHESIS)) >>
+        inputs: first!(parameters) >>
         output_type: opt!(
             preceded!(
                 first!(tag!(tokens::FUNCTION_OUTPUT)),
@@ -903,15 +901,7 @@ named_attr!(
                     }
                 },
                 output_is_a_reference.is_some(),
-                match inputs {
-                    Some(inputs) => {
-                        inputs
-                    },
-
-                    None => {
-                        Arity::Constant
-                    }
-                },
+                inputs,
                 output_type,
                 enclosing_scope,
                 body

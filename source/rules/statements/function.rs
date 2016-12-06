@@ -182,9 +182,7 @@ named_attr!(
         first!(keyword!(tokens::FUNCTION)) >>
         output_is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
         name: first!(name) >>
-        first!(tag!(tokens::LEFT_PARENTHESIS)) >>
-        inputs: opt!(first!(parameters)) >>
-        first!(tag!(tokens::RIGHT_PARENTHESIS)) >>
+        inputs: first!(parameters) >>
         output_type: opt!(
             preceded!(
                 first!(tag!(tokens::FUNCTION_OUTPUT)),
@@ -195,15 +193,7 @@ named_attr!(
         (
             into_function(
                 name,
-                match inputs {
-                    Some(inputs) => {
-                        inputs
-                    },
-
-                    None => {
-                        Arity::Constant
-                    }
-                },
+                inputs,
                 output_is_a_reference.is_some(),
                 output_type,
                 body
@@ -231,7 +221,7 @@ named_attr!(
 
         # fn main() {
         assert_eq!(
-            parameters(b\"$x, \\\\I\\\\J $y, int &$z\"),
+            parameters(b\"($x, \\\\I\\\\J $y, int &$z)\"),
             Result::Done(
                 &b\"\"[..],
                 Arity::Finite(vec![
@@ -258,26 +248,44 @@ named_attr!(
     "],
     pub parameters<Arity>,
     map_res!(
-        do_parse!(
-            accumulator: map_res!(
-                parameter,
-                into_vector_mapper
-            ) >>
-            result: fold_into_vector_many0!(
-                preceded!(
-                    first!(tag!(tokens::COMMA)),
-                    first!(parameter)
-                ),
-                accumulator
-            ) >>
-            (result)
+        terminated!(
+            preceded!(
+                tag!(tokens::LEFT_PARENTHESIS),
+                opt!(
+                    do_parse!(
+                        accumulator: map_res!(
+                            first!(parameter),
+                            into_vector_mapper
+                        ) >>
+                        result: fold_into_vector_many0!(
+                            preceded!(
+                                first!(tag!(tokens::COMMA)),
+                                first!(parameter)
+                            ),
+                            accumulator
+                        ) >>
+                        (result)
+                    )
+                )
+            ),
+            first!(tag!(tokens::RIGHT_PARENTHESIS))
         ),
         parameters_mapper
     )
 );
 
 #[inline(always)]
-fn parameters_mapper<'a>(mut pairs: Vec<(Parameter<'a>, bool)>) -> StdResult<Arity, Error<ErrorKind>> {
+fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult<Arity, Error<ErrorKind>> {
+    let mut pairs = match pairs {
+        Some(pairs) => {
+            pairs
+        },
+
+        None => {
+            return Ok(Arity::Constant);
+        }
+    };
+
     let last_pair      = pairs.pop();
     let mut parameters = Vec::new();
 
@@ -721,7 +729,7 @@ mod tests {
     fn case_invalid_variadic_function_parameter_position() {
         let input  = b"function f(...$x, $y) {}";
 
-        assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::Tag, &b"...$x, $y) {}"[..])));
+        assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y) {}"[..])));
         assert_eq!(statement(input), Result::Error(Error::Position(ErrorKind::Alt, &b"function f(...$x, $y) {}"[..])));
     }
 
@@ -765,7 +773,7 @@ mod tests {
 
     #[test]
     fn case_parameters_one_by_copy() {
-        let input  = b"$x";
+        let input  = b"($x)";
         let output = Result::Done(
             &b""[..],
             Arity::Finite(vec![
@@ -782,7 +790,7 @@ mod tests {
 
     #[test]
     fn case_parameters_one_by_reference() {
-        let input  = b"&$x";
+        let input  = b"(&$x)";
         let output = Result::Done(
             &b""[..],
             Arity::Finite(vec![
@@ -799,7 +807,7 @@ mod tests {
 
     #[test]
     fn case_parameters_one_with_a_copy_type() {
-        let input  = b"A\\B\\C $x";
+        let input  = b"(A\\B\\C $x)";
         let output = Result::Done(
             &b""[..],
             Arity::Finite(vec![
@@ -816,7 +824,7 @@ mod tests {
 
     #[test]
     fn case_parameters_one_with_a_reference_type() {
-        let input  = b"int &$x";
+        let input  = b"(int &$x)";
         let output = Result::Done(
             &b""[..],
             Arity::Finite(vec![
@@ -833,7 +841,7 @@ mod tests {
 
     #[test]
     fn case_parameters_one_variadic() {
-        let input  = b"...$x";
+        let input  = b"(...$x)";
         let output = Result::Done(
             &b""[..],
             Arity::Infinite(vec![
@@ -850,7 +858,7 @@ mod tests {
 
     #[test]
     fn case_parameters_one_variadic_with_a_reference_type() {
-        let input  = b"I &...$x";
+        let input  = b"(I &...$x)";
         let output = Result::Done(
             &b""[..],
             Arity::Infinite(vec![
@@ -867,7 +875,7 @@ mod tests {
 
     #[test]
     fn case_parameters_many() {
-        let input  = b"&$x, int $y, I\\J $z";
+        let input  = b"(&$x, int $y, I\\J $z)";
         let output = Result::Done(
             &b""[..],
             Arity::Finite(vec![
@@ -894,7 +902,7 @@ mod tests {
 
     #[test]
     fn case_parameters_many_variadic() {
-        let input  = b"&$x, int $y, I\\J ...$z";
+        let input  = b"(&$x, int $y, I\\J ...$z)";
         let output = Result::Done(
             &b""[..],
             Arity::Infinite(vec![
@@ -921,8 +929,8 @@ mod tests {
 
     #[test]
     fn case_invalid_parameters_variadic_position() {
-        let input  = b"...$x, $y";
+        let input  = b"(...$x, $y)";
 
-        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"...$x, $y"[..])));
+        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y)"[..])));
     }
 }
