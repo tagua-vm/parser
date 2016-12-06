@@ -463,131 +463,6 @@ mod tests {
     }
 
     #[test]
-    fn case_function_arity_one_by_copy() {
-        let input  = b"function f($x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Finite(vec![
-                        Parameter {
-                            ty   : Ty::Copy(None),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_function_arity_one_by_reference() {
-        let input  = b"function f(&$x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Finite(vec![
-                        Parameter {
-                            ty   : Ty::Reference(None),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_function_arity_one_with_a_copy_type() {
-        let input  = b"function f(A\\B\\C $x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Finite(vec![
-                        Parameter {
-                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_function_arity_one_with_a_reference_type() {
-        let input  = b"function f(int &$x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Finite(vec![
-                        Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_function_arity_one_by_copy_with_a_default_value() {
-        let input  = b"function f($x = 42) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Finite(vec![
-                        Parameter {
-                            ty   : Ty::Copy(None),
-                            name : Variable(&b"x"[..]),
-                            value: Some(Expression::Literal(Literal::Integer(42i64)))
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
     fn case_function_arity_many() {
         let input  = b"function f($a, I\\J $b, int &$c, \\K $d) {}";
         let output = Result::Done(
@@ -614,106 +489,6 @@ mod tests {
                         Parameter {
                             ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b"K"[..]]))),
                             name : Variable(&b"d"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_variadic_function_arity_one_by_copy() {
-        let input  = b"function f(...$x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Infinite(vec![
-                        Parameter {
-                            ty   : Ty::Copy(None),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_variadic_function_arity_one_by_reference() {
-        let input  = b"function f(&...$x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Infinite(vec![
-                        Parameter {
-                            ty   : Ty::Reference(None),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_variadic_function_arity_one_with_a_copy_type() {
-        let input  = b"function f(A\\B\\C ...$x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Infinite(vec![
-                        Parameter {
-                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
-                            name : Variable(&b"x"[..]),
-                            value: None
-                        }
-                    ]),
-                    output: Ty::Copy(None),
-                    body  : vec![Statement::Return]
-                }
-            )
-        );
-
-        assert_eq!(function(input), output);
-        assert_eq!(statement(input), output);
-    }
-
-    #[test]
-    fn case_variadic_function_arity_one_with_a_reference_type() {
-        let input  = b"function f(int &...$x) {}";
-        let output = Result::Done(
-            &b""[..],
-            Statement::Function(
-                Function {
-                    name  : &b"f"[..],
-                    inputs: Arity::Infinite(vec![
-                        Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
-                            name : Variable(&b"x"[..]),
                             value: None
                         }
                     ]),
@@ -763,14 +538,6 @@ mod tests {
     }
 
     #[test]
-    fn case_invalid_variadic_function_parameter_position() {
-        let input  = b"function f(...$x, $y) {}";
-
-        assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y) {}"[..])));
-        assert_eq!(statement(input), Result::Error(Error::Position(ErrorKind::Alt, &b"function f(...$x, $y) {}"[..])));
-    }
-
-    #[test]
     fn case_function_output_by_copy() {
         let input  = b"function f(): \\O {}";
         let output = Result::Done(
@@ -806,6 +573,14 @@ mod tests {
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
+    }
+
+    #[test]
+    fn case_invalid_variadic_function_parameter_position() {
+        let input  = b"function f(...$x, $y) {}";
+
+        assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y) {}"[..])));
+        assert_eq!(statement(input), Result::Error(Error::Position(ErrorKind::Alt, &b"function f(...$x, $y) {}"[..])));
     }
 
     #[test]
@@ -877,7 +652,7 @@ mod tests {
     }
 
     #[test]
-    fn case_parameters_one_variadic() {
+    fn case_parameters_one_variadic_by_copy() {
         let input  = b"(...$x)";
         let output = Result::Done(
             &b""[..],
@@ -901,6 +676,108 @@ mod tests {
             Arity::Infinite(vec![
                 Parameter {
                     ty   : Ty::Reference(Some(Name::Unqualified(&b"I"[..]))),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_by_copy_with_a_default_value() {
+        let input  = b"($x = 42)";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Copy(None),
+                    name : Variable(&b"x"[..]),
+                    value: Some(Expression::Literal(Literal::Integer(42i64)))
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_by_reference_with_a_default_value() {
+        let input  = b"(&$x = 'foo')";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Reference(None),
+                    name : Variable(&b"x"[..]),
+                    value: Some(Expression::Literal(Literal::String(b"foo".to_vec())))
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_variadic_arity_one_by_copy() {
+        let input  = b"(...$x)";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Copy(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_variadic_arity_one_by_reference() {
+        let input  = b"(&...$x)";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Reference(None),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_variadic_arity_one_with_a_copy_type() {
+        let input  = b"(A\\B\\C ...$x)";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
+                    name : Variable(&b"x"[..]),
+                    value: None
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_variadic_arity_one_with_a_reference_type() {
+        let input  = b"(int &...$x)";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Infinite(vec![
+                Parameter {
+                    ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
                     name : Variable(&b"x"[..]),
                     value: None
                 }
