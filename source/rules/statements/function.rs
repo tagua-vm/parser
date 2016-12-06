@@ -577,7 +577,7 @@ mod tests {
 
     #[test]
     fn case_invalid_variadic_function_parameter_position() {
-        let input  = b"function f(...$x, $y) {}";
+        let input = b"function f(...$x, $y) {}";
 
         assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y) {}"[..])));
         assert_eq!(statement(input), Result::Error(Error::Position(ErrorKind::Alt, &b"function f(...$x, $y) {}"[..])));
@@ -843,7 +843,7 @@ mod tests {
 
     #[test]
     fn case_invalid_parameters_variadic_position() {
-        let input  = b"(...$x, $y)";
+        let input = b"(...$x, $y)";
 
         assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y)"[..])));
     }
