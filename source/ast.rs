@@ -788,12 +788,98 @@ pub struct Parameter<'a> {
 #[derive(Debug, PartialEq)]
 pub enum Arity<'a> {
     /// A function with no parameter.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::Arity;
+    /// use tagua_parser::rules::statements::function::parameters;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(b"()"),
+    ///     Result::Done(&b""[..], Arity::Constant)
+    /// );
+    /// # }
+    /// ```
     Constant,
 
     /// A function with a finite number of parameters.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Arity,
+    ///     Parameter,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::statements::function::parameters;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(b"($x, $y)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::Copy(None),
+    ///                 name : Variable(&b"x"[..]),
+    ///                 value: None
+    ///             },
+    ///             Parameter {
+    ///                 ty   : Ty::Copy(None),
+    ///                 name : Variable(&b"y"[..]),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Finite(Vec<Parameter<'a>>),
 
     /// A variadic function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Arity,
+    ///     Parameter,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::statements::function::parameters;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(b"($x, ...$y)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Arity::Infinite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::Copy(None),
+    ///                 name : Variable(&b"x"[..]),
+    ///                 value: None
+    ///             },
+    ///             Parameter {
+    ///                 ty   : Ty::Copy(None),
+    ///                 name : Variable(&b"y"[..]),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Infinite(Vec<Parameter<'a>>)
 }
 
