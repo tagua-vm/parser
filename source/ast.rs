@@ -932,11 +932,57 @@ pub enum Arity<'a> {
 }
 
 /// A function.
+///
+/// # Examples
+///
+/// ```
+/// use tagua_parser::Result;
+/// use tagua_parser::ast::{
+///     Arity,
+///     Function,
+///     Name,
+///     Parameter,
+///     Statement,
+///     Ty,
+///     Variable
+/// };
+/// use tagua_parser::rules::statements::function::function;
+///
+/// # fn main() {
+/// assert_eq!(
+///     function(b"function f(I $x): O { return; }"),
+///     Result::Done(
+///         &b""[..],
+///         Statement::Function(
+///             Function {
+///                 name  : &b"f"[..],
+///                 inputs: Arity::Finite(vec![
+///                     Parameter {
+///                         ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
+///                         name : Variable(&b"x"[..]),
+///                         value: None
+///                     }
+///                 ]),
+///                 output: Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
+///                 body  : vec![Statement::Return]
+///             }
+///         )
+///     )
+/// );
+/// # }
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Function<'a> {
+    /// Name of the function.
     pub name  : &'a [u8],
+
+    /// Inputs, aka parameters, of the function.
     pub inputs: Arity<'a>,
+
+    /// Output type of the function.
     pub output: Ty<'a>,
+
+    /// Body of the function, i.e. a set of statements.
     pub body  : Vec<Statement<'a>>
 }
 
