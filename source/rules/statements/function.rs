@@ -119,7 +119,7 @@ named_attr!(
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Reference(Some(Name::Unqualified(&b\"int\"[..]))),
+                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
                                 name : Variable(&b\"z\"[..]),
                                 value: None
                             }
@@ -165,7 +165,7 @@ named_attr!(
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Copy(Some(Name::Unqualified(&b\"int\"[..]))),
+                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
                                 name : Variable(&b\"y\"[..]),
                                 value: None
                             }
@@ -241,7 +241,7 @@ named_attr!(
                         value: None
                     },
                     Parameter {
-                        ty   : Ty::Reference(Some(Name::Unqualified(&b\"int\"[..]))),
+                        ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
                         name : Variable(&b\"z\"[..]),
                         value: None
                     }
@@ -373,12 +373,30 @@ fn into_parameter<'a>(
 }
 
 named!(
+    #[doc="
+        Recognize all native types.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::Name;
+        use tagua_parser::rules::statements::function::native_type;
+
+        # fn main() {
+        assert_eq!(
+            native_type(b\"int\"),
+            Result::Done(&b\"\"[..], Name::FullyQualified(vec![&b\"int\"[..]]))
+        );
+        # }
+        ```
+    "],
     pub native_type<Name>,
     map_res!(
         alt_complete!(
             tag!(tokens::ARRAY)
-          | tag!(tokens::CALLABLE)
           | tag!(tokens::BOOL)
+          | tag!(tokens::CALLABLE)
           | tag!(tokens::FLOAT)
           | tag!(tokens::INT)
           | tag!(tokens::STRING)
@@ -421,6 +439,7 @@ fn into_function<'a>(
 mod tests {
     use super::{
         function,
+        native_type,
         parameters
     };
     use super::super::statement;
@@ -916,4 +935,23 @@ mod tests {
 
         assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y)"[..])));
     }
+
+    macro_rules! test_native_type {
+        ($test:ident: $name:expr) => {
+            #[test]
+            fn $test() {
+                let input  = $name;
+                let output = Result::Done(&b""[..], Name::FullyQualified(vec![&$name[..]]));
+
+                assert_eq!(native_type(input), output);
+            }
+        }
+    }
+
+    test_native_type!(case_native_type_array:    b"array");
+    test_native_type!(case_native_type_callable: b"callable");
+    test_native_type!(case_native_type_bool:     b"bool");
+    test_native_type!(case_native_type_float:    b"float");
+    test_native_type!(case_native_type_int:      b"int");
+    test_native_type!(case_native_type_string:   b"string");
 }

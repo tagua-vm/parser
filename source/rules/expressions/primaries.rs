@@ -856,7 +856,7 @@ named_attr!(
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Reference(Some(Name::Unqualified(&b\"int\"[..]))),
+                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
                                 name : Variable(&b\"z\"[..]),
                                 value: None
                             }
