@@ -707,10 +707,72 @@ pub enum Expression<'a> {
 /// A type declaration.
 #[derive(Debug, PartialEq)]
 pub enum Ty<'a> {
-    /// A type representing a data passed by copy.
+    /// A type representing a datum passed by copy.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Arity,
+    ///     Name,
+    ///     Parameter,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::statements::function::parameters;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(b"(I $x)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
+    ///                 name : Variable(&b"x"[..]),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Copy(Option<Name<'a>>),
 
-    /// A type representing a data passed by reference.
+    /// A type representing a datum passed by reference.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Arity,
+    ///     Name,
+    ///     Parameter,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::statements::function::parameters;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(b"(I &$x)"),
+    ///     Result::Done(
+    ///         &b""[..],
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::Reference(Some(Name::Unqualified(&b"I"[..]))),
+    ///                 name : Variable(&b"x"[..]),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Reference(Option<Name<'a>>)
 }
 
