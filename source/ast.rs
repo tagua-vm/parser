@@ -776,7 +776,13 @@ pub enum Ty<'a> {
     Reference(Option<Name<'a>>)
 }
 
-/// A parameter (of a function, or a method).
+/// A parameter, aka input, of a function.
+///
+/// A parameter can:
+///
+///   * be typed or not,
+///   * be passed by copy, or by reference,
+///   * have a default constant value.
 ///
 /// # Examples
 ///
