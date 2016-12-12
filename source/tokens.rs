@@ -78,7 +78,7 @@ token!(
 );
 token!(
     pub ARRAY: b"array";
-    "The `ARRAY` token.\n\nRepresent the array constructor, e.g. `array($x, $y)`."
+    "The `ARRAY` token.\n\nRepresent the array constructor or the arary type, e.g. `array($x, $y)` or `function f(array $x) { … }`."
 );
 token!(
     pub AS: b"as";
@@ -133,6 +133,10 @@ token!(
     "The `BITWISE_XOR_AND_ASSIGN` token.\n\nRepresent the exclusive bitwise disjunction assignment operator, e.g. `$x ^= $y;`."
 );
 token!(
+    pub BOOL: b"bool";
+    "The `BOOL` token.\n\nRepresent the boolean type, e.g. `function f(bool $x) { … }`."
+);
+token!(
     pub BOOLEAN_AND: b"&&";
     "The `BOOLEAN_AND` token.\n\nRepresent the boolean conjunction operator, e.g. `$x && $y`."
 );
@@ -150,7 +154,7 @@ token!(
 );
 token!(
     pub CALLABLE: b"callable";
-    "The `CALLABLE` token.\n\nRepresent the callable type, e.g. `function f(callable $x) { … }`."
+    "The `CALLABLE` token.\n\nRepresent the callable meta-type, e.g. `function f(callable $x) { … }`."
 );
 token!(
     pub CASE: b"case";
@@ -297,6 +301,10 @@ token!(
     "The `FINALLY` token.\n\nRepresent the finally block of a `try`/`catch` control structure, e.g. `try { … } catch (…) { … } finally { … }`."
 );
 token!(
+    pub FLOAT: b"float";
+    "The `FLOAT` token.\n\nRepresent the float type, e.g. `function (float $x) { … }`."
+);
+token!(
     pub FOR: b"for";
     "The `FOR` token.\n\nRepresent a `for` loop, e.g. `for (…; …; …) { … }`."
 );
@@ -361,12 +369,20 @@ token!(
     "The `INSTEADOF` token.\n\nRepresent the conflict resolution operator, e.g. `use C, D { C::f insteadof D }`."
 );
 token!(
+    pub INT: b"int";
+    "The `INT` token.\n\nRepresent the int type, e.g. `function f(int $x) { … }`."
+);
+token!(
     pub INTERFACE: b"interface";
     "The `INTERFACE` token.\n\nRepresent the interface declaration operator, e.g. `interface I { … }`."
 );
 token!(
     pub ISSET: b"isset";
     "The `ISSET` token.\n\nRepresent the existence operator, e.g. `isset($x)`."
+);
+token!(
+    pub ITERABLE: b"iterable";
+    "The `ITERABLE` token.\n\nRepresent the iterable meta-type, e.g. `function (iterable $x) { … }`."
 );
 token!(
     pub LEFT_CURLY_BRACKET: b"{";
@@ -505,6 +521,10 @@ token!(
     "The `STATIC_CALL` token.\n\nRepresent the static method call operator, e.g. `class::method()`."
 );
 token!(
+    pub STRING: b"string";
+    "The `STRING` token.\n\nRepresent the string type, e.g. `function f(string $x) { … }`."
+);
+token!(
     pub SUBTRACT: b"-";
     "The `SUBTRACT` token.\n\nRepresent the subtraction operator, e.g. `$x - $y`."
 );
@@ -606,6 +626,7 @@ named_attr!(
       | keyword!(AND)
       | keyword!(ARRAY)
       | keyword!(AS)
+      | keyword!(BOOL)
       | keyword!(BREAK)
       | keyword!(CALLABLE)
       | keyword!(CASE)
@@ -633,6 +654,7 @@ named_attr!(
       | keyword!(EXTENDS)
       | keyword!(FINALLY)
       | keyword!(FINAL)
+      | keyword!(FLOAT)
       | keyword!(FOREACH)
       | keyword!(FOR)
       | keyword!(FUNCTION)
@@ -645,7 +667,9 @@ named_attr!(
       | keyword!(INSTANCEOF)
       | keyword!(INSTEADOF)
       | keyword!(INTERFACE)
+      | keyword!(INT)
       | keyword!(ISSET)
+      | keyword!(ITERABLE)
       | keyword!(LIST)
       | keyword!(NAMESPACE)
       | keyword!(NEW)
@@ -658,6 +682,7 @@ named_attr!(
       | keyword!(REQUIRE)
       | keyword!(RETURN)
       | keyword!(STATIC)
+      | keyword!(STRING)
       | keyword!(SWITCH)
       | keyword!(THROW)
       | keyword!(TRAIT)
@@ -707,6 +732,7 @@ mod tests {
     test_keyword!(case_keyword_and:          (b"and", super::AND));
     test_keyword!(case_keyword_array:        (b"array", super::ARRAY));
     test_keyword!(case_keyword_as:           (b"as", super::AS));
+    test_keyword!(case_keyword_bool:         (b"bool", super::BOOL));
     test_keyword!(case_keyword_break:        (b"break", super::BREAK));
     test_keyword!(case_keyword_callable:     (b"callable", super::CALLABLE));
     test_keyword!(case_keyword_case:         (b"case", super::CASE));
@@ -734,6 +760,7 @@ mod tests {
     test_keyword!(case_keyword_extends:      (b"extends", super::EXTENDS));
     test_keyword!(case_keyword_final:        (b"final", super::FINAL));
     test_keyword!(case_keyword_finally:      (b"finally", super::FINALLY));
+    test_keyword!(case_keyword_float:        (b"float", super::FLOAT));
     test_keyword!(case_keyword_for:          (b"for", super::FOR));
     test_keyword!(case_keyword_foreach:      (b"foreach", super::FOREACH));
     test_keyword!(case_keyword_function:     (b"function", super::FUNCTION));
@@ -745,8 +772,10 @@ mod tests {
     test_keyword!(case_keyword_include_once: (b"include_once", super::INCLUDE_ONCE));
     test_keyword!(case_keyword_instanceof:   (b"instanceof", super::INSTANCEOF));
     test_keyword!(case_keyword_insteadof:    (b"insteadof", super::INSTEADOF));
+    test_keyword!(case_keyword_int:          (b"int", super::INT));
     test_keyword!(case_keyword_interface:    (b"interface", super::INTERFACE));
     test_keyword!(case_keyword_isset:        (b"isset", super::ISSET));
+    test_keyword!(case_keyword_iterable:     (b"iterable", super::ITERABLE));
     test_keyword!(case_keyword_list:         (b"list", super::LIST));
     test_keyword!(case_keyword_namespace:    (b"namespace", super::NAMESPACE));
     test_keyword!(case_keyword_new:          (b"new", super::NEW));
@@ -759,6 +788,7 @@ mod tests {
     test_keyword!(case_keyword_require_once: (b"require_once", super::REQUIRE_ONCE));
     test_keyword!(case_keyword_return:       (b"return", super::RETURN));
     test_keyword!(case_keyword_static:       (b"static", super::STATIC));
+    test_keyword!(case_keyword_string:       (b"string", super::STRING));
     test_keyword!(case_keyword_switch:       (b"switch", super::SWITCH));
     test_keyword!(case_keyword_throw:        (b"throw", super::THROW));
     test_keyword!(case_keyword_trait:        (b"trait", super::TRAIT));
