@@ -777,10 +777,52 @@ pub enum Ty<'a> {
 }
 
 /// A parameter (of a function, or a method).
+///
+/// # Examples
+///
+/// ```
+/// use tagua_parser::Result;
+/// use tagua_parser::ast::{
+///     Arity,
+///     Expression,
+///     Literal,
+///     Name,
+///     Parameter,
+///     Ty,
+///     Variable
+/// };
+/// use tagua_parser::rules::statements::function::parameters;
+///
+/// # fn main() {
+/// assert_eq!(
+///     parameters(b"($x = 42, I &$y)"),
+///     Result::Done(
+///         &b""[..],
+///         Arity::Finite(vec![
+///             Parameter {
+///                 ty   : Ty::Copy(None),
+///                 name : Variable(&b"x"[..]),
+///                 value: Some(Expression::Literal(Literal::Integer(42i64)))
+///             },
+///             Parameter {
+///                 ty   : Ty::Reference(Some(Name::Unqualified(&b"I"[..]))),
+///                 name : Variable(&b"y"[..]),
+///                 value: None
+///             }
+///         ])
+///     )
+/// );
+/// # }
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Parameter<'a> {
+    /// Type of the parameter.
     pub ty   : Ty<'a>,
+
+    /// Name of the parameter.
     pub name : Variable<'a>,
+
+    /// Default value of the parameter.
     pub value: Option<Expression<'a>>
 }
 
