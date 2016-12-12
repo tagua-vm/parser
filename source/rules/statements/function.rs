@@ -364,6 +364,26 @@ fn into_parameter<'a>(
     )
 }
 
+named!(
+    pub native_type<Name>,
+    map_res!(
+        alt_complete!(
+            tag!(tokens::ARRAY)
+          | tag!(tokens::CALLABLE)
+          | tag!(tokens::BOOL)
+          | tag!(tokens::FLOAT)
+          | tag!(tokens::INT)
+          | tag!(tokens::STRING)
+        ),
+        native_type_mapper
+    )
+);
+
+#[inline(always)]
+fn native_type_mapper(native_type_name: &[u8]) -> Result<Name, ()> {
+    Ok(Name::FullyQualified(vec![native_type_name]))
+}
+
 #[inline(always)]
 fn into_function<'a>(
     name                 : &'a [u8],
