@@ -358,7 +358,7 @@ token!(
 );
 token!(
     pub INSTEADOF: b"insteadof";
-    "The `INSTEADOF` token.\n\nRepresent the conflict resolution operator, `use C, D { C::f insteadof D }`."
+    "The `INSTEADOF` token.\n\nRepresent the conflict resolution operator, e.g. `use C, D { C::f insteadof D }`."
 );
 token!(
     pub INTERFACE: b"interface";
