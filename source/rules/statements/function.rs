@@ -188,7 +188,10 @@ named_attr!(
         output_type: opt!(
             preceded!(
                 first!(tag!(tokens::FUNCTION_OUTPUT)),
-                first!(qualified_name)
+                alt!(
+                    first!(native_type)
+                  | first!(qualified_name)
+                )
             )
         ) >>
         body: first!(compound_statement) >>
@@ -319,7 +322,12 @@ fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult
 named!(
     parameter< (Parameter, bool) >,
     do_parse!(
-        ty: opt!(qualified_name) >>
+        ty: opt!(
+            alt!(
+                native_type
+              | qualified_name
+            )
+        ) >>
         is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
         is_variadic: opt!(first!(tag!(tokens::ELLIPSIS))) >>
         name: first!(variable) >>
@@ -502,7 +510,7 @@ mod tests {
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                             name : Variable(&b"c"[..]),
                             value: None
                         },
@@ -542,7 +550,7 @@ mod tests {
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                             name : Variable(&b"c"[..]),
                             value: None
                         }
@@ -585,7 +593,7 @@ mod tests {
                 Function {
                     name  : &b"f"[..],
                     inputs: Arity::Constant,
-                    output: Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                    output: Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                     body  : vec![Statement::Return]
                 }
             )
@@ -661,7 +669,7 @@ mod tests {
             &b""[..],
             Arity::Finite(vec![
                 Parameter {
-                    ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                    ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                     name : Variable(&b"x"[..]),
                     value: None
                 }
@@ -740,6 +748,47 @@ mod tests {
     }
 
     #[test]
+    fn case_parameters_one_with_a_copy_type_and_a_default_value() {
+        let input  = b"(float $x = 4.2)";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b"float"[..]]))),
+                    name : Variable(&b"x"[..]),
+                    value: Some(Expression::Literal(Literal::Real(4.2f64)))
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
+    fn case_parameters_one_with_a_reference_type_and_a_default_value() {
+        let input  = b"(array &$x = ['foo' => true])";
+        let output = Result::Done(
+            &b""[..],
+            Arity::Finite(vec![
+                Parameter {
+                    ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"array"[..]]))),
+                    name : Variable(&b"x"[..]),
+                    value: Some(
+                        Expression::Array(vec![
+                            (
+                                Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                                Expression::Name(Name::Unqualified(&b"true"[..]))
+                            )
+                        ])
+                    )
+                }
+            ])
+        );
+
+        assert_eq!(parameters(input), output);
+    }
+
+    #[test]
     fn case_parameters_variadic_arity_one_by_copy() {
         let input  = b"(...$x)";
         let output = Result::Done(
@@ -797,7 +846,7 @@ mod tests {
             &b""[..],
             Arity::Infinite(vec![
                 Parameter {
-                    ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                    ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                     name : Variable(&b"x"[..]),
                     value: None
                 }
@@ -819,7 +868,7 @@ mod tests {
                     value: None
                 },
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::Unqualified(&b"int"[..]))),
+                    ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                     name : Variable(&b"y"[..]),
                     value: None
                 },
@@ -846,7 +895,7 @@ mod tests {
                     value: None
                 },
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::Unqualified(&b"int"[..]))),
+                    ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                     name : Variable(&b"y"[..]),
                     value: None
                 },

@@ -39,7 +39,10 @@ use std::result::Result as StdResult;
 use super::expression;
 use super::super::literals::literal;
 use super::super::statements::compound_statement;
-use super::super::statements::function::parameters;
+use super::super::statements::function::{
+    native_type,
+    parameters
+};
 use super::super::tokens::{
     qualified_name,
     variable
@@ -884,7 +887,10 @@ named_attr!(
         output_type: opt!(
             preceded!(
                 first!(tag!(tokens::FUNCTION_OUTPUT)),
-                first!(qualified_name)
+                alt!(
+                    first!(native_type)
+                  | first!(qualified_name)
+                )
             )
         ) >>
         enclosing_scope: opt!(first!(anonymous_function_use)) >>
@@ -2314,7 +2320,7 @@ mod tests {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                             name : Variable(&b"x"[..]),
                             value: None
                         }
@@ -2351,7 +2357,7 @@ mod tests {
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                             name : Variable(&b"c"[..]),
                             value: None
                         },
@@ -2403,7 +2409,7 @@ mod tests {
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Constant,
-                    output           : Ty::Reference(Some(Name::Unqualified(&b"int"[..]))),
+                    output           : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
