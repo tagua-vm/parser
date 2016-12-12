@@ -819,7 +819,7 @@ pub struct AnonymousFunction<'a> {
 /// A statement.
 #[derive(Debug, PartialEq)]
 pub enum Statement<'a> {
-    /// A function.
+    /// A function declaration.
     Function(Function<'a>),
 
     /// A return.
@@ -829,7 +829,10 @@ pub enum Statement<'a> {
 /// A scope.
 #[derive(Debug, PartialEq)]
 pub enum Scope {
+    /// A dynamic scope (default one).
     Dynamic,
+
+    /// A static scope (when declared with the `static` keyword).
     Static
 }
 
