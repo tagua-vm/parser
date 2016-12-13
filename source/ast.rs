@@ -705,6 +705,16 @@ pub enum Expression<'a> {
 }
 
 /// A type declaration.
+///
+/// A type holds two informations: Name, and copy or reference. A type
+/// can be native (fully qualified name), or user-defined with an
+/// interface or a class (unqualified, qualified, or fully qualified
+/// name). Note that the name is an `Option`: A binding can have no
+/// type, but still hold the copy or reference constraint.
+///
+/// A type can be a copy type, it means the value must be
+/// copied (at least on write), or it can be a reference type, it
+/// means this is a new binding over an existing binding.
 #[derive(Debug, PartialEq)]
 pub enum Ty<'a> {
     /// A type representing a datum passed by copy.
