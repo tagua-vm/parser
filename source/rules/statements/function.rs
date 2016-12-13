@@ -63,7 +63,10 @@ use super::super::super::tokens;
 pub enum FunctionError {
     /// A variadic function has a `...parameter` at an invalid
     /// position. It must be the latest one.
-    InvalidVariadicParameterPosition
+    InvalidVariadicParameterPosition,
+
+    /// A function has multiple parameters declared with the same name.
+    MultipleParametersWithSameName
 }
 
 
@@ -299,11 +302,19 @@ fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult
             return Err(Error::Code(ErrorKind::Custom(FunctionError::InvalidVariadicParameterPosition as u32)));
         }
 
+        if parameters.iter().any(|p: &Parameter<'a>| p.name == parameter.name) {
+            return Err(Error::Code(ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32)));
+        }
+
         parameters.push(parameter);
     }
 
     match last_pair {
         Some((last_parameter, is_variadic)) => {
+            if parameters.iter().any(|p: &Parameter<'a>| p.name == last_parameter.name) {
+                return Err(Error::Code(ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32)));
+            }
+
             parameters.push(last_parameter);
 
             if is_variadic {
@@ -935,6 +946,20 @@ mod tests {
         let input = b"(...$x, $y)";
 
         assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"(...$x, $y)"[..])));
+    }
+
+    #[test]
+    fn case_invalid_parameters_two_not_unique() {
+        let input = b"($x, $x)";
+
+        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"($x, $x)"[..])));
+    }
+
+    #[test]
+    fn case_invalid_parameters_many_not_unique() {
+        let input = b"($x, $y, $z, $x)";
+
+        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"($x, $y, $z, $x)"[..])));
     }
 
     macro_rules! test_native_type {
