@@ -1025,11 +1025,3 @@ pub enum Scope {
     /// A static scope (when declared with the `static` keyword).
     Static
 }
-
-/// A visibility.
-#[derive(Debug, PartialEq)]
-pub enum Visibility {
-    Public,
-    Protected,
-    Private
-}
