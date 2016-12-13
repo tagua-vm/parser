@@ -957,9 +957,9 @@ mod tests {
 
     #[test]
     fn case_invalid_parameters_many_not_unique() {
-        let input = b"($x, $y, $z, $x)";
+        let input = b"($x, $y, $x, $z)";
 
-        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"($x, $y, $z, $x)"[..])));
+        assert_eq!(parameters(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"($x, $y, $x, $z)"[..])));
     }
 
     macro_rules! test_native_type {
