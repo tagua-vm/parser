@@ -982,17 +982,81 @@ pub struct Function<'a> {
     pub output: Ty<'a>,
 
     /// Body of the function, i.e. a set of statements.
-    pub body  : Vec<Statement<'a>>
+    pub body: Vec<Statement<'a>>
 }
 
 /// An anonymous function.
+///
+/// An anonymous function is defined like, and behaves like, a named
+/// function `Function` except that the former has no name, and an
+/// enclosed scope.
+///
+/// # Examples
+///
+/// ```
+/// # extern crate tagua_parser;
+/// use tagua_parser::Result;
+/// use tagua_parser::ast::{
+///     AnonymousFunction,
+///     Arity,
+///     Expression,
+///     Name,
+///     Parameter,
+///     Scope,
+///     Statement,
+///     Ty,
+///     Variable
+/// };
+/// use tagua_parser::rules::expressions::expression;
+///
+/// # fn main() {
+/// assert_eq!(
+///     expression(b"static function &(I ...$x): O use (&$y, $z) { return; }"),
+///     Result::Done(
+///         &b""[..],
+///         Expression::AnonymousFunction(
+///             AnonymousFunction {
+///                 declaration_scope: Scope::Static,
+///                 inputs           : Arity::Infinite(vec![
+///                     Parameter {
+///                         ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
+///                         name : Variable(&b"x"[..]),
+///                         value: None
+///                     }
+///                 ]),
+///                 output         : Ty::Reference(Some(Name::Unqualified(&b"O"[..]))),
+///                 enclosing_scope: Some(vec![
+///                     Expression::Reference(
+///                         Box::new(
+///                             Expression::Variable(Variable(&b"y"[..]))
+///                         )
+///                     ),
+///                     Expression::Variable(Variable(&b"z"[..]))
+///                 ]),
+///                 body: vec![Statement::Return]
+///             }
+///         )
+///     )
+/// );
+/// # }
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct AnonymousFunction<'a> {
+    /// Declaration scope of the anonymous function.
     pub declaration_scope: Scope,
-    pub inputs           : Arity<'a>,
-    pub output           : Ty<'a>,
-    pub enclosing_scope  : Option<Vec<Expression<'a>>>,
-    pub body             : Vec<Statement<'a>>
+
+    /// Inputs, aka parameters, of the anonymous function.
+    pub inputs: Arity<'a>,
+
+    /// Output type of the anonymous function.
+    pub output: Ty<'a>,
+
+    /// Enclosed scope (list of variables to be accessible from the
+    /// body) of the anonymous function.
+    pub enclosing_scope: Option<Vec<Expression<'a>>>,
+
+    /// Body of the anonymous function, i.e. a set of statements.
+    pub body: Vec<Statement<'a>>
 }
 
 /// A statement.
