@@ -253,7 +253,6 @@ pub enum Name<'a> {
 /// An expression.
 #[derive(Debug, PartialEq)]
 pub enum Expression<'a> {
-    /// Anonymous function.
     /// An anonymous function is defined like, and behaves like, a
     /// named function except that the former has no name, and an
     /// enclosed scope.
@@ -307,7 +306,6 @@ pub enum Expression<'a> {
     /// ```
     AnonymousFunction(AnonymousFunction<'a>),
 
-    /// Array.
     /// A collection of heterogeneous pairs (key, value). The key is
     /// optional.
     ///
@@ -344,7 +342,6 @@ pub enum Expression<'a> {
     /// ```
     Array(Vec<(Option<Expression<'a>>, Expression<'a>)>),
 
-    /// An echo.
     /// Echo converts each of its expression's values into strings,
     /// concatenates them in order given, and writes the result to the
     /// output stream.
@@ -373,7 +370,6 @@ pub enum Expression<'a> {
     /// ```
     Echo(Vec<Expression<'a>>),
 
-    /// Empty.
     /// Returns `TRUE` if the variable or value designated by the
     /// expression is empty.
     ///
@@ -403,7 +399,6 @@ pub enum Expression<'a> {
     /// ```
     Empty(Box<Expression<'a>>),
 
-    /// Eval.
     /// Late evaluation of a PHP program represented as a string.
     ///
     /// # Examples
@@ -432,7 +427,6 @@ pub enum Expression<'a> {
     /// ```
     Eval(Box<Expression<'a>>),
 
-    /// Exit.
     /// Terminate the current script.
     ///
     /// # Examples
@@ -463,7 +457,6 @@ pub enum Expression<'a> {
     /// ```
     Exit(Option<Box<Expression<'a>>>),
 
-    /// Isset.
     /// Return `TRUE` if all expressions set and their values are not
     /// `NULL`. Otherwise, it returns `FALSE`.
     ///
@@ -490,7 +483,6 @@ pub enum Expression<'a> {
     /// ```
     Isset(Vec<Expression<'a>>),
 
-    /// List.
     /// Match and assign one or more elements of the source array to
     /// the target variables.
     ///
@@ -600,7 +592,6 @@ pub enum Expression<'a> {
     /// ```
     Name(Name<'a>),
 
-    /// Print.
     /// Unlike `echo`, `print` can be used in any context allowing an
     /// expression. It always returns the value `1`.
     ///
@@ -628,7 +619,6 @@ pub enum Expression<'a> {
     /// ```
     Print(Box<Expression<'a>>),
 
-    /// Reference.
     /// Describe an expression assignment by reference.
     ///
     /// # Examples
@@ -658,7 +648,6 @@ pub enum Expression<'a> {
     /// ```
     Reference(Box<Expression<'a>>),
 
-    /// Unset.
     /// Unset the variables designated by each expression.
     ///
     /// # Examples
@@ -833,10 +822,10 @@ pub enum Ty<'a> {
 #[derive(Debug, PartialEq)]
 pub struct Parameter<'a> {
     /// Type of the parameter.
-    pub ty   : Ty<'a>,
+    pub ty: Ty<'a>,
 
     /// Name of the parameter.
-    pub name : Variable<'a>,
+    pub name: Variable<'a>,
 
     /// Default value of the parameter.
     pub value: Option<Expression<'a>>
@@ -984,7 +973,7 @@ pub enum Arity<'a> {
 #[derive(Debug, PartialEq)]
 pub struct Function<'a> {
     /// Name of the function.
-    pub name  : &'a [u8],
+    pub name: &'a [u8],
 
     /// Inputs, aka parameters, of the function.
     pub inputs: Arity<'a>,
