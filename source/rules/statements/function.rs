@@ -399,6 +399,7 @@ named!(
           | tag!(tokens::CALLABLE)
           | tag!(tokens::FLOAT)
           | tag!(tokens::INT)
+          | tag!(tokens::ITERABLE)
           | tag!(tokens::STRING)
         ),
         native_type_mapper
@@ -949,9 +950,10 @@ mod tests {
     }
 
     test_native_type!(case_native_type_array:    b"array");
-    test_native_type!(case_native_type_callable: b"callable");
     test_native_type!(case_native_type_bool:     b"bool");
+    test_native_type!(case_native_type_callable: b"callable");
     test_native_type!(case_native_type_float:    b"float");
     test_native_type!(case_native_type_int:      b"int");
+    test_native_type!(case_native_type_iterable: b"iterable");
     test_native_type!(case_native_type_string:   b"string");
 }
