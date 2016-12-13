@@ -931,7 +931,7 @@ pub enum Arity<'a> {
     Infinite(Vec<Parameter<'a>>)
 }
 
-/// A function.
+/// A function declaration.
 ///
 /// # Examples
 ///
