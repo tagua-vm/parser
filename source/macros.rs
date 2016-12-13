@@ -275,10 +275,7 @@ macro_rules! keyword(
 /// # extern crate nom;
 /// # #[macro_use]
 /// # extern crate tagua_parser;
-/// use tagua_parser::{
-///     Result,
-///     tokens
-/// };
+/// use tagua_parser::Result;
 ///
 /// # fn main() {
 /// named!(
