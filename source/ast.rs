@@ -1007,11 +1007,11 @@ pub struct Function<'a> {
 ///     Ty,
 ///     Variable
 /// };
-/// use tagua_parser::rules::expressions::expression;
+/// use tagua_parser::rules::expressions::primaries::anonymous_function;
 ///
 /// # fn main() {
 /// assert_eq!(
-///     expression(b"static function &(I ...$x): O use (&$y, $z) { return; }"),
+///     anonymous_function(b"static function &(I ...$x): O use (&$y, $z) { return; }"),
 ///     Result::Done(
 ///         &b""[..],
 ///         Expression::AnonymousFunction(
