@@ -277,7 +277,7 @@ pub enum Expression<'a> {
     ///
     /// # fn main() {
     /// assert_eq!(
-    ///     expression(b"function (I $x, J &$y): O use ($z) { return; }"),
+    ///     expression(b"function (I $x, J &$y) use ($z): O { return; }"),
     ///     Result::Done(
     ///         &b""[..],
     ///         Expression::AnonymousFunction(
@@ -1011,7 +1011,7 @@ pub struct Function<'a> {
 ///
 /// # fn main() {
 /// assert_eq!(
-///     anonymous_function(b"static function &(I ...$x): O use (&$y, $z) { return; }"),
+///     anonymous_function(b"static function &(I ...$x) use (&$y, $z): O { return; }"),
 ///     Result::Done(
 ///         &b""[..],
 ///         Expression::AnonymousFunction(

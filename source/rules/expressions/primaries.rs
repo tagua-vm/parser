@@ -838,7 +838,7 @@ named_attr!(
 
         # fn main() {
         assert_eq!(
-            anonymous_function(b\"function &($x, \\\\I\\\\J $y, int &$z): O use ($a, &$b) { return; }\"),
+            anonymous_function(b\"function &($x, \\\\I\\\\J $y, int &$z) use ($a, &$b): O { return; }\"),
             Result::Done(
                 &b\"\"[..],
                 Expression::AnonymousFunction(
@@ -884,6 +884,7 @@ named_attr!(
         first!(keyword!(tokens::FUNCTION)) >>
         output_is_a_reference: opt!(first!(tag!(tokens::REFERENCE))) >>
         inputs: first!(parameters) >>
+        enclosing_scope: opt!(first!(anonymous_function_use)) >>
         output_type: opt!(
             preceded!(
                 first!(tag!(tokens::FUNCTION_OUTPUT)),
@@ -893,7 +894,6 @@ named_attr!(
                 )
             )
         ) >>
-        enclosing_scope: opt!(first!(anonymous_function_use)) >>
         body: first!(compound_statement) >>
         (
             into_anonymous_function(
@@ -2178,7 +2178,7 @@ mod tests {
 
     #[test]
     fn case_anonymous_function() {
-        let input  = b"function (I $x, J &$y): O use ($z) { return; }";
+        let input  = b"function (I $x, J &$y) use ($z): O { return; }";
         let output = Result::Done(
             &b""[..],
             Expression::AnonymousFunction(
