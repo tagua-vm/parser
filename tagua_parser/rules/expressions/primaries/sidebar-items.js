@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["IntrinsicError","Intrinsic errors."]],"fn":[["anonymous_function",""],["array",""],["intrinsic",""],["intrinsic_echo",""],["intrinsic_empty",""],["intrinsic_eval",""],["intrinsic_exit",""],["intrinsic_isset",""],["intrinsic_list",""],["intrinsic_print",""],["intrinsic_unset",""],["primary",""]]});

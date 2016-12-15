@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `primaries` mod in crate `tagua_parser`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, primaries">
+
+    <title>tagua_parser::rules::expressions::primaries - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../../index.html'>tagua_parser</a>::<wbr><a href='../../index.html'>rules</a>::<wbr><a href='../index.html'>expressions</a></p><script>window.sidebarCurrent = {name: 'primaries', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../../../index.html'>tagua_parser</a>::<wbr><a href='../../index.html'>rules</a>::<wbr><a href='../index.html'>expressions</a>::<wbr><a class='mod' href=''>primaries</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-650' class='srclink' href='../../../../src/tagua_parser/source/rules/expressions/primaries.rs.html#32-2544' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Group of primary expression rules.</p>
+
+<p>The list of all primary expressions is provided by the PHP Language
+Specification in the <a href="https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#primary-expressions">Grammar chapter, Expressions
+section</a>.</p>
+</div><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.IntrinsicError.html'
+                                  title='tagua_parser::rules::expressions::primaries::IntrinsicError'>IntrinsicError</a></td>
+                           <td class='docblock-short'>
+                                <p>Intrinsic errors.</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.anonymous_function.html'
+                                  title='tagua_parser::rules::expressions::primaries::anonymous_function'>anonymous_function</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an anonymous function.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.array.html'
+                                  title='tagua_parser::rules::expressions::primaries::array'>array</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an array.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic'>intrinsic</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize all kind of intrinsics.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_echo.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_echo'>intrinsic_echo</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an echo.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_empty.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_empty'>intrinsic_empty</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an empty.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_eval.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_eval'>intrinsic_eval</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an lazy evaluation.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_exit.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_exit'>intrinsic_exit</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an exit.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_isset.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_isset'>intrinsic_isset</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an exit.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_list.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_list'>intrinsic_list</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize a list.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_print.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_print'>intrinsic_print</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize a print.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.intrinsic_unset.html'
+                                  title='tagua_parser::rules::expressions::primaries::intrinsic_unset'>intrinsic_unset</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize an unset.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.primary.html'
+                                  title='tagua_parser::rules::expressions::primaries::primary'>primary</a></td>
+                           <td class='docblock-short'>
+                                <p>Recognize all kind of primary expressions.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../../";
+        window.currentCrate = "tagua_parser";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../../../jquery.js"></script>
+    <script src="../../../../main.js"></script>
+    
+    <script defer src="../../../../search-index.js"></script>
+</body>
+</html>

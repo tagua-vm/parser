@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `ErrorKind` enum in crate `tagua_parser`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, ErrorKind">
+
+    <title>tagua_parser::internal::ErrorKind - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>tagua_parser</a>::<wbr><a href='index.html'>internal</a></p><script>window.sidebarCurrent = {name: 'ErrorKind', ty: 'enum', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content enum">
+<h1 class='fqn'><span class='in-band'>Enum <a href='../index.html'>tagua_parser</a>::<wbr><a href='index.html'>internal</a>::<wbr><a class='enum' href=''>ErrorKind</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-517' class='srclink' href='../../nom/util/enum.ErrorKind.html?gotosrc=517' title='goto source code'>[src]</a></span></h1>
+<pre class='rust enum'>pub enum ErrorKind&lt;E&nbsp;=&nbsp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt; {
+    Custom(E),
+    Tag,
+    MapRes,
+    MapOpt,
+    Alt,
+    IsNot,
+    IsA,
+    SeparatedList,
+    SeparatedNonEmptyList,
+    Many0,
+    Many1,
+    ManyTill,
+    Count,
+    TakeUntilAndConsume,
+    TakeUntil,
+    TakeUntilEitherAndConsume,
+    TakeUntilEither,
+    LengthValue,
+    TagClosure,
+    Alpha,
+    Digit,
+    HexDigit,
+    OctDigit,
+    AlphaNumeric,
+    Space,
+    MultiSpace,
+    LengthValueFn,
+    Eof,
+    ExprOpt,
+    ExprRes,
+    CondReduce,
+    Switch,
+    TagBits,
+    OneOf,
+    NoneOf,
+    Char,
+    CrLf,
+    RegexpMatch,
+    RegexpMatches,
+    RegexpFind,
+    RegexpCapture,
+    RegexpCaptures,
+    TakeWhile1,
+    Complete,
+    Fix,
+    Escaped,
+    EscapedTransform,
+    TagStr,
+    IsNotStr,
+    IsAStr,
+    TakeWhile1Str,
+    NonEmpty,
+    ManyMN,
+    TakeUntilAndConsumeStr,
+    TakeUntilStr,
+    Not,
+    Permutation,
+}</pre><div class='docblock'><p>indicates which parser returned an error</p>
+</div><h2 class='variants'>Variants</h2>
+<span id='variant.Custom' class='variant'><span id='Custom.v' class='invisible'><code>Custom(E)</code></span></span><span id='variant.Tag' class='variant'><span id='Tag.v' class='invisible'><code>Tag</code></span></span><span id='variant.MapRes' class='variant'><span id='MapRes.v' class='invisible'><code>MapRes</code></span></span><span id='variant.MapOpt' class='variant'><span id='MapOpt.v' class='invisible'><code>MapOpt</code></span></span><span id='variant.Alt' class='variant'><span id='Alt.v' class='invisible'><code>Alt</code></span></span><span id='variant.IsNot' class='variant'><span id='IsNot.v' class='invisible'><code>IsNot</code></span></span><span id='variant.IsA' class='variant'><span id='IsA.v' class='invisible'><code>IsA</code></span></span><span id='variant.SeparatedList' class='variant'><span id='SeparatedList.v' class='invisible'><code>SeparatedList</code></span></span><span id='variant.SeparatedNonEmptyList' class='variant'><span id='SeparatedNonEmptyList.v' class='invisible'><code>SeparatedNonEmptyList</code></span></span><span id='variant.Many0' class='variant'><span id='Many0.v' class='invisible'><code>Many0</code></span></span><span id='variant.Many1' class='variant'><span id='Many1.v' class='invisible'><code>Many1</code></span></span><span id='variant.ManyTill' class='variant'><span id='ManyTill.v' class='invisible'><code>ManyTill</code></span></span><span id='variant.Count' class='variant'><span id='Count.v' class='invisible'><code>Count</code></span></span><span id='variant.TakeUntilAndConsume' class='variant'><span id='TakeUntilAndConsume.v' class='invisible'><code>TakeUntilAndConsume</code></span></span><span id='variant.TakeUntil' class='variant'><span id='TakeUntil.v' class='invisible'><code>TakeUntil</code></span></span><span id='variant.TakeUntilEitherAndConsume' class='variant'><span id='TakeUntilEitherAndConsume.v' class='invisible'><code>TakeUntilEitherAndConsume</code></span></span><span id='variant.TakeUntilEither' class='variant'><span id='TakeUntilEither.v' class='invisible'><code>TakeUntilEither</code></span></span><span id='variant.LengthValue' class='variant'><span id='LengthValue.v' class='invisible'><code>LengthValue</code></span></span><span id='variant.TagClosure' class='variant'><span id='TagClosure.v' class='invisible'><code>TagClosure</code></span></span><span id='variant.Alpha' class='variant'><span id='Alpha.v' class='invisible'><code>Alpha</code></span></span><span id='variant.Digit' class='variant'><span id='Digit.v' class='invisible'><code>Digit</code></span></span><span id='variant.HexDigit' class='variant'><span id='HexDigit.v' class='invisible'><code>HexDigit</code></span></span><span id='variant.OctDigit' class='variant'><span id='OctDigit.v' class='invisible'><code>OctDigit</code></span></span><span id='variant.AlphaNumeric' class='variant'><span id='AlphaNumeric.v' class='invisible'><code>AlphaNumeric</code></span></span><span id='variant.Space' class='variant'><span id='Space.v' class='invisible'><code>Space</code></span></span><span id='variant.MultiSpace' class='variant'><span id='MultiSpace.v' class='invisible'><code>MultiSpace</code></span></span><span id='variant.LengthValueFn' class='variant'><span id='LengthValueFn.v' class='invisible'><code>LengthValueFn</code></span></span><span id='variant.Eof' class='variant'><span id='Eof.v' class='invisible'><code>Eof</code></span></span><span id='variant.ExprOpt' class='variant'><span id='ExprOpt.v' class='invisible'><code>ExprOpt</code></span></span><span id='variant.ExprRes' class='variant'><span id='ExprRes.v' class='invisible'><code>ExprRes</code></span></span><span id='variant.CondReduce' class='variant'><span id='CondReduce.v' class='invisible'><code>CondReduce</code></span></span><span id='variant.Switch' class='variant'><span id='Switch.v' class='invisible'><code>Switch</code></span></span><span id='variant.TagBits' class='variant'><span id='TagBits.v' class='invisible'><code>TagBits</code></span></span><span id='variant.OneOf' class='variant'><span id='OneOf.v' class='invisible'><code>OneOf</code></span></span><span id='variant.NoneOf' class='variant'><span id='NoneOf.v' class='invisible'><code>NoneOf</code></span></span><span id='variant.Char' class='variant'><span id='Char.v' class='invisible'><code>Char</code></span></span><span id='variant.CrLf' class='variant'><span id='CrLf.v' class='invisible'><code>CrLf</code></span></span><span id='variant.RegexpMatch' class='variant'><span id='RegexpMatch.v' class='invisible'><code>RegexpMatch</code></span></span><span id='variant.RegexpMatches' class='variant'><span id='RegexpMatches.v' class='invisible'><code>RegexpMatches</code></span></span><span id='variant.RegexpFind' class='variant'><span id='RegexpFind.v' class='invisible'><code>RegexpFind</code></span></span><span id='variant.RegexpCapture' class='variant'><span id='RegexpCapture.v' class='invisible'><code>RegexpCapture</code></span></span><span id='variant.RegexpCaptures' class='variant'><span id='RegexpCaptures.v' class='invisible'><code>RegexpCaptures</code></span></span><span id='variant.TakeWhile1' class='variant'><span id='TakeWhile1.v' class='invisible'><code>TakeWhile1</code></span></span><span id='variant.Complete' class='variant'><span id='Complete.v' class='invisible'><code>Complete</code></span></span><span id='variant.Fix' class='variant'><span id='Fix.v' class='invisible'><code>Fix</code></span></span><span id='variant.Escaped' class='variant'><span id='Escaped.v' class='invisible'><code>Escaped</code></span></span><span id='variant.EscapedTransform' class='variant'><span id='EscapedTransform.v' class='invisible'><code>EscapedTransform</code></span></span><span id='variant.TagStr' class='variant'><span id='TagStr.v' class='invisible'><code>TagStr</code></span></span><span id='variant.IsNotStr' class='variant'><span id='IsNotStr.v' class='invisible'><code>IsNotStr</code></span></span><span id='variant.IsAStr' class='variant'><span id='IsAStr.v' class='invisible'><code>IsAStr</code></span></span><span id='variant.TakeWhile1Str' class='variant'><span id='TakeWhile1Str.v' class='invisible'><code>TakeWhile1Str</code></span></span><span id='variant.NonEmpty' class='variant'><span id='NonEmpty.v' class='invisible'><code>NonEmpty</code></span></span><span id='variant.ManyMN' class='variant'><span id='ManyMN.v' class='invisible'><code>ManyMN</code></span></span><span id='variant.TakeUntilAndConsumeStr' class='variant'><span id='TakeUntilAndConsumeStr.v' class='invisible'><code>TakeUntilAndConsumeStr</code></span></span><span id='variant.TakeUntilStr' class='variant'><span id='TakeUntilStr.v' class='invisible'><code>TakeUntilStr</code></span></span><span id='variant.Not' class='variant'><span id='Not.v' class='invisible'><code>Not</code></span></span><span id='variant.Permutation' class='variant'><span id='Permutation.v' class='invisible'><code>Permutation</code></span></span><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;E&gt; <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt;</code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.description' class='method'><span id='description.v' class='invisible'><code>fn <a href='#method.description' class='fnname'>description</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;E&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html' title='core::hash::Hash'>Hash</a> for <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt; <span class='where'>where E: <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html' title='core::hash::Hash'>Hash</a></span></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.hash' class='method'><span id='hash.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html#tymethod.hash' class='fnname'>hash</a>&lt;__HE&gt;(&amp;self, __arg_0: &amp;mut __HE) <span class='where'>where __HE: <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hasher.html' title='core::hash::Hasher'>Hasher</a></span></code></span></h4>
+</div><h3 class='impl'><span class='in-band'><code>impl&lt;E&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html' title='core::cmp::PartialEq'>PartialEq</a>&lt;<a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt;&gt; for <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt; <span class='where'>where E: <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html' title='core::cmp::PartialEq'>PartialEq</a>&lt;E&gt;</span></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.eq' class='method'><span id='eq.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq' class='fnname'>eq</a>(&amp;self, __arg_0: &amp;<a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt;) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>self</code> and <code>other</code> values to be equal, and is used by <code>==</code>. <a href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq">Read more</a></p>
+</div><h4 id='method.ne' class='method'><span id='ne.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.ne' class='fnname'>ne</a>(&amp;self, __arg_0: &amp;<a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt;) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>!=</code>.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;E&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt; <span class='where'>where E: <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a></span></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Error.html' title='core::fmt::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;E&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html' title='core::cmp::Eq'>Eq</a> for <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt; <span class='where'>where E: <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html' title='core::cmp::Eq'>Eq</a></span></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'></div><h3 class='impl'><span class='in-band'><code>impl&lt;E&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt; <span class='where'>where E: <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a></span></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='enum' href='../../tagua_parser/internal/enum.ErrorKind.html' title='tagua_parser::internal::ErrorKind'>ErrorKind</a>&lt;E&gt;</code></span></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "tagua_parser";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>
