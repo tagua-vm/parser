@@ -2,25 +2,20 @@ language: rust
 
 matrix:
   include:
-    - rust: 1.9.0
+    - rust: 1.13.0
       os: linux
       dist: trusty
-    - rust: 1.9.0
+    - rust: 1.13.0
       os: osx
-    - rust: 1.10.0
+    - rust: 1.14.0
       os: linux
       dist: trusty
-    - rust: 1.10.0
+    - rust: 1.14.0
       os: osx
-    - rust: 1.11.0
+    - rust: 1.15.0
       os: linux
       dist: trusty
-    - rust: 1.11.0
-      os: osx
-    - rust: 1.12.0
-      os: linux
-      dist: trusty
-    - rust: 1.12.0
+    - rust: 1.15.0
       os: osx
     - rust: stable
       os: linux
@@ -44,13 +39,6 @@ matrix:
 cache: cargo
 
 sudo: false
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libdw-dev
-      - libdw1
-      - libelf-dev
 
 env:
   global:
@@ -59,20 +47,6 @@ env:
 notifications:
   irc: "chat.freenode.net#taguavm"
 
-before_script:
-  - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH="$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH"
-
 script:
-  - |
-      travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo --only stable doc
-
-after_success:
-  - |
-      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-          travis-cargo --only stable doc-upload;
-          travis-cargo coveralls --no-sudo;
-      fi
+  - cargo build
+  - cargo test
