@@ -263,7 +263,7 @@ named_attr!(
     "],
     pub decimal<Literal>,
     map_res!(
-        re_bytes_find_static!(r"^[1-9][0-9]*"),
+        re_bytes_find_static!(r"(?-u)^[1-9][0-9]*"),
         |bytes: &[u8]| {
             let string = unsafe { str::from_utf8_unchecked(bytes) };
 
@@ -349,7 +349,7 @@ named_attr!(
     "],
     pub exponential<Literal>,
     map_res!(
-        re_bytes_find_static!(r"^(([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)"),
+        re_bytes_find_static!(r"(?-u)^(([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)"),
         |bytes: &[u8]| {
             f64
                 ::from_str(unsafe { str::from_utf8_unchecked(bytes) })

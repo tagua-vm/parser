@@ -159,7 +159,7 @@ named_attr!(
         ```
     "],
     pub name,
-    re_bytes_find_static!(r"^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*")
+    re_bytes_find_static!(r"(?-u)^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*")
 );
 
 
