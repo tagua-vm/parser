@@ -76,7 +76,7 @@ available](https://waffle.io/tagua-vm/parser).
 ## Documentation and help
 
 The documentation is automatically uploaded online at the following address:
-https://tagua-vm.github.io/parser.
+https://docs.rs/tagua-parser/*/tagua_parser/.
 
 To generate it locally, please, run the following command:
 
@@ -97,7 +97,7 @@ Tagua VM is under the New BSD License (BSD-3-Clause):
 
 
 
-Copyright © 2016-2016, Ivan Enderlin.
+Copyright © 2016-2017, Ivan Enderlin.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
