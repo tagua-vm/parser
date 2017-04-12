@@ -5,7 +5,7 @@
 //
 // New BSD License
 //
-// Copyright © 2016-2016, Ivan Enderlin.
+// Copyright © 2016-2017, Ivan Enderlin.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
