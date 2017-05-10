@@ -61,6 +61,8 @@ extern crate lazy_static;
 #[macro_use]
 extern crate nom;
 extern crate regex;
+extern crate memchr;
+extern crate bytecount;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;

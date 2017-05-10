@@ -29,15 +29,41 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! List of lexemes.
+//! List of lexemes, and span definition.
 //!
 //! The list of all lexemes, aka tokens, is provided by the PHP Language
 //! Specification in the [Grammar
 //! chapter](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#lexical-grammar).
 //!
 //! All lexemes are declared as static bytes constants.
+//!
+//! A span is a structure `Span` containing meta information about a
+//! lexeme, like the offset of the lexeme in the input, the line, and
+//! the column. An analysed lexeme is represented by the `Token` structure.
 
+use bytecount;
+use memchr::memrchr;
+use nom::{
+    Compare,
+    CompareResult,
+    InputIter,
+    InputLength,
+    Offset,
+    Slice
+};
+use super::internal::{
+    Input,
+    InputElement
+};
 use rules::whitespaces::whitespace;
+use std::iter::Enumerate;
+use std::ops::{
+    Range,
+    RangeFrom,
+    RangeFull,
+    RangeTo
+};
+use std::slice::Iter;
 
 /// Helper to declare a token.
 ///
@@ -702,14 +728,332 @@ named_attr!(
     )
 );
 
+/// A token is a structure pairing a span to any data.
+#[derive(Debug, PartialEq)]
+pub struct Token<'a, T> {
+    /// Value of the token.
+    pub value: T,
+
+    /// The attached span of the value.
+    pub span : Span<'a>
+}
+
+/// A span is a set of meta information about a token.
+///
+/// The `Span` structure can be used as an input of the nom parsers.
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct Span<'a> {
+    /// The offset represents the position of the slice relatively to
+    /// the input of the parser. It starts at offset 0.
+    pub offset: usize,
+
+    /// The line number of the slice relatively to the input of the
+    /// parser. It starts at line 1.
+    pub line  : u32,
+
+    /// The column number of the slice relatively to the input of the
+    /// parser. It starts at column 1.
+    pub column: u16,
+
+    /// The slice that is spanned.
+    slice     : Input<'a>
+}
+
+impl<'a> Span<'a> {
+    /// Create a blank.
+    ///
+    /// `offset` starts at 0, `line` starts at 1, and `column` starts at 1.
+    pub fn new(input: Input<'a>) -> Self {
+        Span {
+            offset: 0,
+            line  : 1,
+            column: 1,
+            slice : input
+        }
+    }
+
+    /// Extract the entire slice of the span.
+    pub fn as_slice(&self) -> Input<'a> {
+        self.slice
+    }
+}
+
+/// Implement `InputLength` from nom to be able to use the `Span`
+/// structure as an input of the parsers.
+///
+/// This trait aims at computing the length of the input.
+impl<'a> InputLength for Span<'a> {
+    /// Compute the length of the slice in the span.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::InputLength;
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::new(b"foobar").input_len(), 6);
+    /// # }
+    /// ```
+    fn input_len(&self) -> usize {
+        self.slice.len()
+    }
+}
+
+/// Implement `InputIter` from nom to be able to use the `Span`
+/// structure as an input of the parsers.
+///
+/// This trait aims at iterating over the input.
+impl<'a> InputIter for Span<'a> {
+    /// Type of an element of the span' slice.
+    type Item     = &'a InputElement;
+
+    /// Type of a raw element of the span' slice.
+    type RawItem  = InputElement;
+
+    /// Type of the enumerator iterator.
+    type Iter     = Enumerate<Iter<'a, Self::RawItem>>;
+
+    /// Type of the iterator.
+    type IterElem = Iter<'a, Self::RawItem>;
+
+    /// Return an iterator that enumerates the byte offset and the
+    /// element of the slice in the span.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::InputIter;
+    ///
+    /// # fn main() {
+    /// let span   = Span::new(b"foobar");
+    /// let expect = vec![
+    ///     (0, 'f' as u8),
+    ///     (1, 'o' as u8),
+    ///     (2, 'o' as u8),
+    ///     (3, 'b' as u8),
+    ///     (4, 'a' as u8),
+    ///     (5, 'r' as u8)
+    /// ];
+    ///
+    /// let mut accumulator = Vec::new();
+    ///
+    /// for (index, item) in span.iter_indices() {
+    ///     accumulator.push((index, *item));
+    /// }
+    ///
+    /// assert_eq!(accumulator, expect);
+    /// # }
+    /// ```
+    fn iter_indices(&self) -> Self::Iter {
+        self.slice.iter().enumerate()
+    }
+
+    /// Return an iterator over the elements of the slice in the span.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::InputIter;
+    ///
+    /// # fn main() {
+    /// let span   = Span::new(b"foobar");
+    /// let expect = vec![
+    ///     'f' as u8,
+    ///     'o' as u8,
+    ///     'o' as u8,
+    ///     'b' as u8,
+    ///     'a' as u8,
+    ///     'r' as u8
+    /// ];
+    ///
+    /// let mut accumulator = Vec::new();
+    ///
+    /// for item in span.iter_elements() {
+    ///     accumulator.push(*item);
+    /// }
+    ///
+    /// assert_eq!(accumulator, expect);
+    /// # }
+    /// ```
+    fn iter_elements(&self) -> Self::IterElem {
+        self.slice.iter()
+    }
+
+    /// Find the byte position of an element in the slice of the span.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::InputIter;
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::new(b"foobar").position(|x| x == 'a' as u8), Some(4));
+    /// # }
+    /// ```
+    fn position<P>(&self, predicate: P) -> Option<usize>
+        where P: Fn(Self::RawItem) -> bool {
+        self.slice.iter().position(|x| predicate(*x))
+    }
+
+    /// Get the byte offset from the element's position in the slice
+    /// of the span.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::InputIter;
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::new(b"foobar").slice_index(3), Some(3));
+    /// # }
+    /// ```
+    fn slice_index(&self, count: usize) -> Option<usize> {
+        if self.slice.len() >= count {
+            Some(count)
+        } else {
+            None
+        }
+    }
+}
+
+/// Implement `Compare` from nom to be able to use the `Span`
+/// structure as an input of the parsers.
+///
+/// This trait aims at comparing inputs.
+impl<'a, 'b> Compare<Input<'b>> for Span<'a> {
+    /// Compare self to another input for equality.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::{Compare, CompareResult};
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::new(b"foobar").compare(b"foobar"), CompareResult::Ok);
+    /// # }
+    /// ```
+    fn compare(&self, element: Input<'b>) -> CompareResult {
+        self.slice.compare(element)
+    }
+
+    /// Compare self to another input for equality independently of the case.
+    fn compare_no_case(&self, element: Input<'b>) -> CompareResult {
+        self.slice.compare_no_case(element)
+    }
+}
+
+macro_rules! impl_slice_for_range {
+    ($range:ty) => (
+        /// Implement a range from nom to be able to use the `Span`
+        /// structure as an input of the parsers.
+        ///
+        /// This trait aims at slicing inputs based of a range.
+        impl<'a> Slice<$range> for Span<'a> {
+            /// Slice the span' slice based on a particular range.
+            ///
+            /// This is where new spans are computed.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// # extern crate tagua_parser;
+            /// # extern crate nom;
+            /// use tagua_parser::tokens::Span;
+            /// use nom::Slice;
+            ///
+            /// # fn main() {
+            /// let sliced_span = Span::new(b"foobar").slice(2..5);
+            ///
+            /// assert_eq!(sliced_span.offset,     2);
+            /// assert_eq!(sliced_span.line,       1);
+            /// assert_eq!(sliced_span.column,     3);
+            /// assert_eq!(sliced_span.as_slice(), &b"oba"[..]);
+            /// # }
+            /// ```
+            fn slice(&self, range: $range) -> Self {
+                let next_slice = &self.slice[range];
+
+                if next_slice == self.slice {
+                    return *self;
+                }
+
+                let next_offset = self.slice.offset(next_slice);
+
+                if next_offset == 0 {
+                    return Span {
+                        offset: self.offset,
+                        line  : self.line,
+                        column: self.column,
+                        slice : next_slice
+                    };
+                }
+
+                let consumed           = &self.slice[..next_offset];
+                let number_of_newlines = bytecount::count(consumed, b'\n') as u32;
+
+                let next_column =
+                    if number_of_newlines == 0 {
+                        self.column + next_offset as u16
+                    } else {
+                        match memrchr(b'\n', consumed) {
+                            Some(last_newline_position) => {
+                                (next_offset - last_newline_position) as u16
+                            },
+
+                            None => 0 // unreachable
+                        }
+                    };
+
+                Span {
+                    offset: self.offset + next_offset,
+                    line  : self.line + number_of_newlines,
+                    column: next_column,
+                    slice : next_slice
+                }
+            }
+        }
+    )
+}
+
+impl_slice_for_range!(Range<usize>);
+impl_slice_for_range!(RangeTo<usize>);
+impl_slice_for_range!(RangeFrom<usize>);
+impl_slice_for_range!(RangeFull);
+
 
 #[cfg(test)]
 mod tests {
+    use super::Span;
     use super::keywords;
     use super::super::internal::{
         Error,
         ErrorKind,
         Result
+    };
+    use nom::{
+        Compare,
+        CompareResult,
+        InputIter,
+        InputLength,
+        Slice
     };
 
     macro_rules! test_keyword {
@@ -806,5 +1150,303 @@ mod tests {
     #[test]
     fn case_invalid_keyword() {
         assert_eq!(keywords(b"hello"), Result::Error(Error::Position(ErrorKind::Alt, &b"hello"[..])));
+    }
+
+    #[test]
+    fn case_span_from() {
+        let input  = &b"foobar"[..];
+        let output = Span::new(input);
+
+        assert_eq!(Span::new(input), output);
+    }
+
+    #[test]
+    fn case_span_length_zero() {
+        let input  = Span::new(b"");
+        let output = 0;
+
+        assert_eq!(input.input_len(), output);
+    }
+
+    #[test]
+    fn case_span_length_many() {
+        let input  = Span::new(b"foobar");
+        let output = 6;
+
+        assert_eq!(input.input_len(), output);
+    }
+
+    #[test]
+    fn case_span_empty_iterator_with_indices() {
+        let input  = Span::new(b"");
+        let output = 0;
+
+        assert_eq!(input.iter_indices().len(), output);
+    }
+
+    #[test]
+    fn case_span_iterator_with_indices() {
+        let input  = Span::new(b"foobar");
+        let output = vec![
+            (0, 'f' as u8),
+            (1, 'o' as u8),
+            (2, 'o' as u8),
+            (3, 'b' as u8),
+            (4, 'a' as u8),
+            (5, 'r' as u8)
+        ];
+
+        let mut accumulator = Vec::new();
+
+        for (index, item) in input.iter_indices() {
+            accumulator.push((index, *item));
+        }
+
+        assert_eq!(accumulator, output);
+    }
+
+    #[test]
+    fn case_span_empty_iterator() {
+        let input  = Span::new(b"");
+        let output = 0;
+
+        assert_eq!(input.iter_elements().len(), output);
+    }
+
+    #[test]
+    fn case_span_iterator_with_elements() {
+        let input  = Span::new(b"foobar");
+        let output = vec![
+            'f' as u8,
+            'o' as u8,
+            'o' as u8,
+            'b' as u8,
+            'a' as u8,
+            'r' as u8
+        ];
+
+        let mut accumulator = Vec::new();
+
+        for item in input.iter_elements() {
+            accumulator.push(*item);
+        }
+
+        assert_eq!(accumulator, output);
+    }
+
+    #[test]
+    fn case_span_empty_position() {
+        let input  = Span::new(b"");
+        let output = None;
+
+        assert_eq!(input.position(|x| x == 'a' as u8), output);
+    }
+
+    #[test]
+    fn case_span_position() {
+        let input  = Span::new(b"foobar");
+        let output = Some(4);
+
+        assert_eq!(input.position(|x| x == 'a' as u8), output);
+    }
+
+    #[test]
+    fn case_span_position_not_found() {
+        let input  = Span::new(b"foobar");
+        let output = None;
+
+        assert_eq!(input.position(|x| x == 'z' as u8), output);
+    }
+
+    #[test]
+    fn case_span_empty_index() {
+        let input  = Span::new(b"");
+        let output = None;
+
+        assert_eq!(input.slice_index(2), output);
+    }
+
+    #[test]
+    fn case_span_index() {
+        let input  = Span::new(b"foobar");
+        let output = Some(3);
+
+        assert_eq!(input.slice_index(3), output);
+    }
+
+    #[test]
+    fn case_span_index_does_not_exist() {
+        let input  = Span::new(b"foobar");
+        let output = None;
+
+        assert_eq!(input.slice_index(7), output);
+    }
+
+    #[test]
+    fn case_span_empty_compare() {
+        let input  = Span::new(b"");
+        let output = CompareResult::Incomplete;
+
+        assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_compare_incomplete() {
+        let input  = Span::new(b"foo");
+        let output = CompareResult::Incomplete;
+
+        assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_compare_ok() {
+        let input  = Span::new(b"foobar");
+        let output = CompareResult::Ok;
+
+        assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_empty_compare_no_case() {
+        let input  = Span::new(b"");
+        let output = CompareResult::Incomplete;
+
+        assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_compare_no_case_incomplete() {
+        let input  = Span::new(b"foo");
+        let output = CompareResult::Incomplete;
+
+        assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_compare_no_case_ok() {
+        let input  = Span::new(b"foobar");
+        let output = CompareResult::Ok;
+
+        assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_slice_with_range() {
+        let range  = 2..5;
+        let input  = b"foobar";
+        let output = Span { 
+            offset: 2,
+            line  : 1,
+            column: 3,
+            slice : &input[range.clone()]
+        };
+
+        assert_eq!(Span::new(input).slice(range.clone()), output);
+    }
+
+    #[test]
+    fn case_span_slice_with_range_to() {
+        let range  = 2..;
+        let input  = b"foobar";
+        let output = Span { 
+            offset: 2,
+            line  : 1,
+            column: 3,
+            slice : &input[range.clone()]
+        };
+
+        assert_eq!(Span::new(input).slice(range.clone()), output);
+    }
+
+    #[test]
+    fn case_span_slice_with_range_from() {
+        let range  = ..3;
+        let input  = b"foobar";
+        let output = Span { 
+            offset: 0,
+            line  : 1,
+            column: 1,
+            slice : &input[range.clone()]
+        };
+
+        assert_eq!(Span::new(input).slice(range.clone()), output);
+    }
+
+    #[test]
+    fn case_span_slice_with_range_full() {
+        let range  = ..;
+        let input  = b"foobar";
+        let output = Span { 
+            offset: 0,
+            line  : 1,
+            column: 1,
+            slice : &input[range.clone()]
+        };
+
+        assert_eq!(Span::new(input).slice(range.clone()), output);
+    }
+
+    #[test]
+    fn case_span_in_parser() {
+        named!(
+            test<Span, Vec<Span>>,
+            do_parse!(
+                foo: ws!(tag!(b"foo")) >>
+                bar: ws!(tag!(b"bar")) >>
+                baz: many0!(ws!(tag!(b"baz"))) >>
+                qux: ws!(tag!(b"qux")) >>
+                ({
+                    let mut out = vec![foo, bar];
+                    out.extend(baz);
+                    out.push(qux);
+
+                    out
+                })
+            )
+        );
+
+        let input = b"foo bar\nbaz\n \n  baz   qux";
+        let output = Result::Done(
+            Span {
+                offset: 25,
+                line  : 4,
+                column: 12, // dummy value
+                slice : &b""[..]
+            },
+            vec![
+                Span {
+                    offset: 0,
+                    line  : 1,
+                    column: 1,
+                    slice : &b"foo"[..],
+                },
+                Span {
+                    offset: 4,
+                    line  : 1,
+                    column: 5,
+                    slice : &b"bar"[..],
+                },
+                Span {
+                    offset: 8,
+                    line  : 2,
+                    column: 1,
+                    slice : &b"baz"[..],
+                },
+                Span {
+                    offset: 16,
+                    line  : 4,
+                    column: 3,
+                    slice : &b"baz"[..],
+                },
+                Span {
+                    offset: 22,
+                    line  : 4,
+                    column: 9,
+                    slice : &b"qux"[..],
+                }
+            ]
+        );
+
+        assert_eq!(test(Span::new(input)), output);
     }
 }

@@ -31,10 +31,23 @@
 
 //! Internal utilities for the parser.
 
+/// Contain the error that a parser can return.
 pub use nom::Err as Error;
+
+/// Indicate which parser has returned an error.
 pub use nom::ErrorKind;
+
+/// Hold the result of a parser.
 pub use nom::IResult as Result;
+
+/// Contain information on needed data if a parser returned `Incomplete`.
 pub use nom::Needed;
+
+/// Represent the type of the input elements.
+pub type InputElement = u8;
+
+/// Represent the type of the input.
+pub type Input<'a>    = &'a [InputElement];
 
 /// Fold an item into a vector.
 /// This is useful when combined with the `fold_many0!` macro for instance.

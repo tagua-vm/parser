@@ -41,9 +41,15 @@ lto              = false
 debug-assertions = true
 codegen-units    = 1
 
+[features]
+simd = ["bytecount/simd-accel"]
+avx  = ["bytecount/avx-accel"]
+
 [dependencies]
 lazy_static = "~0.2"
 regex       = "~0.2"
+bytecount   = "~0.1"
+memchr      = "~1.0"
 
 [dependencies.nom]
 version  = "~2.2"

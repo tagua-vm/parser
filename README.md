@@ -31,6 +31,13 @@ To build a development version:
 $ cargo build
 ```
 
+If you have SIMD or AVX on your hardware, then, you can respectively
+use the `simd` or `avx` feature as follows:
+
+```sh
+$ cargo build --release --features simd
+```
+
 ### Using Docker
 
 If installing Rust on your machine is too much, Docker might be an alternative:
