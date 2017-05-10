@@ -60,7 +60,7 @@ named_attr!(
         # }
         ```
     "],
-    pub skip< Vec<&[u8]> >,
+    pub skip<Vec<&[u8]>>,
     many0!(
         alt!(
             comment

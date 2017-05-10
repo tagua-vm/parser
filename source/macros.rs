@@ -279,7 +279,7 @@ macro_rules! keyword(
 ///
 /// # fn main() {
 /// named!(
-///     test< Vec<&[u8]> >,
+///     test<Vec<&[u8]>>,
 ///     fold_into_vector_many0!(
 ///         tag!("abc"),
 ///         Vec::new()
@@ -507,7 +507,7 @@ mod tests {
     #[test]
     fn case_fold_into_vector_many0() {
         named!(
-            test< Vec<&[u8]> >,
+            test<Vec<&[u8]>>,
             fold_into_vector_many0!(
                 tag!("abc"),
                 Vec::new()

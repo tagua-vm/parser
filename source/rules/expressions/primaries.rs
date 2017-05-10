@@ -451,7 +451,7 @@ named!(
 );
 
 named!(
-    intrinsic_keyed_list_item< Option<(Option<Expression>, Expression)> >,
+    intrinsic_keyed_list_item<Option<(Option<Expression>, Expression)>>,
     do_parse!(
         key: terminated!(
             expression,
@@ -917,7 +917,7 @@ named_attr!(
 );
 
 named!(
-    anonymous_function_use< Vec<Expression> >,
+    anonymous_function_use<Vec<Expression>>,
     map_res!(
         terminated!(
             preceded!(
@@ -947,7 +947,7 @@ fn anonymous_function_use_mapper<'a>(enclosing_list: Option<Vec<Expression<'a>>>
 }
 
 named!(
-    anonymous_function_use_list< Vec<Expression> >,
+    anonymous_function_use_list<Vec<Expression>>,
     do_parse!(
         accumulator: map_res!(
             anonymous_function_use_list_item,

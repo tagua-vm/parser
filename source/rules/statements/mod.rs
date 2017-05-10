@@ -41,7 +41,7 @@ use super::super::ast::Statement;
 use super::super::tokens;
 
 named!(
-    pub compound_statement< Vec<Statement> >,
+    pub compound_statement<Vec<Statement>>,
     map_res!(
         terminated!(
             preceded!(

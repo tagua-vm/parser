@@ -51,7 +51,7 @@ pub use nom::Needed;
 ///
 /// # fn main() {
 /// named!(
-///     test< &[u8], Vec<&[u8]> >,
+///     test<&[u8], Vec<&[u8]>>,
 ///     fold_many0!(
 ///         tag!("abc"),
 ///         Vec::new(),
