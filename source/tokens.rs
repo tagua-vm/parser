@@ -1410,7 +1410,7 @@ mod tests {
             Span {
                 offset: 25,
                 line  : 4,
-                column: 12, // dummy value
+                column: 12,
                 slice : &b""[..]
             },
             vec![
