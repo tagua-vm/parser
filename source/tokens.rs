@@ -764,6 +764,22 @@ impl<'a> Span<'a> {
     /// `line`, and `column` values.
     ///
     /// `offset` starts at 0, `line` starts at 1, and `column` starts at 1.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// let span = Span::new(b"foobar");
+    ///
+    /// assert_eq!(span.offset,     0);
+    /// assert_eq!(span.line,       1);
+    /// assert_eq!(span.column,     1);
+    /// assert_eq!(span.as_slice(), &b"foobar"[..]);
+    /// # }
+    /// ```
     pub fn new(input: Input<'a>) -> Self {
         Span {
             offset: 0,
@@ -773,13 +789,61 @@ impl<'a> Span<'a> {
         }
     }
 
+    /// Create a span for a particular input at a particular offset, line, and column.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// let span = Span::new_at(b"foobar", 1, 2, 3);
+    ///
+    /// assert_eq!(span.offset,     1);
+    /// assert_eq!(span.line,       2);
+    /// assert_eq!(span.column,     3);
+    /// assert_eq!(span.as_slice(), &b"foobar"[..]);
+    /// # }
+    /// ```
+    pub fn new_at(input: Input<'a>, offset: usize, line: u32, column: u16) -> Self {
+        Span {
+            offset: offset,
+            line  : line,
+            column: column,
+            slice : input
+        }
+    }
+
     /// Create a blank span.
     /// This is strictly equivalent to `Span::new(b"")`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::empty(), Span::new(b""));
+    /// # }
+    /// ```
     pub fn empty() -> Self {
         Self::new(b"")
     }
 
     /// Extract the entire slice of the span.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::new(b"foobar").as_slice(), &b"foobar"[..]);
+    /// # }
+    /// ```
     pub fn as_slice(&self) -> Input<'a> {
         self.slice
     }
@@ -987,12 +1051,10 @@ macro_rules! impl_slice_for_range {
             /// use nom::Slice;
             ///
             /// # fn main() {
-            /// let sliced_span = Span::new(b"foobar").slice(2..5);
-            ///
-            /// assert_eq!(sliced_span.offset,     2);
-            /// assert_eq!(sliced_span.line,       1);
-            /// assert_eq!(sliced_span.column,     3);
-            /// assert_eq!(sliced_span.as_slice(), &b"oba"[..]);
+            /// assert_eq!(
+            ///     Span::new(b"foobar").slice(2..5),
+            ///     Span::new_at(b"oba", 2, 1, 3)
+            /// );
             /// # }
             /// ```
             fn slice(&self, range: $range) -> Self {
@@ -1170,6 +1232,19 @@ mod tests {
         };
 
         assert_eq!(Span::new(input), output);
+    }
+
+    #[test]
+    fn case_span_new_at() {
+        let input  = &b"foobar"[..];
+        let output = Span {
+            offset: 1,
+            line  : 2,
+            column: 3,
+            slice : input
+        };
+
+        assert_eq!(Span::new_at(input, 1, 2, 3), output);
     }
 
     #[test]
