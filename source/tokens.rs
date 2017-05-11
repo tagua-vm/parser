@@ -760,7 +760,8 @@ pub struct Span<'a> {
 }
 
 impl<'a> Span<'a> {
-    /// Create a blank.
+    /// Create a span for a particular input with default `offset`,
+    /// `line`, and `column` values.
     ///
     /// `offset` starts at 0, `line` starts at 1, and `column` starts at 1.
     pub fn new(input: Input<'a>) -> Self {
@@ -770,6 +771,12 @@ impl<'a> Span<'a> {
             column: 1,
             slice : input
         }
+    }
+
+    /// Create a blank span.
+    /// This is strictly equivalent to `Span::new(b"")`.
+    pub fn empty() -> Self {
+        Self::new(b"")
     }
 
     /// Extract the entire slice of the span.
@@ -1150,6 +1157,39 @@ mod tests {
     #[test]
     fn case_invalid_keyword() {
         assert_eq!(keywords(b"hello"), Result::Error(Error::Position(ErrorKind::Alt, &b"hello"[..])));
+    }
+
+    #[test]
+    fn case_span_new() {
+        let input  = &b"foobar"[..];
+        let output = Span {
+            offset: 0,
+            line  : 1,
+            column: 1,
+            slice : input
+        };
+
+        assert_eq!(Span::new(input), output);
+    }
+
+    #[test]
+    fn case_span_empty() {
+        let output = Span {
+            offset: 0,
+            line  : 1,
+            column: 1,
+            slice : &b""[..]
+        };
+
+        assert_eq!(Span::empty(), output);
+    }
+
+    #[test]
+    fn case_span_as_slice() {
+        let input  = Span::new(b"foobar");
+        let output = &b"foobar"[..];
+
+        assert_eq!(input.as_slice(), output);
     }
 
     #[test]
