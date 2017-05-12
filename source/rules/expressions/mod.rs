@@ -39,6 +39,7 @@ pub mod constant;
 pub mod primaries;
 
 use super::super::ast::Expression;
+use super::super::tokens::Span;
 
 named_attr!(
     #[doc="
@@ -65,6 +66,6 @@ named_attr!(
         # }
         ```
     "],
-    pub expression<Expression>,
+    pub expression<Span, Expression>,
     call!(primaries::primary)
 );

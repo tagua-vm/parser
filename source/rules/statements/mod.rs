@@ -39,14 +39,15 @@ pub mod function;
 
 use super::super::ast::Statement;
 use super::super::tokens;
+use super::super::tokens::Span;
 
 named!(
-    pub compound_statement<Vec<Statement>>,
+    pub compound_statement<Span, Vec<Statement>>,
     map_res!(
         terminated!(
             preceded!(
                 tag!(tokens::LEFT_CURLY_BRACKET),
-                opt!(first!(tag!("return;")))
+                opt!(first!(tag!(b"return;")))
             ),
             first!(tag!(tokens::RIGHT_CURLY_BRACKET))
         ),
@@ -57,7 +58,7 @@ named!(
 );
 
 named!(
-    pub statement<Statement>,
+    pub statement<Span, Statement>,
     alt!(
         call!(function::function)
     )

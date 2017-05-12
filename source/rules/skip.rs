@@ -36,6 +36,7 @@
 //! skipped.
 
 use super::comments::comment;
+use super::super::tokens::Span;
 use super::whitespaces::whitespace;
 
 named_attr!(
@@ -60,7 +61,7 @@ named_attr!(
         # }
         ```
     "],
-    pub skip<Vec<&[u8]>>,
+    pub skip<Span, Vec<Span>>,
     many0!(
         alt!(
             comment
@@ -74,19 +75,35 @@ named_attr!(
 mod tests {
     use super::skip;
     use super::super::super::internal::Result;
+    use super::super::super::tokens::Span;
 
     #[test]
     fn case_skip_comment() {
-        assert_eq!(skip(b"/* foo */hello"), Result::Done(&b"hello"[..], vec![&b" foo "[..]]));
+        let input  = Span::new(b"/* foo */hello");
+        let output = Result::Done(Span::new_at(b"hello", 9, 1, 10), vec![Span::new_at(b" foo ", 2, 1, 3)]);
+
+        assert_eq!(skip(input), output);
     }
 
     #[test]
     fn case_skip_whitespace() {
-        assert_eq!(skip(b"  \nhello"), Result::Done(&b"hello"[..], vec![&b"  \n"[..]]));
+        let input  = Span::new(b"  \nhello");
+        let output = Result::Done(Span::new_at(b"hello", 3, 2, 1), vec![Span::new_at(b"  \n", 0, 1, 1)]);
+
+        assert_eq!(skip(input), output);
     }
 
     #[test]
     fn case_skip_comment_whitespace() {
-        assert_eq!(skip(b"/* foo */  \nhello"), Result::Done(&b"hello"[..], vec![&b" foo "[..], &b"  \n"[..]]));
+        let input  = Span::new(b"/* foo */  \nhello");
+        let output = Result::Done(
+            Span::new_at(b"hello", 12, 2, 1),
+            vec![
+                Span::new_at(b" foo ", 2, 1, 3),
+                Span::new_at(b"  \n", 9, 1, 10)
+            ]
+        );
+
+        assert_eq!(skip(input), output);
     }
 }

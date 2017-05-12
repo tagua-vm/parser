@@ -42,10 +42,11 @@
 //! the column. An analysed lexeme is represented by the `Token` structure.
 
 use bytecount;
-use memchr::memrchr;
+use memchr;
 use nom::{
     Compare,
     CompareResult,
+    FindSubstring,
     InputIter,
     InputLength,
     Offset,
@@ -157,6 +158,14 @@ token!(
 token!(
     pub BITWISE_XOR_AND_ASSIGN: b"^=";
     "The `BITWISE_XOR_AND_ASSIGN` token.\n\nRepresent the exclusive bitwise disjunction assignment operator, e.g. `$x ^= $y;`."
+);
+token!(
+    pub BLOCK_COMMENT_OPEN: b"/*";
+    "The `BLOCK_COMMENT_OPEN` token.\n\nRepresent the beginning of a block comment, e.g. `/* comment */`."
+);
+token!(
+    pub BLOCK_COMMENT_CLOSE: b"*/";
+    "The `BLOCK_COMMENT_CLOSE` token.\n\nRepresent the end of a block comment, e.g. `/* comment */`."
 );
 token!(
     pub BOOL: b"bool";
@@ -385,6 +394,14 @@ token!(
 token!(
     pub INCREMENT: b"++";
     "The `INCREMENT` token.\n\nRepresent the increment operator, e.g. `$number++`."
+);
+token!(
+    pub INLINE_COMMENT: b"//";
+    "THe `INLINE_COMMENT` token.\n\nRepresent an inline comment, e.g. `// comment`."
+);
+token!(
+    pub INLINE_COMMENT_HASH: b"#";
+    "THe `INLINE_COMMENT_HASH_` token.\n\nRepresent an inline comment, e.g. `# comment`."
 );
 token!(
     pub INSTANCEOF: b"instanceof";
@@ -646,7 +663,7 @@ named_attr!(
         # }
         ```
     "],
-    pub keywords,
+    pub keywords<Span, Span>,
     alt_complete!(
         keyword!(ABSTRACT)
       | keyword!(AND)
@@ -719,10 +736,17 @@ named_attr!(
       | keyword!(WHILE)
       | keyword!(XOR)
       | do_parse!(
-            keyword!("yield") >>
+            span: keyword!(b"yield") >>
             whitespace >>
-            keyword!("from") >>
-            (YIELD_FROM)
+            keyword!(b"from") >>
+            (
+                Span::new_at(
+                    YIELD_FROM,
+                    span.offset,
+                    span.line,
+                    span.column
+                )
+            )
         )
       | keyword!(YIELD)
     )
@@ -735,7 +759,16 @@ pub struct Token<'a, T> {
     pub value: T,
 
     /// The attached span of the value.
-    pub span : Span<'a>
+    pub span: Span<'a>
+}
+
+impl<'a, T> Token<'a, T> {
+    pub fn new(value: T, span: Span<'a>) -> Self {
+        Token {
+            value: value,
+            span : span
+        }
+    }
 }
 
 /// A span is a set of meta information about a token.
@@ -749,14 +782,14 @@ pub struct Span<'a> {
 
     /// The line number of the slice relatively to the input of the
     /// parser. It starts at line 1.
-    pub line  : u32,
+    pub line: u32,
 
     /// The column number of the slice relatively to the input of the
     /// parser. It starts at column 1.
     pub column: u16,
 
     /// The slice that is spanned.
-    slice     : Input<'a>
+    slice: Input<'a>
 }
 
 impl<'a> Span<'a> {
@@ -904,12 +937,12 @@ impl<'a> InputIter for Span<'a> {
     /// # fn main() {
     /// let span   = Span::new(b"foobar");
     /// let expect = vec![
-    ///     (0, 'f' as u8),
-    ///     (1, 'o' as u8),
-    ///     (2, 'o' as u8),
-    ///     (3, 'b' as u8),
-    ///     (4, 'a' as u8),
-    ///     (5, 'r' as u8)
+    ///     (0, b'f'),
+    ///     (1, b'o'),
+    ///     (2, b'o'),
+    ///     (3, b'b'),
+    ///     (4, b'a'),
+    ///     (5, b'r')
     /// ];
     ///
     /// let mut accumulator = Vec::new();
@@ -937,14 +970,7 @@ impl<'a> InputIter for Span<'a> {
     ///
     /// # fn main() {
     /// let span   = Span::new(b"foobar");
-    /// let expect = vec![
-    ///     'f' as u8,
-    ///     'o' as u8,
-    ///     'o' as u8,
-    ///     'b' as u8,
-    ///     'a' as u8,
-    ///     'r' as u8
-    /// ];
+    /// let expect = vec![b'f', b'o', b'o', b'b', b'a', b'r'];
     ///
     /// let mut accumulator = Vec::new();
     ///
@@ -970,7 +996,7 @@ impl<'a> InputIter for Span<'a> {
     /// use nom::InputIter;
     ///
     /// # fn main() {
-    /// assert_eq!(Span::new(b"foobar").position(|x| x == 'a' as u8), Some(4));
+    /// assert_eq!(Span::new(b"foobar").position(|x| x == b'a'), Some(4));
     /// # }
     /// ```
     fn position<P>(&self, predicate: P) -> Option<usize>
@@ -997,6 +1023,54 @@ impl<'a> InputIter for Span<'a> {
         if self.slice.len() >= count {
             Some(count)
         } else {
+            None
+        }
+    }
+}
+
+/// Implement `FindSubstring` from nom to be able to use the `Span`
+/// structure as an input of the parsers.
+///
+/// This traits aims at finding a substring in an input.
+impl<'a, 'b> FindSubstring<Input<'b>> for Span<'a> {
+    /// Find the position of a substring in the current span.
+    ///
+    /// If the length of the substring is lower or equal to 3, the
+    /// `memchr` crate will be used, respectively `memchr` for a
+    /// length of 1, `memchr2` for a length of 2, and `memchr3` for a
+    /// length of 3. Else, a fallback to a naive implementation with a
+    /// window iterator will be used.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # extern crate nom;
+    /// use tagua_parser::tokens::Span;
+    /// use nom::FindSubstring;
+    ///
+    /// # fn main() {
+    /// assert_eq!(Span::new(b"foobar").find_substring(b"b"), Some(3));
+    /// # }
+    /// ```
+    fn find_substring(&self, substring: Input<'b>) -> Option<usize> {
+        let substring_length = substring.len();
+
+        if substring_length == 0 {
+            None
+        } else if substring_length == 1 {
+            memchr::memchr(substring[0], self.slice)
+        } else if substring_length == 2 {
+            memchr::memchr2(substring[0], substring[1], self.slice)
+        } else if substring_length == 3 {
+            memchr::memchr3(substring[0], substring[1], substring[2], self.slice)
+        } else {
+            for (index, window) in self.slice.windows(substring_length).enumerate() {
+                if window == substring {
+                    return Some(index)
+                }
+            }
+
             None
         }
     }
@@ -1082,7 +1156,7 @@ macro_rules! impl_slice_for_range {
                     if number_of_newlines == 0 {
                         self.column + next_offset as u16
                     } else {
-                        match memrchr(b'\n', consumed) {
+                        match memchr::memrchr(b'\n', consumed) {
                             Some(last_newline_position) => {
                                 (next_offset - last_newline_position) as u16
                             },
@@ -1110,6 +1184,8 @@ impl_slice_for_range!(RangeFull);
 
 #[cfg(test)]
 mod tests {
+    use std::ascii::AsciiExt;
+    use std::str;
     use super::Span;
     use super::keywords;
     use super::super::internal::{
@@ -1120,6 +1196,7 @@ mod tests {
     use nom::{
         Compare,
         CompareResult,
+        FindSubstring,
         InputIter,
         InputLength,
         Slice
@@ -1129,14 +1206,11 @@ mod tests {
         ($test_case_name:ident: ($string:expr, $expect:expr)) => (
             #[test]
             fn $test_case_name() {
-                use std::ascii::AsciiExt;
-                use std::str;
-
-                let output     = Result::Done(&b""[..], $expect);
+                let output     = Result::Done(Span::new_at(b"", $string.len(), 1, $string.len() as u32 + 1), Span::new($expect));
                 let uppercased = str::from_utf8($string).unwrap().to_ascii_uppercase();
 
-                assert_eq!(keywords($string), output);
-                assert_eq!(keywords(uppercased.as_bytes()), output);
+                assert_eq!(keywords(Span::new($string)), output);
+                assert_eq!(keywords(Span::new(uppercased.as_bytes())), output);
             }
         )
     }
@@ -1214,11 +1288,22 @@ mod tests {
     test_keyword!(case_keyword_yield:        (b"yield", super::YIELD));
     test_keyword!(case_keyword_yield_from:   (b"yield from", super::YIELD_FROM));
 
-    test_keyword!(case_keyword_yield_from_with_many_whitespaces: (b"yield  \t \t \n \n \r \r  from", super::YIELD_FROM));
+    #[test]
+    fn case_keyword_yield_from_with_many_whitespaces() {
+        let input      = b"yield  \t \t \n \n \r \r  fromabc";
+        let output1    = Result::Done(Span::new_at(b"abc", 24, 3, 11), Span::new(super::YIELD_FROM));
+        let output2    = Result::Done(Span::new_at(b"ABC", 24, 3, 11), Span::new(super::YIELD_FROM));
+        let uppercased = str::from_utf8(input).unwrap().to_ascii_uppercase();
+
+        assert_eq!(keywords(Span::new(input)), output1);
+        assert_eq!(keywords(Span::new(uppercased.as_bytes())), output2);
+    }
 
     #[test]
     fn case_invalid_keyword() {
-        assert_eq!(keywords(b"hello"), Result::Error(Error::Position(ErrorKind::Alt, &b"hello"[..])));
+        let input = Span::new(b"hello");
+
+        assert_eq!(keywords(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
     }
 
     #[test]
@@ -1303,12 +1388,12 @@ mod tests {
     fn case_span_iterator_with_indices() {
         let input  = Span::new(b"foobar");
         let output = vec![
-            (0, 'f' as u8),
-            (1, 'o' as u8),
-            (2, 'o' as u8),
-            (3, 'b' as u8),
-            (4, 'a' as u8),
-            (5, 'r' as u8)
+            (0, b'f'),
+            (1, b'o'),
+            (2, b'o'),
+            (3, b'b'),
+            (4, b'a'),
+            (5, b'r')
         ];
 
         let mut accumulator = Vec::new();
@@ -1331,14 +1416,7 @@ mod tests {
     #[test]
     fn case_span_iterator_with_elements() {
         let input  = Span::new(b"foobar");
-        let output = vec![
-            'f' as u8,
-            'o' as u8,
-            'o' as u8,
-            'b' as u8,
-            'a' as u8,
-            'r' as u8
-        ];
+        let output = vec![b'f', b'o', b'o', b'b', b'a', b'r'];
 
         let mut accumulator = Vec::new();
 
@@ -1354,7 +1432,7 @@ mod tests {
         let input  = Span::new(b"");
         let output = None;
 
-        assert_eq!(input.position(|x| x == 'a' as u8), output);
+        assert_eq!(input.position(|x| x == b'a'), output);
     }
 
     #[test]
@@ -1362,7 +1440,7 @@ mod tests {
         let input  = Span::new(b"foobar");
         let output = Some(4);
 
-        assert_eq!(input.position(|x| x == 'a' as u8), output);
+        assert_eq!(input.position(|x| x == b'a'), output);
     }
 
     #[test]
@@ -1370,7 +1448,7 @@ mod tests {
         let input  = Span::new(b"foobar");
         let output = None;
 
-        assert_eq!(input.position(|x| x == 'z' as u8), output);
+        assert_eq!(input.position(|x| x == b'z'), output);
     }
 
     #[test]
@@ -1403,6 +1481,46 @@ mod tests {
         let output = CompareResult::Incomplete;
 
         assert_eq!(input.compare(b"foobar"), output);
+    }
+
+    #[test]
+    fn case_span_find_substring_of_length_0() {
+        let input  = Span::new(b"foobarbaz");
+        let output = None;
+
+        assert_eq!(input.find_substring(b""), output);
+    }
+
+    #[test]
+    fn case_span_find_substring_of_length_1() {
+        let input  = Span::new(b"foobarbaz");
+        let output = Some(3);
+
+        assert_eq!(input.find_substring(b"b"), output);
+    }
+
+    #[test]
+    fn case_span_find_substring_of_length_2() {
+        let input  = Span::new(b"foobarbaz");
+        let output = Some(3);
+
+        assert_eq!(input.find_substring(b"ba"), output);
+    }
+
+    #[test]
+    fn case_span_find_substring_of_length_3() {
+        let input  = Span::new(b"foobarbaz");
+        let output = Some(3);
+
+        assert_eq!(input.find_substring(b"bar"), output);
+    }
+
+    #[test]
+    fn case_span_find_substring_of_length_4() {
+        let input  = Span::new(b"foobarbaz");
+        let output = Some(3);
+
+        assert_eq!(input.find_substring(b"barb"), output);
     }
 
     #[test]

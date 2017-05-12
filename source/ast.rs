@@ -31,25 +31,30 @@
 
 //! Structures that will constitute the Abstract Syntax Tree.
 
+use super::tokens::{
+    Span,
+    Token
+};
+
 /// A term.
 #[derive(Debug, PartialEq)]
-pub struct Term {
+pub struct Term<'a> {
     /// The term value.
-    pub t: Literal
+    pub t: Literal<'a>
 }
 
 /// An addition of two terms.
 #[derive(Debug, PartialEq)]
-pub struct Addition {
+pub struct Addition<'a> {
     /// The left-hand side of the addition.
-    pub a: Term,
+    pub a: Term<'a>,
     /// The right-hand side of the addition.
-    pub b: Term
+    pub b: Term<'a>
 }
 
 /// A literal represents a fixed value, aka an atom.
 #[derive(Debug, PartialEq)]
-pub enum Literal {
+pub enum Literal<'a> {
     /// A boolean, either `true` or `false`.
     ///
     /// # Examples
@@ -65,7 +70,7 @@ pub enum Literal {
     /// assert_eq!(literal(b"false"), Result::Done(&b""[..], Literal::Boolean(false)));
     /// # }
     /// ```
-    Boolean(bool),
+    Boolean(Token<'a, bool>),
 
     /// An integer, for instance a binary, octal, decimal or hexadecimal number.
     ///
@@ -86,7 +91,7 @@ pub enum Literal {
     /// assert_eq!(literal(b"0x2a"), output);
     /// # }
     /// ```
-    Integer(i64),
+    Integer(Token<'a, i64>),
 
     /// A null value.
     ///
@@ -102,7 +107,7 @@ pub enum Literal {
     /// assert_eq!(literal(b"null"), Result::Done(&b""[..], Literal::Null));
     /// # }
     /// ```
-    Null,
+    Null(Token<'a, ()>),
 
     /// A real, for instance an exponential number.
     ///
@@ -122,7 +127,7 @@ pub enum Literal {
     /// assert_eq!(literal(b"420e-2"), output);
     /// # }
     /// ```
-    Real(f64),
+    Real(Token<'a, f64>),
 
     /// A string.
     ///
@@ -141,7 +146,7 @@ pub enum Literal {
     /// );
     /// # }
     /// ```
-    String(Vec<u8>)
+    String(Token<'a, Vec<u8>>)
 }
 
 /// A variable.
@@ -163,7 +168,7 @@ pub enum Literal {
 /// ```
 /// Note that the `$` is not present.
 #[derive(Debug, PartialEq)]
-pub struct Variable<'a>(pub &'a [u8]);
+pub struct Variable<'a>(pub Span<'a>);
 
 /// A name represents an entity name.
 #[derive(Debug, PartialEq)]
@@ -185,7 +190,7 @@ pub enum Name<'a> {
     /// );
     /// # }
     /// ```
-    Unqualified(&'a [u8]),
+    Unqualified(Span<'a>),
 
     /// A qualified name, i.e. a name in a relative namespace (aliased or not),
     /// like `Foo\Bar`.
@@ -205,7 +210,7 @@ pub enum Name<'a> {
     /// );
     /// # }
     /// ```
-    Qualified(Vec<&'a [u8]>),
+    Qualified(Vec<Span<'a>>),
 
     /// A relative qualified name, i.e. a name in a relative namespace
     /// restricted to the current namespace, like `namespace\Foo\Bar`.
@@ -226,7 +231,7 @@ pub enum Name<'a> {
     /// # }
     /// ```
     /// Note that the `namespace` part is not present.
-    RelativeQualified(Vec<&'a [u8]>),
+    RelativeQualified(Vec<Span<'a>>),
 
     /// A fully qualified name, i.e. a name in an absolute namespace, like
     /// `\Foo\Bar`.
@@ -247,7 +252,7 @@ pub enum Name<'a> {
     /// # }
     /// ```
     /// Note that the leading `\` part is not present.
-    FullyQualified(Vec<&'a [u8]>)
+    FullyQualified(Vec<Span<'a>>)
 }
 
 /// An expression.
@@ -571,7 +576,7 @@ pub enum Expression<'a> {
     /// );
     /// # }
     /// ```
-    Literal(Literal),
+    Literal(Literal<'a>),
 
     /// A name.
     ///
@@ -973,7 +978,7 @@ pub enum Arity<'a> {
 #[derive(Debug, PartialEq)]
 pub struct Function<'a> {
     /// Name of the function.
-    pub name: &'a [u8],
+    pub name: Span<'a>,
 
     /// Inputs, aka parameters, of the function.
     pub inputs: Arity<'a>,

@@ -160,9 +160,6 @@ macro_rules! first(
 /// It is pretty similar to the nom `tag!` macro except it is case-insensitive
 /// and only accepts ASCII characters so far.
 ///
-/// It does not return the consumed data but the expected data (the first
-/// argument).
-///
 /// # Examples
 ///
 /// ```
@@ -178,41 +175,40 @@ macro_rules! first(
 ///     itag!("foobar")
 /// );
 ///
-/// let output = Result::Done(&b""[..], "foobar");
-///
-/// assert_eq!(test(&b"foobar"[..]), output);
-/// assert_eq!(test(&b"FoObAr"[..]), output);
+/// assert_eq!(test(&b"foobar"[..]), Result::Done(&b""[..], "foobar"));
+/// assert_eq!(test(&b"FoObAr"[..]), Result::Done(&b""[..], "FoObAr"));
 /// # }
 /// ```
 #[macro_export]
 macro_rules! itag(
-    ($input:expr, $string:expr) => (
+    ($input:expr, $tag:expr) => (
         {
-            use std::ascii::AsciiExt;
+            use $crate::tokens::Span;
+            use nom::{
+                Compare,
+                CompareResult,
+                InputLength,
+                Slice
+            };
 
-            let input = $input as &[u8];
+            let tag_length = $tag.input_len();
 
-            #[inline(always)]
-            fn as_bytes<T: ::nom::AsBytes>(datum: &T) -> &[u8] {
-                datum.as_bytes()
-            }
+            let output: $crate::Result<_, _> = match $input.compare_no_case($tag) {
+                CompareResult::Ok => {
+                    let Span { offset, line, column, .. } = $input.slice(..tag_length);
+                    let consumed = Span::new_at($tag, offset, line, column);
 
-            let expected      = $string;
-            let bytes         = as_bytes(&expected);
-            let input_length  = input.len();
-            let bytes_length  = bytes.len();
-            let length        = ::std::cmp::min(input_length, bytes_length);
-            let reduced_input = &input[..length];
-            let reduced_bytes = &bytes[..length];
+                    $crate::Result::Done($input.slice(tag_length..), consumed)
+                },
 
-            let output: $crate::Result<_, _> =
-                if !reduced_input.eq_ignore_ascii_case(reduced_bytes) {
-                    $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), input))
-                } else if length < bytes_length {
-                    $crate::Result::Incomplete($crate::Needed::Size(bytes_length))
-                } else {
-                    $crate::Result::Done(&input[bytes_length..], $string)
-                };
+                CompareResult::Incomplete => {
+                    $crate::Result::Incomplete($crate::Needed::Size($tag.input_len()))
+                },
+
+                CompareResult::Error => {
+                    $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), $input))
+                }
+            };
 
             output
         }
@@ -317,6 +313,30 @@ macro_rules! fold_into_vector_many0(
     );
 );
 
+/// `regex!(regexp) => &[T] -> IResult<&[T], &[T]>`
+/// Return the first match.
+///
+/// This is exactly like `re_bytes_find_static!` from nom, except that
+/// it works on `Span`.
+#[macro_export]
+macro_rules! regex (
+    ($input:expr, $regex:expr) => (
+        {
+            use nom::Slice;
+
+            regex_bytes!(RE, $regex);
+
+            if let Some(first_match) = RE.find($input.as_slice()) {
+                $crate::Result::Done($input.slice(first_match.end()..), $input.slice(first_match.start()..first_match.end()))
+            } else {
+                let output: $crate::Result<_, _> = $crate::Result::Error(error_code!($crate::ErrorKind::RegexpFind));
+
+                output
+            }
+        }
+    )
+);
+
 
 #[cfg(test)]
 mod tests {
@@ -327,6 +347,7 @@ mod tests {
         Needed,
         Result
     };
+    use super::super::tokens::Span;
 
     #[test]
     fn case_exclude_empty_set() {
@@ -407,12 +428,12 @@ mod tests {
 
     #[test]
     fn case_first_with_whitespace() {
-        named!(hello, tag!("hello"));
-        named!(test1, first!(tag!("hello")));
-        named!(test2, first!(hello));
+        named!(hello<Span, Span>, tag!(b"hello"));
+        named!(test1<Span, Span>, first!(tag!(b"hello")));
+        named!(test2<Span, Span>, first!(hello));
 
-        let input  = &b"  \nhello\t\r"[..];
-        let output = Result::Done(&b"\t\r"[..], &b"hello"[..]);
+        let input  = Span::new(b"  \nhello\t\r");
+        let output = Result::Done(Span::new_at(b"\t\r", 8, 2, 6), Span::new_at(b"hello", 3, 2, 1));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -420,12 +441,12 @@ mod tests {
 
     #[test]
     fn case_first_with_comment() {
-        named!(hello, tag!("hello"));
-        named!(test1, first!(tag!("hello")));
-        named!(test2, first!(hello));
+        named!(hello<Span, Span>, tag!(b"hello"));
+        named!(test1<Span, Span>, first!(tag!(b"hello")));
+        named!(test2<Span, Span>, first!(hello));
 
-        let input  = &b"/* foo */hello/* bar */"[..];
-        let output = Result::Done(&b"/* bar */"[..], &b"hello"[..]);
+        let input  = Span::new(b"/* foo */hello/* bar */");
+        let output = Result::Done(Span::new_at(b"/* bar */", 14, 1, 15), Span::new_at(b"hello", 9, 1, 10));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -433,12 +454,12 @@ mod tests {
 
     #[test]
     fn case_first_with_whitespace_and_comment() {
-        named!(hello, tag!("hello"));
-        named!(test1, first!(tag!("hello")));
-        named!(test2, first!(hello));
+        named!(hello<Span, Span>, tag!(b"hello"));
+        named!(test1<Span, Span>, first!(tag!(b"hello")));
+        named!(test2<Span, Span>, first!(hello));
 
-        let input  = &b"/* foo */  \nhello/* bar */\t"[..];
-        let output = Result::Done(&b"/* bar */\t"[..], &b"hello"[..]);
+        let input  = Span::new(b"/* foo */  \nhello/* bar */\t");
+        let output = Result::Done(Span::new_at(b"/* bar */\t", 17, 2, 6), Span::new_at(b"hello", 12, 2, 1));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -446,21 +467,21 @@ mod tests {
 
     #[test]
     fn case_itag() {
-        named!(test1<&str>, itag!("foobar"));
-        named!(test2<&str>, itag!("fOoBaR"));
+        named!(test1<Span, Span>, itag!(b"foobar"));
+        named!(test2<Span, Span>, itag!(b"fOoBaR"));
 
-        let input = &b"FoObArBaZQuX"[..];
+        let input = Span::new(&b"FoObArBaZQuX"[..]);
 
-        assert_eq!(test1(input), Result::Done(&b"BaZQuX"[..], "foobar"));
-        assert_eq!(test2(input), Result::Done(&b"BaZQuX"[..], "fOoBaR"));
+        assert_eq!(test1(input), Result::Done(Span::new_at(&b"BaZQuX"[..], 6, 1, 7), Span::new_at(&b"foobar"[..], 0, 1, 1)));
+        assert_eq!(test2(input), Result::Done(Span::new_at(&b"BaZQuX"[..], 6, 1, 7), Span::new_at(&b"fOoBaR"[..], 0, 1, 1)));
     }
 
     #[test]
     fn case_itag_incomplete() {
-        named!(test1<&str>, itag!("foobar"));
-        named!(test2<&str>, itag!("FoObAR"));
+        named!(test1<Span, Span>, itag!(b"foobar"));
+        named!(test2<Span, Span>, itag!(b"FoObAR"));
 
-        let input  = &b"FoOb"[..];
+        let input  = Span::new(&b"FoOb"[..]);
         let output = Result::Incomplete(Needed::Size(6));
 
         assert_eq!(test1(input), output);
@@ -469,28 +490,29 @@ mod tests {
 
     #[test]
     fn case_itag_error() {
-        named!(test<&str>, itag!("foobar"));
+        named!(test<Span, Span>, itag!(b"foobar"));
 
-        assert_eq!(test(&b"BaZQuX"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
+        assert_eq!(test(Span::new(&b"BaZQuX"[..])), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), Span::new(&b"BaZQuX"[..]))));
     }
 
     #[test]
     fn case_keyword() {
-        named!(test1<&str>, keyword!("foobar"));
-        named!(test2<&str>, keyword!("fOoBaR"));
+        named!(test1<Span, Span>, keyword!(b"foobar"));
+        named!(test2<Span, Span>, keyword!(b"fOoBaR"));
 
-        let input = &b"FoObArBaZQuX"[..];
+        let input  = Span::new(b"FoObArBaZQuX");
+        let output = Span::new_at(b"BaZQuX", 6, 1, 7);
 
-        assert_eq!(test1(input), Result::Done(&b"BaZQuX"[..], "foobar"));
-        assert_eq!(test2(input), Result::Done(&b"BaZQuX"[..], "fOoBaR"));
+        assert_eq!(test1(input), Result::Done(output, Span::new(b"foobar")));
+        assert_eq!(test2(input), Result::Done(output, Span::new(b"fOoBaR")));
     }
 
     #[test]
     fn case_keyword_incomplete() {
-        named!(test1<&str>, keyword!("foobar"));
-        named!(test2<&str>, keyword!("FoObAR"));
+        named!(test1<Span, Span>, keyword!(b"foobar"));
+        named!(test2<Span, Span>, keyword!(b"FoObAR"));
 
-        let input  = &b"FoOb"[..];
+        let input  = Span::new(b"FoOb");
         let output = Result::Incomplete(Needed::Size(6));
 
         assert_eq!(test1(input), output);
@@ -499,9 +521,11 @@ mod tests {
 
     #[test]
     fn case_keyword_error() {
-        named!(test<&str>, keyword!("foobar"));
+        named!(test<Span, Span>, keyword!(b"foobar"));
 
-        assert_eq!(test(&b"BaZQuX"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), &b"BaZQuX"[..])));
+        let input = Span::new(b"BaZQuX");
+
+        assert_eq!(test(input), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), input)));
     }
 
     #[test]

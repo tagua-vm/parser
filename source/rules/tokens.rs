@@ -40,6 +40,7 @@ use super::super::ast::{
     Variable
 };
 use super::super::tokens;
+use super::super::tokens::Span;
 
 named_attr!(
     #[doc="
@@ -58,7 +59,7 @@ named_attr!(
         # }
         ```
     "],
-    pub variable<Variable>,
+    pub variable<Span, Variable>,
     map_res!(
         preceded!(
             tag!(tokens::VARIABLE),
@@ -68,9 +69,9 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn variable_mapper(string: &[u8]) -> Result<Variable, ()> {
-    Ok(Variable(string))
+#[inline]
+fn variable_mapper(span: Span) -> Result<Variable, ()> {
+    Ok(Variable(span))
 }
 
 named_attr!(
@@ -93,7 +94,7 @@ named_attr!(
         # }
         ```
     "],
-    pub qualified_name<Name>,
+    pub qualified_name<Span, Name>,
     do_parse!(
         head: opt!(
             alt!(
@@ -118,7 +119,7 @@ named_attr!(
         (
             match head {
                 Some(handle) => {
-                    if handle == tokens::NAMESPACE_SEPARATOR {
+                    if handle.as_slice() == tokens::NAMESPACE_SEPARATOR {
                         Name::FullyQualified(result)
                     } else {
                         Name::RelativeQualified(result)
@@ -137,9 +138,9 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn wrap_into_vector_mapper(string: &[u8]) -> Result<Vec<&[u8]>, ()> {
-    Ok(vec![string])
+#[inline]
+fn wrap_into_vector_mapper(span: Span) -> Result<Vec<Span>, ()> {
+    Ok(vec![span])
 }
 
 named_attr!(
@@ -158,13 +159,14 @@ named_attr!(
         # }
         ```
     "],
-    pub name,
-    re_bytes_find_static!(r"(?-u)^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*")
+    pub name<Span, Span>,
+    regex!(r"(?-u)^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*")
 );
 
 
 #[cfg(test)]
 mod tests {
+    use nom::Slice;
     use super::{
         name,
         qualified_name,
@@ -180,46 +182,73 @@ mod tests {
         Result
     };
     use super::super::super::macros::ErrorKindCustom;
+    use super::super::super::tokens::Span;
 
     #[test]
     fn case_variable() {
-        assert_eq!(variable(b"$foo"), Result::Done(&b""[..], Variable(&b"foo"[..])));
+        let input  = Span::new(b"$foo");
+        let output = Result::Done(Span::new_at(b"", 4, 1, 5), Variable(input.slice(1..)));
+
+        assert_eq!(variable(input), output);
     }
 
     #[test]
     fn case_variable_shortest() {
-        assert_eq!(variable(b"$x"), Result::Done(&b""[..], Variable(&b"x"[..])));
+        let input  = Span::new(b"$x");
+        let output = Result::Done(Span::new_at(b"", 2, 1, 3), Variable(input.slice(1..)));
+
+        assert_eq!(variable(input), output);
     }
 
     #[test]
     fn case_invalid_variable_prefix() {
-        assert_eq!(variable(b"x"), Result::Error(Error::Position(ErrorKind::Tag, &b"x"[..])));
+        let input = Span::new(b"x");
+
+        assert_eq!(variable(input), Result::Error(Error::Position(ErrorKind::Tag, input)));
     }
 
     #[test]
     fn case_invalid_variable_name() {
-        assert_eq!(variable(b"$0"), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        let input = Span::new(b"$0");
+
+        assert_eq!(variable(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
     }
 
     #[test]
     fn case_unqualified_name() {
-        assert_eq!(qualified_name(b"Foo"), Result::Done(&b""[..], Name::Unqualified(&b"Foo"[..])));
+        let input  = Span::new(b"Foo");
+        let output = Result::Done(Span::new_at(b"", 3, 1, 4), Name::Unqualified(input));
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_invalid_unqualified_name() {
-        assert_eq!(qualified_name(b"class"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
-        assert_eq!(qualified_name(b"ClAsS"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
+        let input1 = Span::new(b"class");
+        let input2 = Span::new(b"ClAsS");
+
+        assert_eq!(qualified_name(input1), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input1)));
+        assert_eq!(qualified_name(input2), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input2)));
     }
 
     #[test]
     fn case_qualified_name() {
-        assert_eq!(qualified_name(b"Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        let input  = Span::new(b"Foo\\Bar\\Baz");
+        let output = Result::Done(
+            Span::new_at(b"", 11, 1, 12),
+            Name::Qualified(vec![
+                Span::new(b"Foo"),
+                Span::new_at(b"Bar", 4, 1, 5),
+                Span::new_at(b"Baz", 8, 1, 9)
+            ])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_qualified_name_vector_capacity() {
-        if let Result::Done(_, Name::Qualified(vector)) = qualified_name(b"Foo\\Bar\\Baz") {
+        if let Result::Done(_, Name::Qualified(vector)) = qualified_name(Span::new(b"Foo\\Bar\\Baz")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -229,23 +258,54 @@ mod tests {
 
     #[test]
     fn case_qualified_name_with_skip_tokens() {
-        assert_eq!(qualified_name(b"Foo\n/* baz */ \\ Bar /* qux */\\"), Result::Done(&b" /* qux */\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        let input  = Span::new(b"Foo\n/* baz */ \\ Bar /* qux */\\");
+        let output = Result::Done(
+            Span::new_at(b" /* qux */\\", 19, 2, 16),
+            Name::Qualified(vec![
+                Span::new(b"Foo"),
+                Span::new_at(b"Bar", 16, 2, 13)
+            ])
+        );
+        
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_invalid_qualified_name() {
-        assert_eq!(qualified_name(b"Foo\\class\\Baz"), Result::Done(&b"\\class\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
-        assert_eq!(qualified_name(b"Foo\\ClAsS\\Baz"), Result::Done(&b"\\ClAsS\\Baz"[..], Name::Unqualified(&b"Foo"[..])));
+        assert_eq!(
+            qualified_name(Span::new(b"Foo\\class\\Baz")),
+            Result::Done(
+                Span::new_at(b"\\class\\Baz", 3, 1, 4),
+                Name::Unqualified(Span::new(b"Foo"))
+            )
+        );
+        assert_eq!(
+            qualified_name(Span::new(b"Foo\\ClAsS\\Baz")),
+            Result::Done(
+                Span::new_at(b"\\ClAsS\\Baz", 3, 1, 4),
+                Name::Unqualified(Span::new(b"Foo"))
+            )
+        );
     }
 
     #[test]
     fn case_relative_qualified_name() {
-        assert_eq!(qualified_name(b"namespace\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        let input  = Span::new(b"namespace\\Foo\\Bar\\Baz");
+        let output = Result::Done(
+            Span::new_at(b"", 21, 1, 22),
+            Name::RelativeQualified(vec![
+                Span::new_at(b"Foo", 10, 1, 11),
+                Span::new_at(b"Bar", 14, 1, 15),
+                Span::new_at(b"Baz", 18, 1, 19)
+            ])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_relative_qualified_name_vector_capacity() {
-        if let Result::Done(_, Name::RelativeQualified(vector)) = qualified_name(b"namespace\\Foo\\Bar\\Baz") {
+        if let Result::Done(_, Name::RelativeQualified(vector)) = qualified_name(Span::new(b"namespace\\Foo\\Bar\\Baz")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -255,34 +315,81 @@ mod tests {
 
     #[test]
     fn case_relative_qualified_name_case_insensitive() {
-        assert_eq!(qualified_name(b"NaMeSpAcE\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        let input  = Span::new(b"NaMeSpAcE\\Foo\\Bar\\Baz");
+        let output = Result::Done(
+            Span::new_at(b"", 21, 1, 22),
+            Name::RelativeQualified(vec![
+                Span::new_at(b"Foo", 10, 1, 11),
+                Span::new_at(b"Bar", 14, 1, 15),
+                Span::new_at(b"Baz", 18, 1, 19)
+            ])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_relative_qualified_name_with_skip_tokens() {
-        assert_eq!(qualified_name(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\"), Result::Done(&b" /* hello */\\"[..], Name::RelativeQualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        let input  = Span::new(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\");
+        let output = Result::Done(
+            Span::new_at(b" /* hello */\\", 40, 2, 16),
+            Name::RelativeQualified(vec![
+                Span::new_at(b"Foo", 21, 1, 22),
+                Span::new_at(b"Bar", 37, 2, 13)
+            ])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_invalid_relative_qualified_name_with_namespace() {
-        assert_eq!(qualified_name(b"namespace\\Foo\\namespace\\Baz"), Result::Done(&b"\\namespace\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
-        assert_eq!(qualified_name(b"namespace\\Foo\\NaMeSpAcE\\Baz"), Result::Done(&b"\\NaMeSpAcE\\Baz"[..], Name::RelativeQualified(vec![&b"Foo"[..]])));
+        let input1 = Span::new(b"namespace\\Foo\\namespace\\Baz");
+        let input2 = Span::new(b"namespace\\Foo\\NaMeSpAcE\\Baz");
+
+        assert_eq!(
+            qualified_name(input1),
+            Result::Done(
+                Span::new_at(b"\\namespace\\Baz", 13, 1, 14),
+                Name::RelativeQualified(vec![Span::new_at(b"Foo", 10, 1, 11)])
+            )
+        );
+        assert_eq!(
+            qualified_name(input2),
+            Result::Done(
+                Span::new_at(b"\\NaMeSpAcE\\Baz", 13, 1, 14),
+                Name::RelativeQualified(vec![Span::new_at(b"Foo", 10, 1, 11)])
+            )
+        );
     }
 
     #[test]
     fn case_invalid_relative_qualified_name_with_any_keyword() {
-        assert_eq!(qualified_name(b"namespace\\class"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class"[..])));
-        assert_eq!(qualified_name(b"namespace\\ClAsS"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS"[..])));
+        let input1 = Span::new(b"namespace\\class");
+        let input2 = Span::new(b"namespace\\ClAsS");
+
+        assert_eq!(qualified_name(input1), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), Span::new_at(b"class", 10, 1, 11))));
+        assert_eq!(qualified_name(input2), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), Span::new_at(b"ClAsS", 10, 1, 11))));
     }
 
     #[test]
     fn case_fully_qualified_name() {
-        assert_eq!(qualified_name(b"\\Foo\\Bar\\Baz"), Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..], &b"Bar"[..], &b"Baz"[..]])));
+        let input  = Span::new(b"\\Foo\\Bar\\Baz");
+        let output = Result::Done(
+            Span::new_at(b"", 12, 1, 13),
+            Name::FullyQualified(vec![
+                Span::new_at(b"Foo", 1, 1, 2),
+                Span::new_at(b"Bar", 5, 1, 6),
+                Span::new_at(b"Baz", 9, 1, 10)
+            ])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_fully_qualified_name_vector_capacity() {
-        if let Result::Done(_, Name::FullyQualified(vector)) = qualified_name(b"\\Foo\\Bar\\Baz") {
+        if let Result::Done(_, Name::FullyQualified(vector)) = qualified_name(Span::new(b"\\Foo\\Bar\\Baz")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -292,59 +399,97 @@ mod tests {
 
     #[test]
     fn case_fully_qualified_shortest_name() {
-        assert_eq!(qualified_name(b"\\Foo"), Result::Done(&b""[..], Name::FullyQualified(vec![&b"Foo"[..]])));
+        let input  = Span::new(b"\\Foo");
+        let output = Result::Done(
+            Span::new_at(b"", 4, 1, 5),
+            Name::FullyQualified(vec![Span::new_at(b"Foo", 1, 1, 2)])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_invalid_fully_and_relative_qualified_name_with_namespace() {
-        assert_eq!(qualified_name(b"\\namespace\\Foo\\Bar"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"namespace\\Foo\\Bar"[..])));
+        let input = Span::new(b"\\namespace\\Foo\\Bar");
+
+        assert_eq!(qualified_name(input), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input.slice(1..))));
     }
 
     #[test]
     fn case_invalid_fully_and_relative_qualified_name_with_any_keyword() {
-        assert_eq!(qualified_name(b"\\class\\Foo\\Bar"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"class\\Foo\\Bar"[..])));
-        assert_eq!(qualified_name(b"\\ClAsS\\Foo\\Bar"), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"ClAsS\\Foo\\Bar"[..])));
+        let input1 = Span::new(b"\\class\\Foo\\Bar");
+        let input2 = Span::new(b"\\ClAsS\\Foo\\Bar");
+
+        assert_eq!(qualified_name(input1), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input1.slice(1..))));
+        assert_eq!(qualified_name(input2), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input2.slice(1..))));
     }
 
     #[test]
     fn case_invalid_qualified_name_ending_with_a_separator() {
-        assert_eq!(qualified_name(b"Foo\\Bar\\"), Result::Done(&b"\\"[..], Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        let input  = Span::new(b"Foo\\Bar\\");
+        let output = Result::Done(
+            Span::new_at(b"\\", 7, 1, 8),
+            Name::Qualified(vec![
+                Span::new(b"Foo"),
+                Span::new_at(b"Bar", 4, 1, 5)
+            ])
+        );
+
+        assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_name() {
-        assert_eq!(name(b"_fooBar42"), Result::Done(&b""[..], &b"_fooBar42"[..]));
+        let input  = Span::new(b"_fooBar42");
+        let output = Result::Done(Span::new_at(b"", 9, 1, 10), input);
+
+        assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_name_shortest() {
-        assert_eq!(name(b"x"), Result::Done(&b""[..], &b"x"[..]));
+        let input  = Span::new(b"x");
+        let output = Result::Done(Span::new_at(b"", 1, 1, 2), input);
+
+        assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_name_only_head() {
-        assert_eq!(name(b"aB_\x80"), Result::Done(&b""[..], &b"aB_\x80"[..]));
+        let input  = Span::new(b"aB_\x80");
+        let output = Result::Done(Span::new_at(b"", 4, 1, 5), input);
+
+        assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_name_head_and_tail() {
-        assert_eq!(name(b"aB_\x80aB7\xff"), Result::Done(&b""[..], &b"aB_\x80aB7\xff"[..]));
+        let input  = Span::new(b"aB_\x80aB7\xff");
+        let output = Result::Done(Span::new_at(b"", 8, 1, 9), input);
+
+        assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_name_copyright() {
         // © = 0xa9
-        assert_eq!(name(b"\xa9"), Result::Done(&b""[..], &b"\xa9"[..]));
+        let input  = Span::new(b"\xa9");
+        let output = Result::Done(Span::new_at(b"", 1, 1, 2), input);
+
+        assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_name_non_breaking_space() {
         //   = 0xa0
-        assert_eq!(name(b"\xa0"), Result::Done(&b""[..], &b"\xa0"[..]));
+        let input  = Span::new(b"\xa0");
+        let output = Result::Done(Span::new_at(b"", 1, 1, 2), input);
+
+        assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_invalid_name() {
-        assert_eq!(name(b"0x"), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(name(Span::new(b"0x")), Result::Error(Error::Code(ErrorKind::RegexpFind)));
     }
 }

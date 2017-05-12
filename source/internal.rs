@@ -47,7 +47,7 @@ pub use nom::Needed;
 pub type InputElement = u8;
 
 /// Represent the type of the input.
-pub type Input<'a>    = &'a [InputElement];
+pub type Input<'a> = &'a [InputElement];
 
 /// Fold an item into a vector.
 /// This is useful when combined with the `fold_many0!` macro for instance.

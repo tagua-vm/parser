@@ -41,33 +41,20 @@ use super::super::super::ast::{
     Expression,
     Literal
 };
+use super::super::super::tokens::Span;
 
 named_attr!(
     #[doc="
         Recognize all kind of constant expressions.
     "],
-    pub constant_expression<Expression>,
+    pub constant_expression<Span, Expression>,
     alt!(
         literal => { literal_mapper }
       | array
     )
 );
 
-#[inline(always)]
-fn literal_mapper<'a>(literal: Literal) -> Expression<'a> {
+#[inline]
+fn literal_mapper(literal: Literal) -> Expression {
     Expression::Literal(literal)
 }
-
-
-/*
-#[cfg(test)]
-mod tests {
-    use super::constant;
-    use super::super::expression;
-    use super::super::super::super::ast::{
-        Expression,
-        Literal
-    };
-    use super::super::super::super::internal::Result;
-}
-*/

@@ -41,10 +41,11 @@ pub mod statements;
 pub mod tokens;
 pub mod whitespaces;
 
-use super::ast;
+use super::ast::Expression;
 use super::internal::*;
+use super::tokens::Span;
 
-pub fn root(input: &[u8]) -> ast::Expression {
+pub fn root(input: Span) -> Expression {
     match expressions::expression(input) {
         Result::Done(_, ast) => ast,
         _ => panic!("Youhouuu")
@@ -55,21 +56,26 @@ pub fn root(input: &[u8]) -> ast::Expression {
 #[cfg(test)]
 mod tests {
     use super::root;
-    use super::super::ast;
+    use super::super::ast::{
+        Expression,
+        Literal
+    };
+    use super::super::tokens::{
+        Span,
+        Token
+    };
 
     #[test]
     fn case_root() {
-        assert_eq!(
-            root(b"'Hello, World!'"),
-            ast::Expression::Literal(
-                ast::Literal::String(b"Hello, World!".to_vec())
-            )
-        );
+        let input  = Span::new(b"'Hello, World!'");
+        let output = Expression::Literal(Literal::String(Token::new(b"Hello, World!".to_vec(), input)));
+
+        assert_eq!(root(input), output);
     }
 
     #[test]
     #[should_panic(expected = "Youhouuu")]
     fn case_root_panic() {
-        root(b"!");
+        root(Span::new(b"!"));
     }
 }

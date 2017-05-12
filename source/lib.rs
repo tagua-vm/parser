@@ -90,6 +90,6 @@ pub use self::internal::*;
 /// let expression = b"1+2";
 /// parser::parse(&expression[..]);
 /// ```
-pub fn parse(input: &[u8]) -> ast::Expression {
+pub fn parse(input: tokens::Span) -> ast::Expression {
     rules::root(input)
 }

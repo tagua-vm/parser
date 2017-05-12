@@ -62,6 +62,10 @@ use super::super::super::internal::{
     Error,
     ErrorKind
 };
+use super::super::super::tokens::{
+    Span,
+    Token
+};
 use super::super::super::tokens;
 
 /// Intrinsic errors.
@@ -101,7 +105,7 @@ named_attr!(
         # }
         ```
     "],
-    pub primary<Expression>,
+    pub primary<Span, Expression>,
     alt!(
         variable       => { variable_mapper }
       | qualified_name => { qualified_name_mapper }
@@ -119,18 +123,18 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn variable_mapper<'a>(variable: Variable<'a>) -> Expression<'a> {
+#[inline]
+fn variable_mapper(variable: Variable) -> Expression {
     Expression::Variable(variable)
 }
 
-#[inline(always)]
-fn qualified_name_mapper<'a>(name: Name<'a>) -> Expression<'a> {
+#[inline]
+fn qualified_name_mapper(name: Name) -> Expression {
     Expression::Name(name)
 }
 
-#[inline(always)]
-fn literal_mapper<'a>(literal: Literal) -> Expression<'a> {
+#[inline]
+fn literal_mapper(literal: Literal) -> Expression {
     Expression::Literal(literal)
 }
 
@@ -166,7 +170,7 @@ named_attr!(
         # }
         ```
     "],
-    pub array<Expression>,
+    pub array<Span, Expression>,
     alt!(
         preceded!(
             tag!(tokens::LEFT_SQUARE_BRACKET),
@@ -201,7 +205,7 @@ named_attr!(
 );
 
 named!(
-    array_pairs<Expression>,
+    array_pairs<Span, Expression>,
     do_parse!(
         accumulator: map_res!(
             first!(array_pair),
@@ -220,7 +224,7 @@ named!(
 );
 
 named!(
-    array_pair<(Option<Expression>, Expression)>,
+    array_pair<Span, (Option<Expression>, Expression)>,
     do_parse!(
         key: opt!(
             terminated!(
@@ -242,17 +246,17 @@ named!(
     )
 );
 
-#[inline(always)]
-fn empty_array_mapper<'a>(_: &[u8]) -> StdResult<Expression<'a>, ()> {
+#[inline]
+fn empty_array_mapper<'a>(_: Span<'a>) -> StdResult<Expression<'a>, ()> {
     Ok(Expression::Array(vec![]))
 }
 
-#[inline(always)]
-fn value_by_reference_array_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+#[inline]
+fn value_by_reference_array_mapper(expression: Expression) -> StdResult<Expression, ()> {
     Ok(Expression::Reference(Box::new(expression)))
 }
 
-#[inline(always)]
+#[inline]
 fn into_array<'a>(expressions: Vec<(Option<Expression<'a>>, Expression<'a>)>) -> Expression<'a> {
     Expression::Array(expressions)
 }
@@ -281,7 +285,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic<Expression>,
+    pub intrinsic<Span, Expression>,
     alt!(
         intrinsic_construct
       | intrinsic_operator
@@ -289,7 +293,7 @@ named_attr!(
 );
 
 named!(
-    intrinsic_construct<Expression>,
+    intrinsic_construct<Span, Expression>,
     alt!(
         intrinsic_echo
       | intrinsic_list
@@ -298,7 +302,7 @@ named!(
 );
 
 named!(
-    intrinsic_operator<Expression>,
+    intrinsic_operator<Span, Expression>,
     alt!(
         intrinsic_empty
       | intrinsic_eval
@@ -333,7 +337,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_echo<Expression>,
+    pub intrinsic_echo<Span, Expression>,
     do_parse!(
         accumulator: map_res!(
             preceded!(
@@ -353,13 +357,13 @@ named_attr!(
     )
 );
 
-#[inline(always)]
+#[inline]
 fn into_vector_mapper<T>(item: T) -> StdResult<Vec<T>, ()> {
     Ok(vec![item])
 }
 
-#[inline(always)]
-fn into_echo<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+#[inline]
+fn into_echo(expressions: Vec<Expression>) -> Expression {
     Expression::Echo(expressions)
 }
 
@@ -394,7 +398,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_list<Expression>,
+    pub intrinsic_list<Span, Expression>,
     map_res!(
         preceded!(
             preceded!(
@@ -414,7 +418,7 @@ named_attr!(
 );
 
 named!(
-    intrinsic_keyed_list<Expression>,
+    intrinsic_keyed_list<Span, Expression>,
     do_parse!(
         accumulator: map_res!(
             first!(intrinsic_keyed_list_item),
@@ -433,7 +437,7 @@ named!(
 );
 
 named!(
-    intrinsic_unkeyed_list<Expression>,
+    intrinsic_unkeyed_list<Span, Expression>,
     do_parse!(
         accumulator: map_res!(
             opt!(first!(intrinsic_unkeyed_list_item)),
@@ -451,7 +455,7 @@ named!(
 );
 
 named!(
-    intrinsic_keyed_list_item<Option<(Option<Expression>, Expression)>>,
+    intrinsic_keyed_list_item<Span, Option<(Option<Expression>, Expression)>>,
     do_parse!(
         key: terminated!(
             expression,
@@ -463,23 +467,23 @@ named!(
 );
 
 named!(
-    intrinsic_unkeyed_list_item<(Option<Expression>, Expression)>,
+    intrinsic_unkeyed_list_item<Span, (Option<Expression>, Expression)>,
     do_parse!(
         value: expression >>
         ((None, value))
     )
 );
 
-#[inline(always)]
+#[inline]
 fn into_list<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>)>>) -> Expression<'a> {
     Expression::List(expressions)
 }
 
-#[inline(always)]
-fn intrinsic_list_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, Error<ErrorKind>> {
+#[inline]
+fn intrinsic_list_mapper(expression: Expression) -> StdResult<Expression, Error<ErrorKind>> {
     match expression {
         Expression::List(items) => {
-            if items.iter().any(|ref item| item.is_some()) {
+            if items.iter().any(|item| item.is_some()) {
                 Ok(Expression::List(items))
             } else {
                 Err(Error::Code(ErrorKind::Custom(IntrinsicError::ListIsEmpty as u32)))
@@ -517,7 +521,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_unset<Expression>,
+    pub intrinsic_unset<Span, Expression>,
     do_parse!(
         accumulator: map_res!(
             preceded!(
@@ -543,8 +547,8 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn into_unset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+#[inline]
+fn into_unset(expressions: Vec<Expression>) -> Expression {
     Expression::Unset(expressions)
 }
 
@@ -576,7 +580,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_empty<Expression>,
+    pub intrinsic_empty<Span, Expression>,
     map_res!(
         preceded!(
             keyword!(tokens::EMPTY),
@@ -592,8 +596,8 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn empty_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+#[inline]
+fn empty_mapper(expression: Expression) -> StdResult<Expression, ()> {
     Ok(Expression::Empty(Box::new(expression)))
 }
 
@@ -625,7 +629,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_eval<Expression>,
+    pub intrinsic_eval<Span, Expression>,
     map_res!(
         preceded!(
             keyword!(tokens::EVAL),
@@ -641,8 +645,8 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn eval_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+#[inline]
+fn eval_mapper(expression: Expression) -> StdResult<Expression, ()> {
     Ok(Expression::Eval(Box::new(expression)))
 }
 
@@ -676,7 +680,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_exit<Expression>,
+    pub intrinsic_exit<Span, Expression>,
     map_res!(
         preceded!(
             alt!(
@@ -697,11 +701,11 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn exit_mapper<'a>(expression: Option<Expression<'a>>) -> StdResult<Expression<'a>, Error<ErrorKind>> {
+#[inline]
+fn exit_mapper(expression: Option<Expression>) -> StdResult<Expression, Error<ErrorKind>> {
     match expression {
         Some(expression) => {
-            if let Expression::Literal(Literal::Integer(code)) = expression {
+            if let Expression::Literal(Literal::Integer(Token { value: code, .. })) = expression {
                 if code == 255 {
                     return Err(Error::Code(ErrorKind::Custom(IntrinsicError::ReservedExitCode as u32)));
                 } else if code > 255 {
@@ -743,7 +747,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_isset<Expression>,
+    pub intrinsic_isset<Span, Expression>,
     do_parse!(
         accumulator: map_res!(
             preceded!(
@@ -769,8 +773,8 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn into_isset<'a>(expressions: Vec<Expression<'a>>) -> Expression<'a> {
+#[inline]
+fn into_isset(expressions: Vec<Expression>) -> Expression {
     Expression::Isset(expressions)
 }
 
@@ -800,7 +804,7 @@ named_attr!(
         # }
         ```
     "],
-    pub intrinsic_print<Expression>,
+    pub intrinsic_print<Span, Expression>,
     map_res!(
         preceded!(
             keyword!(tokens::PRINT),
@@ -810,8 +814,8 @@ named_attr!(
     )
 );
 
-#[inline(always)]
-fn print_mapper<'a>(expression: Expression<'a>) -> StdResult<Expression<'a>, ()> {
+#[inline]
+fn print_mapper(expression: Expression) -> StdResult<Expression, ()> {
     Ok(Expression::Print(Box::new(expression)))
 }
 
@@ -878,7 +882,7 @@ named_attr!(
         # }
         ```
     "],
-    pub anonymous_function<Expression>,
+    pub anonymous_function<Span, Expression>,
     do_parse!(
         static_scope: opt!(keyword!(tokens::STATIC)) >>
         first!(keyword!(tokens::FUNCTION)) >>
@@ -917,7 +921,7 @@ named_attr!(
 );
 
 named!(
-    anonymous_function_use<Vec<Expression>>,
+    anonymous_function_use<Span, Vec<Expression>>,
     map_res!(
         terminated!(
             preceded!(
@@ -933,8 +937,8 @@ named!(
     )
 );
 
-#[inline(always)]
-fn anonymous_function_use_mapper<'a>(enclosing_list: Option<Vec<Expression<'a>>>) -> StdResult<Vec<Expression<'a>>, ()> {
+#[inline]
+fn anonymous_function_use_mapper(enclosing_list: Option<Vec<Expression>>) -> StdResult<Vec<Expression>, ()> {
     match enclosing_list {
         Some(enclosing_list) => {
             Ok(enclosing_list)
@@ -947,7 +951,7 @@ fn anonymous_function_use_mapper<'a>(enclosing_list: Option<Vec<Expression<'a>>>
 }
 
 named!(
-    anonymous_function_use_list<Vec<Expression>>,
+    anonymous_function_use_list<Span, Vec<Expression>>,
     do_parse!(
         accumulator: map_res!(
             anonymous_function_use_list_item,
@@ -965,7 +969,7 @@ named!(
 );
 
 named!(
-    anonymous_function_use_list_item<Expression>,
+    anonymous_function_use_list_item<Span, Expression>,
     do_parse!(
         reference: opt!(first!(tag!(tokens::REFERENCE))) >>
         name: first!(variable) >>
@@ -973,8 +977,8 @@ named!(
     )
 );
 
-#[inline(always)]
-fn into_anonymous_function_use_list_item<'a>(reference: bool, name: Variable<'a>) -> Expression<'a> {
+#[inline]
+fn into_anonymous_function_use_list_item(reference: bool, name: Variable) -> Expression {
     if reference {
         Expression::Reference(Box::new(Expression::Variable(name)))
     } else {
@@ -982,7 +986,7 @@ fn into_anonymous_function_use_list_item<'a>(reference: bool, name: Variable<'a>
     }
 }
 
-#[inline(always)]
+#[inline]
 fn into_anonymous_function<'a>(
     declaration_scope    : Scope,
     output_is_a_reference: bool,
@@ -1045,11 +1049,15 @@ mod tests {
         ErrorKind,
         Result
     };
+    use super::super::super::super::tokens::{
+        Span,
+        Token
+    };
 
     #[test]
     fn case_array_empty() {
-        let input  = b"[ /* foo */ ]";
-        let output = Result::Done(&b""[..], Expression::Array(vec![]));
+        let input  = Span::new(b"[ /* foo */ ]");
+        let output = Result::Done(Span::new_at(b"", 13, 1, 14), Expression::Array(vec![]));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1058,13 +1066,17 @@ mod tests {
 
     #[test]
     fn case_array_one_value() {
-        let input  = b"['foo']";
+        let input  = Span::new(b"['foo']");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 7, 1, 8),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Expression::Literal(
+                        Literal::String(
+                            Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))
+                        )
+                    )
                 )
             ])
         );
@@ -1076,13 +1088,13 @@ mod tests {
 
     #[test]
     fn case_array_one_pair() {
-        let input  = b"[42 => 'foo']";
+        let input  = Span::new(b"[42 => 'foo']");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 13, 1, 14),
             Expression::Array(vec![
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 1, 1, 2))))),
+                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 7, 1, 8))))
                 )
             ])
         );
@@ -1094,21 +1106,21 @@ mod tests {
 
     #[test]
     fn case_array_many_pairs() {
-        let input  = b"['foo', 42 => 'bar', 'baz' => $qux]";
+        let input  = Span::new(b"['foo', 42 => 'bar', 'baz' => $qux]");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 35, 1, 36),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
-                    Expression::Literal(Literal::String(b"bar".to_vec()))
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 8, 1, 9))))),
+                    Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 14, 1, 15))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-                    Expression::Variable(Variable(&b"qux"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 21, 1, 22))))),
+                    Expression::Variable(Variable(Span::new_at(b"qux", 31, 1, 32)))
                 )
             ])
         );
@@ -1120,7 +1132,7 @@ mod tests {
 
     #[test]
     fn case_array_vector_capacity() {
-        if let Result::Done(_, Expression::Array(vector)) = array(b"[1, 2, 3]") {
+        if let Result::Done(_, Expression::Array(vector)) = array(Span::new(b"[1, 2, 3]")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1130,21 +1142,21 @@ mod tests {
 
     #[test]
     fn case_array_trailing_comma() {
-        let input  = b"[1, 2, 3, /* foo */]";
+        let input  = Span::new(b"[1, 2, 3, /* foo */]");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 20, 1, 21),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::Integer(1i64))
+                    Expression::Literal(Literal::Integer(Token::new(1i64, Span::new_at(b"1", 1, 1, 2))))
                 ),
                 (
                     None,
-                    Expression::Literal(Literal::Integer(2i64))
+                    Expression::Literal(Literal::Integer(Token::new(2i64, Span::new_at(b"2", 4, 1, 5))))
                 ),
                 (
                     None,
-                    Expression::Literal(Literal::Integer(3i64))
+                    Expression::Literal(Literal::Integer(Token::new(3i64, Span::new_at(b"3", 7, 1, 8))))
                 )
             ])
         );
@@ -1156,35 +1168,35 @@ mod tests {
 
     #[test]
     fn case_array_recursive() {
-        let input  = b"['foo', 42 => [3 => 5, 7 => [11 => '13']], 'baz' => $qux]";
+        let input  = Span::new(b"['foo', 42 => [3 => 5, 7 => [11 => '13']], 'baz' => $qux]");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 57, 1, 58),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 8, 1, 9))))),
                     Expression::Array(vec![
                         (
-                            Some(Expression::Literal(Literal::Integer(3i64))),
-                            Expression::Literal(Literal::Integer(5i64))
+                            Some(Expression::Literal(Literal::Integer(Token::new(3i64, Span::new_at(b"3", 15, 1, 16))))),
+                            Expression::Literal(Literal::Integer(Token::new(5i64, Span::new_at(b"5", 20, 1, 21))))
                         ),
                         (
-                            Some(Expression::Literal(Literal::Integer(7i64))),
+                            Some(Expression::Literal(Literal::Integer(Token::new(7i64, Span::new_at(b"7", 23, 1, 24))))),
                             Expression::Array(vec![
                                 (
-                                    Some(Expression::Literal(Literal::Integer(11i64))),
-                                    Expression::Literal(Literal::String(b"13".to_vec()))
+                                    Some(Expression::Literal(Literal::Integer(Token::new(11i64, Span::new_at(b"11", 29, 1, 30))))),
+                                    Expression::Literal(Literal::String(Token::new(b"13".to_vec(), Span::new_at(b"'13'", 35, 1, 36))))
                                 )
                             ])
                         )
                     ])
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-                    Expression::Variable(Variable(&b"qux"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 43, 1, 44))))),
+                    Expression::Variable(Variable(Span::new_at(b"qux", 53, 1, 54)))
                 )
             ])
         );
@@ -1196,19 +1208,19 @@ mod tests {
 
     #[test]
     fn case_array_value_by_reference() {
-        let input  = b"[7 => &$foo, 42 => $bar]";
+        let input  = Span::new(b"[7 => &$foo, 42 => $bar]");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 24, 1, 25),
             Expression::Array(vec![
                 (
-                    Some(Expression::Literal(Literal::Integer(7i64))),
+                    Some(Expression::Literal(Literal::Integer(Token::new(7i64, Span::new_at(b"7", 1, 1, 2))))),
                     Expression::Reference(
-                        Box::new(Expression::Variable(Variable(&b"foo"[..])))
+                        Box::new(Expression::Variable(Variable(Span::new_at(b"foo", 8, 1, 9))))
                     )
                 ),
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 13, 1, 14))))),
+                    Expression::Variable(Variable(Span::new_at(b"bar", 20, 1, 21)))
                 )
             ])
         );
@@ -1220,28 +1232,28 @@ mod tests {
 
     #[test]
     fn case_invalid_array_trailing_commas() {
-        let input  = b"[1, 2, 3,,]";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"[1, 2, 3,,]"[..]));
+        let input  = Span::new(b"[1, 2, 3,,]");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(array(input), Result::Error(Error::Position(ErrorKind::Alt, &b"[1, 2, 3,,]"[..])));
+        assert_eq!(array(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
     #[test]
     fn case_invalid_array_empty_trailing_comma() {
-        let input  = b"[,]";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"[,]"[..]));
+        let input  = Span::new(b"[,]");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(array(input), Result::Error(Error::Position(ErrorKind::Alt, &b"[,]"[..])));
+        assert_eq!(array(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
 
     #[test]
     fn case_array_long_syntax_empty() {
-        let input  = b"array ( /* foo */ )";
-        let output = Result::Done(&b""[..], Expression::Array(vec![]));
+        let input  = Span::new(b"array ( /* foo */ )");
+        let output = Result::Done(Span::new_at(b"", 19, 1, 20), Expression::Array(vec![]));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1250,13 +1262,17 @@ mod tests {
 
     #[test]
     fn case_array_long_syntax_one_value() {
-        let input  = b"array('foo')";
+        let input  = Span::new(b"array('foo')");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 12, 1, 13),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Expression::Literal(
+                        Literal::String(
+                            Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7))
+                        )
+                    )
                 )
             ])
         );
@@ -1268,13 +1284,13 @@ mod tests {
 
     #[test]
     fn case_array_long_syntax_one_pair() {
-        let input  = b"array(42 => 'foo')";
+        let input  = Span::new(b"array(42 => 'foo')");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 18, 1, 19),
             Expression::Array(vec![
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 6, 1, 7))))),
+                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 12, 1, 13))))
                 )
             ])
         );
@@ -1286,21 +1302,21 @@ mod tests {
 
     #[test]
     fn case_array_long_syntax_many_pairs() {
-        let input  = b"array('foo', 42 => 'bar', 'baz' => $qux)";
+        let input  = Span::new(b"array('foo', 42 => 'bar', 'baz' => $qux)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 40, 1, 41),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
-                    Expression::Literal(Literal::String(b"bar".to_vec()))
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 13, 1, 14))))),
+                    Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 19, 1, 20))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-                    Expression::Variable(Variable(&b"qux"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 26, 1, 27))))),
+                    Expression::Variable(Variable(Span::new_at(b"qux", 36, 1, 37)))
                 )
             ])
         );
@@ -1312,21 +1328,21 @@ mod tests {
 
     #[test]
     fn case_array_long_syntax_trailing_comma() {
-        let input  = b"array(1, 2, 3, /* foo */)";
+        let input  = Span::new(b"array(1, 2, 3, /* foo */)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 25, 1, 26),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::Integer(1i64))
+                    Expression::Literal(Literal::Integer(Token::new(1i64, Span::new_at(b"1", 6, 1, 7))))
                 ),
                 (
                     None,
-                    Expression::Literal(Literal::Integer(2i64))
+                    Expression::Literal(Literal::Integer(Token::new(2i64, Span::new_at(b"2", 9, 1, 10))))
                 ),
                 (
                     None,
-                    Expression::Literal(Literal::Integer(3i64))
+                    Expression::Literal(Literal::Integer(Token::new(3i64, Span::new_at(b"3", 12, 1, 13))))
                 )
             ])
         );
@@ -1338,35 +1354,35 @@ mod tests {
 
     #[test]
     fn case_array_long_syntax_recursive() {
-        let input  = b"array('foo', 42 => array(3 => 5, 7 => array(11 => '13')), 'baz' => $qux)";
+        let input  = Span::new(b"array('foo', 42 => array(3 => 5, 7 => array(11 => '13')), 'baz' => $qux)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 72, 1, 73),
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(b"foo".to_vec()))
+                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 13, 1, 14))))),
                     Expression::Array(vec![
                         (
-                            Some(Expression::Literal(Literal::Integer(3i64))),
-                            Expression::Literal(Literal::Integer(5i64))
+                            Some(Expression::Literal(Literal::Integer(Token::new(3i64, Span::new_at(b"3", 25, 1, 26))))),
+                            Expression::Literal(Literal::Integer(Token::new(5i64, Span::new_at(b"5", 30, 1, 31))))
                         ),
                         (
-                            Some(Expression::Literal(Literal::Integer(7i64))),
+                            Some(Expression::Literal(Literal::Integer(Token::new(7i64, Span::new_at(b"7", 33, 1, 34))))),
                             Expression::Array(vec![
                                 (
-                                    Some(Expression::Literal(Literal::Integer(11i64))),
-                                    Expression::Literal(Literal::String(b"13".to_vec()))
+                                    Some(Expression::Literal(Literal::Integer(Token::new(11i64, Span::new_at(b"11", 44, 1, 45))))),
+                                    Expression::Literal(Literal::String(Token::new(b"13".to_vec(), Span::new_at(b"'13'", 50, 1, 51))))
                                 )
                             ])
                         )
                     ])
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-                    Expression::Variable(Variable(&b"qux"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 58, 1, 59))))),
+                    Expression::Variable(Variable(Span::new_at(b"qux", 68, 1, 69)))
                 )
             ])
         );
@@ -1378,19 +1394,19 @@ mod tests {
 
     #[test]
     fn case_array_long_syntax_value_by_reference() {
-        let input  = b"array(7 => &$foo, 42 => $bar)";
+        let input  = Span::new(b"array(7 => &$foo, 42 => $bar)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 29, 1, 30),
             Expression::Array(vec![
                 (
-                    Some(Expression::Literal(Literal::Integer(7i64))),
+                    Some(Expression::Literal(Literal::Integer(Token::new(7i64, Span::new_at(b"7", 6, 1, 7))))),
                     Expression::Reference(
-                        Box::new(Expression::Variable(Variable(&b"foo"[..])))
+                        Box::new(Expression::Variable(Variable(Span::new_at(b"foo", 13, 1, 14))))
                     )
                 ),
                 (
-                    Some(Expression::Literal(Literal::Integer(42i64))),
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 18, 1, 19))))),
+                    Expression::Variable(Variable(Span::new_at(b"bar", 25, 1, 26)))
                 )
             ])
         );
@@ -1402,8 +1418,11 @@ mod tests {
 
     #[test]
     fn case_variable() {
-        let input  = b"$foo";
-        let output = Result::Done(&b""[..], Expression::Variable(Variable(&b"foo"[..])));
+        let input  = Span::new(b"$foo");
+        let output = Result::Done(
+            Span::new_at(b"", 4, 1, 5),
+            Expression::Variable(Variable(Span::new_at(b"foo", 1, 1, 2)))
+        );
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
@@ -1411,8 +1430,16 @@ mod tests {
 
     #[test]
     fn case_qualified_name() {
-        let input  = b"Foo\\Bar";
-        let output = Result::Done(&b""[..], Expression::Name(Name::Qualified(vec![&b"Foo"[..], &b"Bar"[..]])));
+        let input  = Span::new(b"Foo\\Bar");
+        let output = Result::Done(
+            Span::new_at(b"", 7, 1, 8),
+            Expression::Name(
+                Name::Qualified(vec![
+                    Span::new(b"Foo"),
+                    Span::new_at(b"Bar", 4, 1, 5)
+                ])
+            )
+        );
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
@@ -1420,8 +1447,15 @@ mod tests {
 
     #[test]
     fn case_literal() {
-        let input  = b"'Hello, World!'";
-        let output = Result::Done(&b""[..], Expression::Literal(Literal::String(b"Hello, World!".to_vec())));
+        let input  = Span::new(b"'Hello, World!'");
+        let output = Result::Done(
+            Span::new_at(b"", 15, 1, 16),
+            Expression::Literal(
+                Literal::String(
+                    Token::new(b"Hello, World!".to_vec(), input)
+                )
+            )
+        );
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
@@ -1429,11 +1463,11 @@ mod tests {
 
     #[test]
     fn case_intrinsic_echo_one_expression() {
-        let input  = b"echo /* baz */ 'foobar'";
+        let input  = Span::new(b"echo /* baz */ 'foobar'");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 23, 1, 24),
             Expression::Echo(vec![
-                Expression::Literal(Literal::String(b"foobar".to_vec()))
+                Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 15, 1, 16))))
             ])
         );
 
@@ -1446,13 +1480,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_echo_many_expressions() {
-        let input  = b"echo /* baz */ 'foobar',\t $bazqux, \n  42";
+        let input  = Span::new(b"echo /* baz */ 'foobar',\t $bazqux, \n  42");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 40, 2, 5),
             Expression::Echo(vec![
-                Expression::Literal(Literal::String(b"foobar".to_vec())),
-                Expression::Variable(Variable(&b"bazqux"[..])),
-                Expression::Literal(Literal::Integer(42i64))
+                Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 15, 1, 16)))),
+                Expression::Variable(Variable(Span::new_at(b"bazqux", 27, 1, 28))),
+                Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 38, 2, 3))))
             ])
         );
 
@@ -1465,7 +1499,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_echo_vector_capacity() {
-        if let Result::Done(_, Expression::Echo(vector)) = intrinsic_echo(b"echo 'foobar', $bazqux, 42") {
+        if let Result::Done(_, Expression::Echo(vector)) = intrinsic_echo(Span::new(b"echo 'foobar', $bazqux, 42")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1475,10 +1509,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_echo_expression_missing() {
-        let input  = b"echo;";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"echo;"[..]));
+        let input  = Span::new(b"echo;");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b";", 4, 1, 5))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1487,13 +1521,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_keyed_one_pattern() {
-        let input  = b"list('foo' => $foo)";
+        let input  = Span::new(b"list('foo' => $foo)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 19, 1, 20),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
-                    Expression::Variable(Variable(&b"foo"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 ))
             ])
         );
@@ -1507,21 +1541,21 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_keyed_many_patterns() {
-        let input  = b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)";
+        let input  = Span::new(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 49, 1, 50),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
-                    Expression::Variable(Variable(&b"foo"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 20, 1, 21))))),
+                    Expression::Variable(Variable(Span::new_at(b"bar", 30, 1, 31)))
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-                    Expression::Variable(Variable(&b"baz"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 35, 1, 36))))),
+                    Expression::Variable(Variable(Span::new_at(b"baz", 45, 1, 46)))
                 ))
             ])
         );
@@ -1535,7 +1569,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_keyed_vector_capacity() {
-        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)") {
+        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(Span::new(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1545,17 +1579,17 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_keyed_trailing_comma() {
-        let input  = b"list('foo' => $foo, 'bar' => $bar,)";
+        let input  = Span::new(b"list('foo' => $foo, 'bar' => $bar,)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 35, 1, 36),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
-                    Expression::Variable(Variable(&b"foo"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 20, 1, 21))))),
+                    Expression::Variable(Variable(Span::new_at(b"bar", 30, 1, 31)))
                 ))
             ])
         );
@@ -1569,26 +1603,26 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_keyed_recursive() {
-        let input  = b"list('foo' => list('bar' => $bar), 'baz' => list(, $qux))";
+        let input  = Span::new(b"list('foo' => list('bar' => $bar), 'baz' => list(, $qux))");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 57, 1, 58),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(b"foo".to_vec()))),
+                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
                     Expression::List(vec![
                         Some((
-                            Some(Expression::Literal(Literal::String(b"bar".to_vec()))),
-                            Expression::Variable(Variable(&b"bar"[..]))
+                            Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 19, 1, 20))))),
+                            Expression::Variable(Variable(Span::new_at(b"bar", 29, 1, 30)))
                         ))
                     ])
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
+                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 35, 1, 36))))),
                     Expression::List(vec![
                         None,
                         Some((
                             None,
-                            Expression::Variable(Variable(&b"qux"[..]))
+                            Expression::Variable(Variable(Span::new_at(b"qux", 52, 1, 53)))
                         ))
                     ])
                 ))
@@ -1604,13 +1638,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_unkeyed_one_pattern() {
-        let input  = b"list($foo)";
+        let input  = Span::new(b"list($foo)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 10, 1, 11),
             Expression::List(vec![
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"foo"[..]))
+                Expression::Variable(Variable(Span::new_at(b"foo", 6, 1, 7)))
                 ))
             ])
         );
@@ -1624,21 +1658,21 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_unkeyed_many_patterns() {
-        let input  = b"list($foo, $bar, $baz)";
+        let input  = Span::new(b"list($foo, $bar, $baz)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 22, 1, 23),
             Expression::List(vec![
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"foo"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"foo", 6, 1, 7)))
                 )),
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"bar", 12, 1, 13)))
                 )),
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"baz"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"baz", 18, 1, 19)))
                 ))
             ])
         );
@@ -1652,7 +1686,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_unkeyed_vector_capacity() {
-        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(b"list($foo, $bar, $baz)") {
+        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(Span::new(b"list($foo, $bar, $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1662,24 +1696,24 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_unkeyed_free_patterns() {
-        let input  = b"list($foo, , $bar, , , $baz,)";
+        let input  = Span::new(b"list($foo, , $bar, , , $baz,)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 29, 1, 30),
             Expression::List(vec![
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"foo"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"foo", 6, 1, 7)))
                 )),
                 None,
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"bar"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"bar", 14, 1, 15)))
                 )),
                 None,
                 None,
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"baz"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"baz", 24, 1, 25)))
                 )),
                 None
             ])
@@ -1694,20 +1728,20 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_unkeyed_recursive() {
-        let input  = b"list($foo, list($bar), list('baz' => $baz))";
+        let input  = Span::new(b"list($foo, list($bar), list('baz' => $baz))");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 43, 1, 44),
             Expression::List(vec![
                 Some((
                     None,
-                    Expression::Variable(Variable(&b"foo"[..]))
+                    Expression::Variable(Variable(Span::new_at(b"foo", 6, 1, 7)))
                 )),
                 Some((
                     None,
                     Expression::List(vec![
                         Some((
                             None,
-                            Expression::Variable(Variable(&b"bar"[..]))
+                            Expression::Variable(Variable(Span::new_at(b"bar", 17, 1, 18)))
                         ))
                     ])
                 )),
@@ -1715,8 +1749,8 @@ mod tests {
                     None,
                     Expression::List(vec![
                         Some((
-                            Some(Expression::Literal(Literal::String(b"baz".to_vec()))),
-                            Expression::Variable(Variable(&b"baz"[..]))
+                            Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 28, 1, 29))))),
+                            Expression::Variable(Variable(Span::new_at(b"baz", 38, 1, 39)))
                         ))
                     ])
                 ))
@@ -1732,10 +1766,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_list_mixed_pairs() {
-        let input  = b"list('foo' => $foo, $bar)";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list('foo' => $foo, $bar)"[..]));
+        let input  = Span::new(b"list('foo' => $foo, $bar)");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, &b"$bar)"[..])));
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, Span::new_at(b"$bar)", 20, 1, 21))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1744,10 +1778,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_list_empty() {
-        let input  = b"list()";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list()"[..]));
+        let input  = Span::new(b"list()");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list()"[..])));
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1756,10 +1790,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_list_only_free_patterns() {
-        let input  = b"list(,,,)";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"list(,,,)"[..]));
+        let input  = Span::new(b"list(,,,)");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"list(,,,)"[..])));
+        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1768,11 +1802,11 @@ mod tests {
 
     #[test]
     fn case_intrinsic_unset_one_variable() {
-        let input  = b"unset($foo)";
+        let input  = Span::new(b"unset($foo)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 11, 1, 12),
             Expression::Unset(vec![
-                Expression::Variable(Variable(&b"foo"[..]))
+                Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8)))
             ])
         );
 
@@ -1785,13 +1819,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_unset_many_variables() {
-        let input  = b"unset($foo, $bar, $baz)";
+        let input  = Span::new(b"unset($foo, $bar, $baz)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 23, 1, 24),
             Expression::Unset(vec![
-                Expression::Variable(Variable(&b"foo"[..])),
-                Expression::Variable(Variable(&b"bar"[..])),
-                Expression::Variable(Variable(&b"baz"[..]))
+                Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8))),
+                Expression::Variable(Variable(Span::new_at(b"bar", 13, 1, 14))),
+                Expression::Variable(Variable(Span::new_at(b"baz", 19, 1, 20)))
             ])
         );
 
@@ -1804,7 +1838,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_unset_vector_capacity() {
-        if let Result::Done(_, Expression::Unset(vector)) = intrinsic_unset(b"unset($foo, $bar, $baz)") {
+        if let Result::Done(_, Expression::Unset(vector)) = intrinsic_unset(Span::new(b"unset($foo, $bar, $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1814,10 +1848,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_unset_zero_variable() {
-        let input  = b"unset()";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"unset()"[..]));
+        let input  = Span::new(b"unset()");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 6, 1, 7))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1826,13 +1860,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_empty_string() {
-        let input  = b"empty('foo')";
+        let input  = Span::new(b"empty('foo')");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 12, 1, 13),
             Expression::Empty(
                 Box::new(
                     Expression::Literal(
-                        Literal::String(b"foo".to_vec())
+                        Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7)))
                     )
                 )
             )
@@ -1847,13 +1881,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_empty_integer() {
-        let input  = b"empty(42)";
+        let input  = Span::new(b"empty(42)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 9, 1, 10),
             Expression::Empty(
                 Box::new(
                     Expression::Literal(
-                        Literal::Integer(42i64)
+                        Literal::Integer(Token::new(42i64, Span::new_at(b"42", 6, 1, 7)))
                     )
                 )
             )
@@ -1868,10 +1902,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_empty_expression_missing() {
-        let input  = b"empty()";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"empty()"[..]));
+        let input  = Span::new(b"empty()");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_empty(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_empty(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 6, 1, 7))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1880,13 +1914,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_eval() {
-        let input  = b"eval('1 + 2;')";
+        let input  = Span::new(b"eval('1 + 2;')");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 14, 1, 15),
             Expression::Eval(
                 Box::new(
                     Expression::Literal(
-                        Literal::String(b"1 + 2;".to_vec())
+                        Literal::String(Token::new(b"1 + 2;".to_vec(), Span::new_at(b"'1 + 2;'", 5, 1, 6)))
                     )
                 )
             )
@@ -1901,10 +1935,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_eval_expression_missing() {
-        let input  = b"eval()";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"eval()"[..]));
+        let input  = Span::new(b"eval()");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_eval(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_eval(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 5, 1, 6))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1913,14 +1947,14 @@ mod tests {
 
     #[test]
     fn case_intrinsic_exit() {
-        let input  = b"exit(42)";
+        let input  = Span::new(b"exit(42)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 8, 1, 9),
             Expression::Exit(
                 Some(
                     Box::new(
                         Expression::Literal(
-                            Literal::Integer(42i64)
+                            Literal::Integer(Token::new(42i64, Span::new_at(b"42", 5, 1, 6)))
                         )
                     )
                 )
@@ -1936,8 +1970,8 @@ mod tests {
 
     #[test]
     fn case_intrinsic_exit_with_no_argument() {
-        let input  = b"exit 42";
-        let output = Result::Done(&b" 42"[..], Expression::Exit(None));
+        let input  = Span::new(b"exit 42");
+        let output = Result::Done(Span::new_at(b" 42", 4, 1, 5), Expression::Exit(None));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -1948,14 +1982,14 @@ mod tests {
 
     #[test]
     fn case_intrinsic_exit_with_a_variable() {
-        let input  = b"exit($foo)";
+        let input  = Span::new(b"exit($foo)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 10, 1, 11),
             Expression::Exit(
                 Some(
                     Box::new(
                         Expression::Variable(
-                            Variable(&b"foo"[..])
+                            Variable(Span::new_at(b"foo", 6, 1, 7))
                         )
                     )
                 )
@@ -1971,10 +2005,10 @@ mod tests {
 
     #[test]
     fn case_invalid_exit_with_reserved_code_255() {
-        let input  = b"exit(255)";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"exit(255)"[..]));
+        let input  = Span::new(b"exit(255)");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"exit(255)"[..])));
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1983,10 +2017,10 @@ mod tests {
 
     #[test]
     fn case_invalid_exit_with_out_of_range_code() {
-        let input  = b"exit(256)";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"exit(256)"[..]));
+        let input  = Span::new(b"exit(256)");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"exit(256)"[..])));
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1995,14 +2029,14 @@ mod tests {
 
     #[test]
     fn case_intrinsic_die() {
-        let input  = b"die(42)";
+        let input  = Span::new(b"die(42)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 7, 1, 8),
             Expression::Exit(
                 Some(
                     Box::new(
                         Expression::Literal(
-                            Literal::Integer(42i64)
+                            Literal::Integer(Token::new(42i64, Span::new_at(b"42", 4, 1, 5)))
                         )
                     )
                 )
@@ -2018,8 +2052,8 @@ mod tests {
 
     #[test]
     fn case_intrinsic_die_with_no_parenthesis() {
-        let input  = b"die 42";
-        let output = Result::Done(&b" 42"[..], Expression::Exit(None));
+        let input  = Span::new(b"die 42");
+        let output = Result::Done(Span::new_at(b" 42", 3, 1, 4), Expression::Exit(None));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2030,14 +2064,14 @@ mod tests {
 
     #[test]
     fn case_intrinsic_die_with_a_variable() {
-        let input  = b"die($foo)";
+        let input  = Span::new(b"die($foo)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 9, 1, 10),
             Expression::Exit(
                 Some(
                     Box::new(
                         Expression::Variable(
-                            Variable(&b"foo"[..])
+                            Variable(Span::new_at(b"foo", 5, 1, 6))
                         )
                     )
                 )
@@ -2053,10 +2087,10 @@ mod tests {
 
     #[test]
     fn case_invalid_die_with_reserved_code_255() {
-        let input  = b"die(255)";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"die(255)"[..]));
+        let input  = Span::new(b"die(255)");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(255)"[..])));
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2065,10 +2099,10 @@ mod tests {
 
     #[test]
     fn case_invalid_die_with_out_of_range_code() {
-        let input  = b"die(256)";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"die(256)"[..]));
+        let input  = Span::new(b"die(256)");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, &b"die(256)"[..])));
+        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2077,11 +2111,11 @@ mod tests {
 
     #[test]
     fn case_intrinsic_isset_one_variable() {
-        let input  = b"isset($foo)";
+        let input  = Span::new(b"isset($foo)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 11, 1, 12),
             Expression::Isset(vec![
-                Expression::Variable(Variable(&b"foo"[..]))
+                Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8)))
             ])
         );
 
@@ -2094,13 +2128,13 @@ mod tests {
 
     #[test]
     fn case_intrinsic_isset_many_variables() {
-        let input  = b"isset($foo, $bar, $baz)";
+        let input  = Span::new(b"isset($foo, $bar, $baz)");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 23, 1, 24),
             Expression::Isset(vec![
-                Expression::Variable(Variable(&b"foo"[..])),
-                Expression::Variable(Variable(&b"bar"[..])),
-                Expression::Variable(Variable(&b"baz"[..]))
+                Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8))),
+                Expression::Variable(Variable(Span::new_at(b"bar", 13, 1, 14))),
+                Expression::Variable(Variable(Span::new_at(b"baz", 19, 1, 20)))
             ])
         );
 
@@ -2113,7 +2147,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_isset_vector_capacity() {
-        if let Result::Done(_, Expression::Isset(vector)) = intrinsic_isset(b"isset($foo, $bar, $baz)") {
+        if let Result::Done(_, Expression::Isset(vector)) = intrinsic_isset(Span::new(b"isset($foo, $bar, $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -2123,10 +2157,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_isset_zero_variable() {
-        let input  = b"isset()";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"isset()"[..]));
+        let input  = Span::new(b"isset()");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, &b")"[..])));
+        assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 6, 1, 7))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2135,12 +2169,12 @@ mod tests {
 
     #[test]
     fn case_intrinsic_print() {
-        let input  = b"print /* baz */ 'foobar'";
+        let input  = Span::new(b"print /* baz */ 'foobar'");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 24, 1, 25),
             Expression::Print(
                 Box::new(
-                    Expression::Literal(Literal::String(b"foobar".to_vec()))
+                    Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 16, 1, 17))))
                 )
             )
         );
@@ -2154,10 +2188,10 @@ mod tests {
 
     #[test]
     fn case_invalid_intrinsic_print_expression_missing() {
-        let input  = b"print;";
-        let output = Result::Error(Error::Position(ErrorKind::Alt, &b"print;"[..]));
+        let input  = Span::new(b"print;");
+        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, &b";"[..])));
+        assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b";", 5, 1, 6))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2166,8 +2200,15 @@ mod tests {
 
     #[test]
     fn case_grouped_by_parenthesis() {
-        let input  = b"print (((('foobar'))))";
-        let output = intrinsic_print(b"print 'foobar'");
+        let input  = Span::new(b"print (((('foobar'))))");
+        let output = Result::Done(
+            Span::new_at(b"", 22, 1, 23),
+            Expression::Print(
+                Box::new(
+                    Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 10, 1, 11))))
+                )
+            )
+        );
 
         assert_eq!(intrinsic_print(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2178,26 +2219,26 @@ mod tests {
 
     #[test]
     fn case_anonymous_function() {
-        let input  = b"function (I $x, J &$y) use ($z): O { return; }";
+        let input  = Span::new(b"function (I $x, J &$y) use ($z): O { return; }");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 46, 1, 47),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::Unqualified(&b"I"[..]))),
-                            name : Variable(&b"x"[..]),
+                            ty   : Ty::Copy(Some(Name::Unqualified(Span::new_at(b"I", 10, 1, 11)))),
+                            name : Variable(Span::new_at(b"x", 13, 1, 14)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::Unqualified(&b"J"[..]))),
-                            name : Variable(&b"y"[..]),
+                            ty   : Ty::Reference(Some(Name::Unqualified(Span::new_at(b"J", 16, 1, 17)))),
+                            name : Variable(Span::new_at(b"y", 20, 1, 21)),
                             value: None
                         }
                     ]),
-                    output         : Ty::Copy(Some(Name::Unqualified(&b"O"[..]))),
-                    enclosing_scope: Some(vec![Expression::Variable(Variable(&b"z"[..]))]),
+                    output         : Ty::Copy(Some(Name::Unqualified(Span::new_at(b"O", 33, 1, 34)))),
+                    enclosing_scope: Some(vec![Expression::Variable(Variable(Span::new_at(b"z", 29, 1, 30)))]),
                     body           : vec![Statement::Return]
                 }
             )
@@ -2210,9 +2251,9 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_arity_zero() {
-        let input  = b"function () {}";
+        let input  = Span::new(b"function () {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 14, 1, 15),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
@@ -2231,16 +2272,16 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_arity_one_by_copy() {
-        let input  = b"function ($x) {}";
+        let input  = Span::new(b"function ($x) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 16, 1, 17),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
-                            name : Variable(&b"x"[..]),
+                            name : Variable(Span::new_at(b"x", 11, 1, 12)),
                             value: None
                         }
                     ]),
@@ -2258,16 +2299,16 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_arity_one_by_reference() {
-        let input  = b"function (&$x) {}";
+        let input  = Span::new(b"function (&$x) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 17, 1, 18),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(None),
-                            name : Variable(&b"x"[..]),
+                            name : Variable(Span::new_at(b"x", 12, 1, 13)),
                             value: None
                         }
                     ]),
@@ -2285,16 +2326,16 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_arity_one_with_a_copy_type() {
-        let input  = b"function (A\\B\\C $x) {}";
+        let input  = Span::new(b"function (A\\B\\C $x) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 22, 1, 23),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"A"[..], &b"B"[..], &b"C"[..]]))),
-                            name : Variable(&b"x"[..]),
+                            ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"A", 10, 1, 11), Span::new_at(b"B", 12, 1, 13), Span::new_at(b"C", 14, 1, 15)]))),
+                            name : Variable(Span::new_at(b"x", 17, 1, 18)),
                             value: None
                         }
                     ]),
@@ -2312,16 +2353,16 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_arity_one_with_a_reference_type() {
-        let input  = b"function (int &$x) {}";
+        let input  = Span::new(b"function (int &$x) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
-                            name : Variable(&b"x"[..]),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 10, 1, 11)]))),
+                            name : Variable(Span::new_at(b"x", 16, 1, 17)),
                             value: None
                         }
                     ]),
@@ -2339,31 +2380,31 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_arity_many() {
-        let input  = b"function ($a, I\\J $b, int &$c, \\K $d) {}";
+        let input  = Span::new(b"function ($a, I\\J $b, int &$c, \\K $d) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 40, 1, 41),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
-                            name : Variable(&b"a"[..]),
+                            name : Variable(Span::new_at(b"a", 11, 1, 12)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::Qualified(vec![&b"I"[..], &b"J"[..]]))),
-                            name : Variable(&b"b"[..]),
+                            ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"I", 14, 1, 15), Span::new_at(b"J", 16, 1, 17)]))),
+                            name : Variable(Span::new_at(b"b", 19, 1, 20)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
-                            name : Variable(&b"c"[..]),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 22, 1, 23)]))),
+                            name : Variable(Span::new_at(b"c", 28, 1, 29)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b"K"[..]]))),
-                            name : Variable(&b"d"[..]),
+                            ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"K", 32, 1, 33)]))),
+                            name : Variable(Span::new_at(b"d", 35, 1, 36)),
                             value: None
                         }
                     ]),
@@ -2381,14 +2422,14 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_output_by_copy() {
-        let input  = b"function (): \\O {}";
+        let input  = Span::new(b"function (): \\O {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 18, 1, 19),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Constant,
-                    output           : Ty::Copy(Some(Name::FullyQualified(vec![&b"O"[..]]))),
+                    output           : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"O", 14, 1, 15)]))),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
@@ -2402,14 +2443,14 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_output_by_reference() {
-        let input  = b"function &(): int {}";
+        let input  = Span::new(b"function &(): int {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 20, 1, 21),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Constant,
-                    output           : Ty::Reference(Some(Name::FullyQualified(vec![&b"int"[..]]))),
+                    output           : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 14, 1, 15)]))),
                     enclosing_scope  : None,
                     body             : vec![Statement::Return]
                 }
@@ -2423,9 +2464,9 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_empty_enclosing_scope() {
-        let input  = b"function () use () {}";
+        let input  = Span::new(b"function () use () {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
@@ -2444,16 +2485,16 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_one_enclosed_variable_by_copy() {
-        let input  = b"function () use ($x) {}";
+        let input  = Span::new(b"function () use ($x) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 23, 1, 24),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
-                        Expression::Variable(Variable(&b"x"[..]))
+                        Expression::Variable(Variable(Span::new_at(b"x", 18, 1, 19)))
                     ]),
                     body: vec![Statement::Return]
                 }
@@ -2467,9 +2508,9 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_one_enclosed_variable_by_reference() {
-        let input  = b"function () use (&$x) {}";
+        let input  = Span::new(b"function () use (&$x) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 24, 1, 25),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
@@ -2478,7 +2519,7 @@ mod tests {
                     enclosing_scope  : Some(vec![
                         Expression::Reference(
                             Box::new(
-                                Expression::Variable(Variable(&b"x"[..]))
+                                Expression::Variable(Variable(Span::new_at(b"x", 19, 1, 20)))
                             )
                         )
                     ]),
@@ -2494,22 +2535,22 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_many_enclosed_variables() {
-        let input  = b"function () use ($x, &$y, $z) {}";
+        let input  = Span::new(b"function () use ($x, &$y, $z) {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 32, 1, 33),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
-                        Expression::Variable(Variable(&b"x"[..])),
+                        Expression::Variable(Variable(Span::new_at(b"x", 18, 1, 19))),
                         Expression::Reference(
                             Box::new(
-                                Expression::Variable(Variable(&b"y"[..]))
+                                Expression::Variable(Variable(Span::new_at(b"y", 23, 1, 24)))
                             )
                         ),
-                        Expression::Variable(Variable(&b"z"[..]))
+                        Expression::Variable(Variable(Span::new_at(b"z", 27, 1, 28)))
                     ]),
                     body: vec![Statement::Return]
                 }
@@ -2523,9 +2564,9 @@ mod tests {
 
     #[test]
     fn case_anonymous_function_static_scope() {
-        let input  = b"static function () {}";
+        let input  = Span::new(b"static function () {}");
         let output = Result::Done(
-            &b""[..],
+            Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
                     declaration_scope: Scope::Static,
