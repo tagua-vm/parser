@@ -1035,12 +1035,6 @@ impl<'a> InputIter for Span<'a> {
 impl<'a, 'b> FindSubstring<Input<'b>> for Span<'a> {
     /// Find the position of a substring in the current span.
     ///
-    /// If the length of the substring is lower or equal to 3, the
-    /// `memchr` crate will be used, respectively `memchr` for a
-    /// length of 1, `memchr2` for a length of 2, and `memchr3` for a
-    /// length of 3. Else, a fallback to a naive implementation with a
-    /// window iterator will be used.
-    ///
     /// # Examples
     ///
     /// ```
@@ -1060,15 +1054,19 @@ impl<'a, 'b> FindSubstring<Input<'b>> for Span<'a> {
             None
         } else if substring_length == 1 {
             memchr::memchr(substring[0], self.slice)
-        } else if substring_length == 2 {
-            memchr::memchr2(substring[0], substring[1], self.slice)
-        } else if substring_length == 3 {
-            memchr::memchr3(substring[0], substring[1], substring[2], self.slice)
         } else {
-            for (index, window) in self.slice.windows(substring_length).enumerate() {
-                if window == substring {
-                    return Some(index)
+            let mut offset   = 0;
+            let mut haystack = self.slice;
+
+            while let Some(position) = memchr::memchr(substring[0], haystack) {
+                offset += position;
+
+                if &haystack[position..position + substring_length] == substring {
+                    return Some(offset);
                 }
+
+                haystack  = &haystack[position + 1..];
+                offset   += 1;
             }
 
             None

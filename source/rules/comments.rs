@@ -203,6 +203,15 @@ mod tests {
     }
 
     #[test]
+    fn case_comment_delimited_almost_nested() {
+        let input  = Span::new(b"/****/xyz");
+        let output = Result::Done(Span::new_at(b"xyz", 6, 1, 7), Span::new_at(b"**", 2, 1, 3));
+
+        assert_eq!(comment_delimited153(input), output);
+        assert_eq!(comment153(input), output);
+    }
+
+    #[test]
     fn case_comment_delimited() {
         let input  = Span::new(b"/* foo bar\nbaz\r\nqux // hello,\n /*world!*/xyz */");
         let output = Result::Done(Span::new_at(b"xyz */", 41, 4, 12), Span::new_at(b" foo bar\nbaz\r\nqux // hello,\n /*world!", 2, 1, 3));
