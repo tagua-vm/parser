@@ -786,7 +786,7 @@ pub struct Span<'a> {
 
     /// The column number of the slice relatively to the input of the
     /// parser. It starts at column 1.
-    pub column: u16,
+    pub column: u32,
 
     /// The slice that is spanned.
     slice: Input<'a>
@@ -839,7 +839,7 @@ impl<'a> Span<'a> {
     /// assert_eq!(span.as_slice(), &b"foobar"[..]);
     /// # }
     /// ```
-    pub fn new_at(input: Input<'a>, offset: usize, line: u32, column: u16) -> Self {
+    pub fn new_at(input: Input<'a>, offset: usize, line: u32, column: u32) -> Self {
         Span {
             offset: offset,
             line  : line,
@@ -1154,11 +1154,11 @@ macro_rules! impl_slice_for_range {
 
                 let next_column =
                     if number_of_newlines == 0 {
-                        self.column + next_offset as u16
+                        self.column + next_offset as u32
                     } else {
                         match memchr::memrchr(b'\n', consumed) {
                             Some(last_newline_position) => {
-                                (next_offset - last_newline_position) as u16
+                                (next_offset - last_newline_position) as u32
                             },
 
                             None => 0 // unreachable
