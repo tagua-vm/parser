@@ -1055,11 +1055,16 @@ impl<'a, 'b> FindSubstring<Input<'b>> for Span<'a> {
         } else if substring_length == 1 {
             memchr::memchr(substring[0], self.slice)
         } else {
+            let max          = self.slice.len() - substring_length;
             let mut offset   = 0;
             let mut haystack = self.slice;
 
             while let Some(position) = memchr::memchr(substring[0], haystack) {
                 offset += position;
+
+                if offset > max {
+                    return None
+                }
 
                 if &haystack[position..position + substring_length] == substring {
                     return Some(offset);
@@ -1519,6 +1524,14 @@ mod tests {
         let output = Some(3);
 
         assert_eq!(input.find_substring(b"barb"), output);
+    }
+
+    #[test]
+    fn case_span_find_substring_out_of_bound() {
+        let input  = Span::new(b"abc");
+        let output = None;
+
+        assert_eq!(input.find_substring(b"cd"), output);
     }
 
     #[test]
