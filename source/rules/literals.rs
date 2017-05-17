@@ -461,7 +461,7 @@ fn string_single_quoted(span: Span) -> Result<Span, Literal> {
 
             return Result::Done(
                 span.slice(index + 2..),
-                Literal::String(Token::new(output, span))
+                Literal::String(Token::new(output, span.slice(..index + 2)))
             );
         }
     }
@@ -529,11 +529,15 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
         }
     }
 
+    let mut span_offset = offset + name_length;
+
     if next_input[1] == b'\r' {
         offset = 2;
     } else {
         offset = 1;
     }
+
+    span_offset += offset;
 
     for (index, item) in next_input[offset..].iter().enumerate() {
         if *item == b'\n' {
@@ -570,7 +574,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                 if index == 0 {
                     return Result::Done(
                         next_span.slice(lookahead_offset + 1..),
-                        Literal::String(Token::new(Vec::new(), span))
+                        Literal::String(Token::new(Vec::new(), span.slice(..span_offset + lookahead_offset - ending_offset)))
                     );
                 }
 
@@ -579,7 +583,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                     Literal::String(
                         Token::new(
                             next_input[offset + 1..offset - ending_offset + index].to_vec(),
-                            span
+                            span.slice(..span_offset + lookahead_offset - ending_offset)
                         )
                     )
                 );
@@ -1211,10 +1215,15 @@ mod tests {
 
     #[test]
     fn case_string_single_quoted() {
-        let input  = Span::new(b"'foobar'");
+        let input  = Span::new(b"'foobar'tail");
         let output = Result::Done(
-            Span::new_at(b"", 8, 1, 9),
-            Literal::String(Token::new(b"foobar".to_vec(), input))
+            Span::new_at(b"tail", 8, 1, 9),
+            Literal::String(
+                Token::new(
+                    b"foobar".to_vec(),
+                    Span::new(b"'foobar'")
+                )
+            )
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1224,10 +1233,15 @@ mod tests {
 
     #[test]
     fn case_string_single_quoted_escaped_quote() {
-        let input  = Span::new(b"'foo\\'bar'");
+        let input  = Span::new(b"'foo\\'bar'tail");
         let output = Result::Done(
-            Span::new_at(b"", 10, 1, 11),
-            Literal::String(Token::new(b"foo'bar".to_vec(), input))
+            Span::new_at(b"tail", 10, 1, 11),
+            Literal::String(
+                Token::new(
+                    b"foo'bar".to_vec(),
+                    Span::new(b"'foo\\'bar'")
+                )
+            )
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1237,10 +1251,15 @@ mod tests {
 
     #[test]
     fn case_string_single_quoted_escaped_backslash() {
-        let input  = Span::new(b"'foo\\\\bar'");
+        let input  = Span::new(b"'foo\\\\bar'tail");
         let output = Result::Done(
-            Span::new_at(b"", 10, 1, 11),
-            Literal::String(Token::new(b"foo\\bar".to_vec(), input))
+            Span::new_at(b"tail", 10, 1, 11),
+            Literal::String(
+                Token::new(
+                    b"foo\\bar".to_vec(),
+                    Span::new(b"'foo\\\\bar'")
+                )
+            )
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1250,10 +1269,15 @@ mod tests {
 
     #[test]
     fn case_string_single_quoted_escaped_any() {
-        let input  = Span::new(b"'foo\\nbar'");
+        let input  = Span::new(b"'foo\\nbar'tail");
         let output = Result::Done(
-            Span::new_at(b"", 10, 1, 11),
-            Literal::String(Token::new(b"foo\\nbar".to_vec(), input))
+            Span::new_at(b"tail", 10, 1, 11),
+            Literal::String(
+                Token::new(
+                    b"foo\\nbar".to_vec(),
+                    Span::new(b"'foo\\nbar'")
+                )
+            )
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1263,10 +1287,15 @@ mod tests {
 
     #[test]
     fn case_string_single_quoted_escaped_many() {
-        let input  = Span::new(b"'\\'f\\oo\\\\bar\\\\'");
+        let input  = Span::new(b"'\\'f\\oo\\\\bar\\\\'tail");
         let output = Result::Done(
-            Span::new_at(b"", 15, 1, 16),
-            Literal::String(Token::new(b"'f\\oo\\bar\\".to_vec(), input))
+            Span::new_at(b"tail", 15, 1, 16),
+            Literal::String(
+                Token::new(
+                    b"'f\\oo\\bar\\".to_vec(),
+                    Span::new(b"'\\'f\\oo\\\\bar\\\\'")
+                )
+            )
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1276,10 +1305,15 @@ mod tests {
 
     #[test]
     fn case_string_single_quoted_empty() {
-        let input  = Span::new(b"''");
+        let input  = Span::new(b"''tail");
         let output = Result::Done(
-            Span::new_at(b"", 2, 1, 3),
-            Literal::String(Token::new(Vec::new(), input))
+            Span::new_at(b"tail", 2, 1, 3),
+            Literal::String(
+                Token::new(
+                    Vec::new(),
+                    Span::new(b"''")
+                )
+            )
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1398,10 +1432,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc() {
-        let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\n");
+        let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 30, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input))
+            Span::new_at(b"tail", 30, 5, 1),
+            Literal::String(
+                Token::new(
+                    b"hello \n  world ".to_vec(),
+                    Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1411,10 +1450,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_crlf() {
-        let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\n");
+        let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 34, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input))
+            Span::new_at(b"tail", 34, 5, 1),
+            Literal::String(
+                Token::new(
+                    b"hello \r\n  world ".to_vec(),
+                    Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1424,10 +1468,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_without_semi_colon() {
-        let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO\n");
+        let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 29, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input))
+            Span::new_at(b"tail", 29, 5, 1),
+            Literal::String(
+                Token::new(
+                    b"hello \n  world ".to_vec(),
+                    Span::new(b"<<<'FOO'\nhello \n  world \nFOO\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1437,10 +1486,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_without_semi_colon_crlf() {
-        let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
+        let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 33, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input))
+            Span::new_at(b"tail", 33, 5, 1),
+            Literal::String(
+                Token::new(
+                    b"hello \r\n  world ".to_vec(),
+                    Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1450,10 +1504,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_empty() {
-        let input  = Span::new(b"<<<'FOO'\nFOO\n");
+        let input  = Span::new(b"<<<'FOO'\nFOO\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 13, 3, 1),
-            Literal::String(Token::new(Vec::new(), input))
+            Span::new_at(b"tail", 13, 3, 1),
+            Literal::String(
+                Token::new(
+                    Vec::new(),
+                    Span::new(b"<<<'FOO'\nFOO\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1463,10 +1522,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_empty_crlf() {
-        let input  = Span::new(b"<<<'FOO'\r\nFOO\r\n");
+        let input  = Span::new(b"<<<'FOO'\r\nFOO\r\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 15, 3, 1),
-            Literal::String(Token::new(Vec::new(), input))
+            Span::new_at(b"tail", 15, 3, 1),
+            Literal::String(
+                Token::new(
+                    Vec::new(),
+                    Span::new(b"<<<'FOO'\r\nFOO\r\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1476,10 +1540,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_with_whitespaces_before_identifier() {
-        let input  = Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\n");
+        let input  = Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 35, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input))
+            Span::new_at(b"tail", 35, 5, 1),
+            Literal::String(
+                Token::new(
+                    b"hello \n  world ".to_vec(),
+                    Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1489,10 +1558,15 @@ mod tests {
 
     #[test]
     fn case_string_nowdoc_with_whitespaces_before_identifier_crlf() {
-        let input  = Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
+        let input  = Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\ntail");
         let output = Result::Done(
-            Span::new_at(b"", 39, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input))
+            Span::new_at(b"tail", 39, 5, 1),
+            Literal::String(
+                Token::new(
+                    b"hello \r\n  world ".to_vec(),
+                    Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
+                )
+            )
         );
 
         assert_eq!(string_nowdoc(input), output);
