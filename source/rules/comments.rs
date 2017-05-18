@@ -50,9 +50,16 @@ named_attr!(
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::rules::comments::comment;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
-        assert_eq!(comment(b\"/* foo */ bar\"), Result::Done(&b\" bar\"[..], &b\" foo \"[..]));
+        assert_eq!(
+            comment(Span::new(b\"/* foo */ bar\")),
+            Result::Done(
+                Span::new_at(b\" bar\", 9, 1, 10),
+                Span::new_at(b\" foo \", 2, 1, 3)
+            )
+        );
         # }
         ```
     "],

@@ -53,11 +53,21 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Variable;
         use tagua_parser::rules::tokens::variable;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
-        assert_eq!(variable(b\"$foo\"), Result::Done(&b\"\"[..], Variable(&b\"foo\"[..])));
+        assert_eq!(
+            variable(Span::new(b\"$foo\")),
+            Result::Done(
+                Span::new_at(b\"\", 4, 1, 5),
+                Variable(Span::new_at(b\"foo\", 1, 1, 2))
+            )
+        );
         # }
         ```
+
+        Note that the variable prefix `$` is not present in the output
+        of the parser.
     "],
     pub variable<Span, Variable>,
     map_res!(
@@ -85,12 +95,20 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Name;
         use tagua_parser::rules::tokens::qualified_name;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
         assert_eq!(
-            qualified_name(b\"Foo\\\\Bar\\\\Baz\"),
-            Result::Done(&b\"\"[..], Name::Qualified(vec![&b\"Foo\"[..], &b\"Bar\"[..], &b\"Baz\"[..]]))
-       );
+            qualified_name(Span::new(b\"Foo\\\\Bar\\\\Baz\")),
+            Result::Done(
+                Span::new_at(b\"\", 11, 1, 12),
+                Name::Qualified(vec![
+                    Span::new_at(b\"Foo\", 0, 1, 1),
+                    Span::new_at(b\"Bar\", 4, 1, 5),
+                    Span::new_at(b\"Baz\", 8, 1, 9)
+                ])
+            )
+        );
         # }
         ```
     "],
@@ -153,9 +171,16 @@ named_attr!(
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::rules::tokens::name;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
-        assert_eq!(name(b\"foo\"), Result::Done(&b\"\"[..], &b\"foo\"[..]));
+        assert_eq!(
+            name(Span::new(b\"foo\")),
+            Result::Done(
+                Span::new_at(b\"\", 3, 1, 4),
+                Span::new(b\"foo\")
+            )
+        );
         # }
         ```
     "],

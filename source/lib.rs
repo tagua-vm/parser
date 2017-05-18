@@ -85,10 +85,11 @@ pub use self::internal::*;
 /// # Examples
 ///
 /// ```
-/// use tagua_parser as parser;
+/// use tagua_parser::parse;
+/// use tagua_parser::tokens::Span;
 ///
-/// let expression = b"1+2";
-/// parser::parse(&expression[..]);
+/// let expression = Span::new(b"1+2");
+/// tagua_parser::parse(expression);
 /// ```
 pub fn parse(input: tokens::Span) -> ast::Expression {
     rules::root(input)

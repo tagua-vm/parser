@@ -91,14 +91,25 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::primary;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            primary(b\"echo 'Hello, World!'\"),
+            primary(Span::new(b\"echo 'Hello, World!'\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 20, 1, 21),
                 Expression::Echo(vec![
-                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                    Expression::Literal(
+                        Literal::String(
+                            Token::new(
+                                b\"Hello, World!\".to_vec(),
+                                Span::new_at(b\"'Hello, World!'\", 5, 1, 6)
+                            )
+                        )
+                    )
                 ])
             )
         );
@@ -149,20 +160,24 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal, Variable};
         use tagua_parser::rules::expressions::primaries::array;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            array(b\"[42, 'foo' => $bar]\"),
+            array(Span::new(b\"[42, 'foo' => $bar]\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 19, 1, 20),
                 Expression::Array(vec![
                     (
                         None,
-                        Expression::Literal(Literal::Integer(42i64))
+                        Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b\"42\", 1, 1, 2))))
                     ),
                     (
-                        Some(Expression::Literal(Literal::String(b\"foo\".to_vec()))),
-                        Expression::Variable(Variable(&b\"bar\"[..]))
+                        Some(Expression::Literal(Literal::String(Token::new(b\"foo\".to_vec(), Span::new_at(b\"'foo'\", 5, 1, 6))))),
+                        Expression::Variable(Variable(Span::new_at(b\"bar\", 15, 1, 16)))
                     )
                 ])
             )
@@ -271,14 +286,25 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic(b\"echo 'Hello, World!'\"),
+            intrinsic(Span::new(b\"echo 'Hello, World!'\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 20, 1, 21),
                 Expression::Echo(vec![
-                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                    Expression::Literal(
+                        Literal::String(
+                            Token::new(
+                                b\"Hello, World!\".to_vec(),
+                                Span::new_at(b\"'Hello, World!'\", 5, 1, 6)
+                            )
+                        )
+                    )
                 ])
             )
         );
@@ -322,15 +348,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_echo;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_echo(b\"echo 'Hello,', ' World!'\"),
+            intrinsic_echo(Span::new(b\"echo 'Hello,', ' World!'\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 24, 1, 25),
                 Expression::Echo(vec![
-                    Expression::Literal(Literal::String(b\"Hello,\".to_vec())),
-                    Expression::Literal(Literal::String(b\" World!\".to_vec()))
+                    Expression::Literal(Literal::String(Token::new(b\"Hello,\".to_vec(), Span::new_at(b\"'Hello,'\", 5, 1, 6)))),
+                    Expression::Literal(Literal::String(Token::new(b\" World!\".to_vec(), Span::new_at(b\"' World!'\", 15, 1, 16))))
                 ])
             )
         );
@@ -377,20 +407,24 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_list;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_list(b\"list('foo' => $foo, 'bar' => $bar)\"),
+            intrinsic_list(Span::new(b\"list('foo' => $foo, 'bar' => $bar)\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 34, 1, 35),
                 Expression::List(vec![
                     Some((
-                        Some(Expression::Literal(Literal::String(b\"foo\".to_vec()))),
-                        Expression::Variable(Variable(&b\"foo\"[..]))
+                        Some(Expression::Literal(Literal::String(Token::new(b\"foo\".to_vec(), Span::new_at(b\"'foo'\", 5, 1, 6))))),
+                        Expression::Variable(Variable(Span::new_at(b\"foo\", 15, 1, 16)))
                     )),
                     Some((
-                        Some(Expression::Literal(Literal::String(b\"bar\".to_vec()))),
-                        Expression::Variable(Variable(&b\"bar\"[..]))
+                        Some(Expression::Literal(Literal::String(Token::new(b\"bar\".to_vec(), Span::new_at(b\"'bar'\", 20, 1, 21))))),
+                        Expression::Variable(Variable(Span::new_at(b\"bar\", 30, 1, 31)))
                     ))
                 ])
             )
@@ -506,15 +540,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_unset;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_unset(b\"unset($foo, $bar)\"),
+            intrinsic_unset(Span::new(b\"unset($foo, $bar)\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 17, 1, 18),
                 Expression::Unset(vec![
-                    Expression::Variable(Variable(&b\"foo\"[..])),
-                    Expression::Variable(Variable(&b\"bar\"[..]))
+                    Expression::Variable(Variable(Span::new_at(b\"foo\", 7, 1, 8))),
+                    Expression::Variable(Variable(Span::new_at(b\"bar\", 13, 1, 14)))
                 ])
             )
         );
@@ -562,16 +600,22 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_empty;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_empty(b\"empty('foo')\"),
+            intrinsic_empty(Span::new(b\"empty('foo')\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 12, 1, 13),
                 Expression::Empty(
                     Box::new(
                         Expression::Literal(
-                            Literal::String(b\"foo\".to_vec())
+                            Literal::String(
+                                Token::new(b\"foo\".to_vec(), Span::new_at(b\"'foo'\", 6, 1, 7))
+                            )
                         )
                     )
                 )
@@ -611,16 +655,20 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_eval;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_eval(b\"eval('1 + 2')\"),
+            intrinsic_eval(Span::new(b\"eval('1 + 2')\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 13, 1, 14),
                 Expression::Eval(
                     Box::new(
                         Expression::Literal(
-                            Literal::String(b\"1 + 2\".to_vec())
+                            Literal::String(Token::new(b\"1 + 2\".to_vec(), Span::new_at(b\"'1 + 2'\", 5, 1, 6)))
                         )
                     )
                 )
@@ -660,17 +708,21 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_exit;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_exit(b\"exit(7)\"),
+            intrinsic_exit(Span::new(b\"exit(7)\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 7, 1, 8),
                 Expression::Exit(
                     Some(
                         Box::new(
                             Expression::Literal(
-                                Literal::Integer(7i64)
+                                Literal::Integer(Token::new(7i64, Span::new_at(b\"7\", 5, 1, 6)))
                             )
                         )
                     )
@@ -732,15 +784,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_isset;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_isset(b\"isset($foo, $bar)\"),
+            intrinsic_isset(Span::new(b\"isset($foo, $bar)\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 17, 1, 18),
                 Expression::Isset(vec![
-                    Expression::Variable(Variable(&b\"foo\"[..])),
-                    Expression::Variable(Variable(&b\"bar\"[..]))
+                    Expression::Variable(Variable(Span::new_at(b\"foo\", 7, 1, 8))),
+                    Expression::Variable(Variable(Span::new_at(b\"bar\", 13, 1, 14)))
                 ])
             )
         );
@@ -788,15 +844,23 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_print;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            intrinsic_print(b\"print('Hello, World!')\"),
+            intrinsic_print(Span::new(b\"print('Hello, World!')\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 22, 1, 23),
                 Expression::Print(
                     Box::new(
-                        Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                        Expression::Literal(
+                            Literal::String(
+                                Token::new(b\"Hello, World!\".to_vec(), Span::new_at(b\"'Hello, World!'\", 6, 1, 7))
+                            )
+                        )
                     )
                 )
             )
@@ -839,38 +903,42 @@ named_attr!(
             Variable
         };
         use tagua_parser::rules::expressions::primaries::anonymous_function;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            anonymous_function(b\"function &($x, \\\\I\\\\J $y, int &$z) use ($a, &$b): O { return; }\"),
+            anonymous_function(Span::new(b\"function &($x, \\\\I\\\\J $y, int &$z) use ($a, &$b): O { return; }\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 61, 1, 62),
                 Expression::AnonymousFunction(
                     AnonymousFunction {
                         declaration_scope: Scope::Dynamic,
                         inputs           : Arity::Finite(vec![
                             Parameter {
                                 ty   : Ty::Copy(None),
-                                name : Variable(&b\"x\"[..]),
+                                name : Variable(Span::new_at(b\"x\", 12, 1, 13)),
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b\"I\"[..], &b\"J\"[..]]))),
-                                name : Variable(&b\"y\"[..]),
+                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"I\", 16, 1, 17), Span::new_at(b\"J\", 18, 1, 19)]))),
+                                name : Variable(Span::new_at(b\"y\", 21, 1, 22)),
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
-                                name : Variable(&b\"z\"[..]),
+                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 24, 1, 25)]))),
+                                name : Variable(Span::new_at(b\"z\", 30, 1, 31)),
                                 value: None
                             }
                         ]),
-                        output         : Ty::Reference(Some(Name::Unqualified(&b\"O\"[..]))),
+                        output         : Ty::Reference(Some(Name::Unqualified(Span::new_at(b\"O\", 48, 1, 49)))),
                         enclosing_scope: Some(vec![
-                            Expression::Variable(Variable(&b\"a\"[..])),
+                            Expression::Variable(Variable(Span::new_at(b\"a\", 39, 1, 40))),
                             Expression::Reference(
                                 Box::new(
-                                    Expression::Variable(Variable(&b\"b\"[..]))
+                                    Expression::Variable(Variable(Span::new_at(b\"b\", 44, 1, 45)))
                                 )
                             )
                         ]),

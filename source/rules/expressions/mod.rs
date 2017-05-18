@@ -52,14 +52,25 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::expression;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
         assert_eq!(
-            expression(b\"echo 'Hello, World!'\"),
+            expression(Span::new(b\"echo 'Hello, World!'\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 20, 1, 21),
                 Expression::Echo(vec![
-                    Expression::Literal(Literal::String(b\"Hello, World!\".to_vec()))
+                    Expression::Literal(
+                        Literal::String(
+                            Token::new(
+                                b\"Hello, World!\".to_vec(),
+                                Span::new_at(b\"'Hello, World!'\", 5, 1, 6)
+                            )
+                        )
+                    )
                 ])
             )
         );

@@ -101,33 +101,37 @@ named_attr!(
             Variable
         };
         use tagua_parser::rules::statements::function::function;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            function(b\"function &f($x, \\\\I\\\\J $y, int &$z): O { return; }\"),
+            function(Span::new(b\"function &f($x, \\\\I\\\\J $y, int &$z): O { return; }\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 48, 1, 49),
                 Statement::Function(
                     Function {
-                        name  : &b\"f\"[..],
+                        name  : Span::new_at(b\"f\", 10, 1, 11),
                         inputs: Arity::Finite(vec![
                             Parameter {
                                 ty   : Ty::Copy(None),
-                                name : Variable(&b\"x\"[..]),
+                                name : Variable(Span::new_at(b\"x\", 13, 1, 14)),
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b\"I\"[..], &b\"J\"[..]]))),
-                                name : Variable(&b\"y\"[..]),
+                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"I\", 17, 1, 18), Span::new_at(b\"J\", 19, 1, 20)]))),
+                                name : Variable(Span::new_at(b\"y\", 22, 1, 23)),
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
-                                name : Variable(&b\"z\"[..]),
+                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 25, 1, 26)]))),
+                                name : Variable(Span::new_at(b\"z\", 31, 1, 32)),
                                 value: None
                             }
                         ]),
-                        output: Ty::Reference(Some(Name::Unqualified(&b\"O\"[..]))),
+                        output: Ty::Reference(Some(Name::Unqualified(Span::new_at(b\"O\", 35, 1, 36)))),
                         body  : vec![Statement::Return]
                     }
                 )
@@ -152,24 +156,28 @@ named_attr!(
             Variable
         };
         use tagua_parser::rules::statements::function::function;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            function(b\"function f($x, int ...$y) { return; }\"),
+            function(Span::new(b\"function f($x, int ...$y) { return; }\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 37, 1, 38),
                 Statement::Function(
                     Function {
-                        name  : &b\"f\"[..],
+                        name  : Span::new_at(b\"f\", 9, 1, 10),
                         inputs: Arity::Infinite(vec![
                             Parameter {
                                 ty   : Ty::Copy(None),
-                                name : Variable(&b\"x\"[..]),
+                                name : Variable(Span::new_at(b\"x\", 12, 1, 13)),
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
-                                name : Variable(&b\"y\"[..]),
+                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 15, 1, 16)]))),
+                                name : Variable(Span::new_at(b\"y\", 23, 1, 24)),
                                 value: None
                             }
                         ]),
@@ -226,26 +234,30 @@ named_attr!(
             Variable
         };
         use tagua_parser::rules::statements::function::parameters;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            parameters(b\"($x, \\\\I\\\\J $y, int &$z)\"),
+            parameters(Span::new(b\"($x, \\\\I\\\\J $y, int &$z)\")),
             Result::Done(
-                &b\"\"[..],
+                Span::new_at(b\"\", 22, 1, 23),
                 Arity::Finite(vec![
                     Parameter {
                         ty   : Ty::Copy(None),
-                        name : Variable(&b\"x\"[..]),
+                        name : Variable(Span::new_at(b\"x\", 2, 1, 3)),
                         value: None
                     },
                     Parameter {
-                        ty   : Ty::Copy(Some(Name::FullyQualified(vec![&b\"I\"[..], &b\"J\"[..]]))),
-                        name : Variable(&b\"y\"[..]),
+                        ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"I\", 6, 1, 7), Span::new_at(b\"J\", 8, 1, 9)]))),
+                        name : Variable(Span::new_at(b\"y\", 11, 1, 12)),
                         value: None
                     },
                     Parameter {
-                        ty   : Ty::Reference(Some(Name::FullyQualified(vec![&b\"int\"[..]]))),
-                        name : Variable(&b\"z\"[..]),
+                        ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 14, 1, 15)]))),
+                        name : Variable(Span::new_at(b\"z\", 20, 1, 21)),
                         value: None
                     }
                 ])
@@ -393,11 +405,18 @@ named!(
         use tagua_parser::Result;
         use tagua_parser::ast::Name;
         use tagua_parser::rules::statements::function::native_type;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main() {
         assert_eq!(
-            native_type(b\"int\"),
-            Result::Done(&b\"\"[..], Name::FullyQualified(vec![&b\"int\"[..]]))
+            native_type(Span::new(b\"int\")),
+            Result::Done(
+                Span::new_at(b\"\", 3, 1, 4),
+                Name::FullyQualified(vec![Span::new(b\"int\")])
+            )
         );
         # }
         ```

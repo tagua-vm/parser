@@ -71,9 +71,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::literal;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(literal(b\"0x2a\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        assert_eq!(
+            literal(Span::new(b\"0x2a\")),
+            Result::Done(
+                Span::new_at(b\"\", 4, 1, 5),
+                Literal::Integer(Token::new(42i64, Span::new(b\"0x2a\")))
+            )
+        );
         # }
         ```
     "],
@@ -98,9 +108,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::null;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(null(b\"null\"), Result::Done(&b\"\"[..], Literal::Null));
+        assert_eq!(
+            null(Span::new(b\"null\")),
+            Result::Done(
+                Span::new_at(b\"\", 4, 1, 5),
+                Literal::Null(Token::new((), Span::new(b\"null\")))
+            )
+        );
         # }
         ```
     "],
@@ -127,9 +147,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::boolean;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(boolean(b\"true\"), Result::Done(&b\"\"[..], Literal::Boolean(true)));
+        assert_eq!(
+            boolean(Span::new(b\"true\")),
+            Result::Done(
+                Span::new_at(b\"\", 4, 1, 5),
+                Literal::Boolean(Token::new(true, Span::new(b\"true\")))
+            )
+        );
         # }
         ```
     "],
@@ -158,9 +188,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::integer;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(integer(b\"0b101010\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        assert_eq!(
+            integer(Span::new(b\"0b101010\")),
+            Result::Done(
+                Span::new_at(b\"\", 8, 1, 9),
+                Literal::Integer(Token::new(42i64, Span::new(b\"0b101010\")))
+            )
+        );
         # }
         ```
     "],
@@ -184,9 +224,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::binary;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(binary(b\"0b101010\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        assert_eq!(
+            binary(Span::new(b\"0b101010\")),
+            Result::Done(
+                Span::new_at(b\"\", 8, 1, 9),
+                Literal::Integer(Token::new(42i64, Span::new(b\"0b101010\")))
+            )
+        );
         # }
         ```
     "],
@@ -222,9 +272,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::octal;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(octal(b\"052\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        assert_eq!(
+            octal(Span::new(b\"052\")),
+            Result::Done(
+                Span::new_at(b\"\", 3, 1, 4),
+                Literal::Integer(Token::new(42i64, Span::new(b\"052\")))
+            )
+        );
         # }
         ```
     "],
@@ -266,9 +326,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::decimal;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(decimal(b\"42\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        assert_eq!(
+            decimal(Span::new(b\"42\")),
+            Result::Done(
+                Span::new_at(b\"\", 2, 1, 3),
+                Literal::Integer(Token::new(42i64, Span::new(b\"42\")))
+            )
+        );
         # }
         ```
     "],
@@ -314,9 +384,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::decimal;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(decimal(b\"42\"), Result::Done(&b\"\"[..], Literal::Integer(42i64)));
+        assert_eq!(
+            decimal(Span::new(b\"42\")),
+            Result::Done(
+                Span::new_at(b\"\", 2, 1, 3),
+                Literal::Integer(Token::new(42i64, Span::new(b\"42\")))
+            )
+        );
         # }
         ```
     "],
@@ -352,9 +432,19 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::exponential;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
-        assert_eq!(exponential(b\"123.456e+78\"), Result::Done(&b\"\"[..], Literal::Real(123.456e78f64)));
+        assert_eq!(
+            exponential(Span::new(b\"123.456e+78\")),
+            Result::Done(
+                Span::new_at(b\"\", 11, 1, 12),
+                Literal::Real(Token::new(123.456e78f64, Span::new(b\"123.456e+78\")))
+            )
+        );
         # }
         ```
     "],
@@ -405,11 +495,18 @@ named_attr!(
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::string;
+        use tagua_parser::tokens::{
+            Span,
+            Token
+        };
 
         # fn main () {
         assert_eq!(
-            string(b\"'foobar'\"),
-            Result::Done(&b\"\"[..], Literal::String(b\"foobar\".to_vec()))
+            string(Span::new(b\"'foobar'\")),
+            Result::Done(
+                Span::new_at(b\"\", 8, 1, 9),
+                Literal::String(Token::new(b\"foobar\".to_vec(), Span::new(b\"'foobar'\")))
+            )
         );
         # }
         ```

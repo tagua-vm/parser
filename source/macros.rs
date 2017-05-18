@@ -127,14 +127,21 @@ macro_rules! exclude(
 /// # #[macro_use]
 /// # extern crate tagua_parser;
 /// use tagua_parser::Result;
+/// use tagua_parser::tokens::Span;
 ///
 /// # fn main() {
 /// named!(
-///     test,
-///     first!(tag!("bar"))
+///     test<Span, Span>,
+///     first!(tag!(b"bar"))
 /// );
 ///
-/// assert_eq!(test(&b"/* foo */bar"[..]), Result::Done(&b""[..], &b"bar"[..]));
+/// assert_eq!(
+///     test(Span::new(b"/* foo */bar")),
+///     Result::Done(
+///         Span::new_at(b"", 12, 1, 13),
+///         Span::new_at(b"bar", 9, 1, 10)
+///     )
+/// );
 /// # }
 /// ```
 #[macro_export]
@@ -154,11 +161,12 @@ macro_rules! first(
     );
 );
 
-/// `itag!(&[T]: nom::AsBytes) => &[T] -> Result<&[T], &[T]>`
-/// declares a case-insensitive ASCII array as a suite to recognize.
+/// `itag!(I -> Result<I, O>) => I -> Result<I, O>`
+/// declares a case-insensitive tag to recognize.
 ///
-/// It is pretty similar to the nom `tag!` macro except it is case-insensitive
-/// and only accepts ASCII characters so far.
+/// It is pretty similar to the nom `tag!` macro except it is
+/// case-insensitive, and return the expected tag, not the consumed
+/// tag.
 ///
 /// # Examples
 ///
@@ -168,15 +176,18 @@ macro_rules! first(
 /// # #[macro_use]
 /// # extern crate tagua_parser;
 /// use tagua_parser::Result;
+/// use tagua_parser::tokens::Span;
 ///
 /// # fn main() {
 /// named!(
-///     test<&str>,
-///     itag!("foobar")
+///     test<Span, Span>,
+///     itag!(b"foobar")
 /// );
 ///
-/// assert_eq!(test(&b"foobar"[..]), Result::Done(&b""[..], "foobar"));
-/// assert_eq!(test(&b"FoObAr"[..]), Result::Done(&b""[..], "FoObAr"));
+/// let output = Result::Done(Span::new_at(b"", 6, 1, 7), Span::new(b"foobar"));
+///
+/// assert_eq!(test(Span::new(b"foobar")), output);
+/// assert_eq!(test(Span::new(b"FoObAr")), output);
 /// # }
 /// ```
 #[macro_export]
@@ -235,17 +246,18 @@ macro_rules! itag(
 ///     Result,
 ///     tokens
 /// };
+/// use tagua_parser::tokens::Span;
 ///
 /// # fn main() {
 /// named!(
-///     test<&[u8]>,
+///     test<Span, Span>,
 ///     keyword!(tokens::CLASS)
 /// );
 ///
-/// let output = Result::Done(&b""[..], tokens::CLASS);
+/// let output = Result::Done(Span::new_at(b"", 5, 1, 6), Span::new(tokens::CLASS));
 ///
-/// assert_eq!(test(&b"class"[..]), output);
-/// assert_eq!(test(&b"ClAsS"[..]), output);
+/// assert_eq!(test(Span::new(b"class")), output);
+/// assert_eq!(test(Span::new(b"ClAsS")), output);
 /// # }
 /// ```
 #[macro_export]
@@ -282,7 +294,7 @@ macro_rules! keyword(
 ///     )
 /// );
 ///
-/// if let Result::Done(_, vector) = test(&b"abcabcabc"[..]) {
+/// if let Result::Done(_, vector) = test(b"abcabcabc") {
 ///     assert_eq!(vector.capacity(), vector.len());
 /// }
 /// # }

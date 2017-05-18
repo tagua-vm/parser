@@ -52,11 +52,18 @@ named_attr!(
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::rules::skip::skip;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
         assert_eq!(
-            skip(b\"/* foo */ \\n\\thello\"),
-            Result::Done(&b\"hello\"[..], vec![&b\" foo \"[..], &b\" \\n\\t\"[..]])
+            skip(Span::new(b\"/* foo */ \\n\\thello\")),
+            Result::Done(
+                Span::new_at(b\"hello\", 12, 2, 2),
+                vec![
+                    Span::new_at(b\" foo \", 2, 1, 3),
+                    Span::new_at(b\" \\n\\t\", 9, 1, 10)
+                ]
+            )
         );
         # }
         ```

@@ -653,13 +653,17 @@ named_attr!(
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::tokens;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
-        let output = Result::Done(&b\"\"[..], tokens::ECHO);
+        let output = Result::Done(
+            Span::new_at(b\"\", 4, 1, 5),
+            Span::new(tokens::ECHO)
+        );
 
-        assert_eq!(tokens::keywords(b\"echo\"), output);
-        assert_eq!(tokens::keywords(b\"ECHO\"), output);
-        assert_eq!(tokens::keywords(b\"EcHo\"), output);
+        assert_eq!(tokens::keywords(Span::new(b\"echo\")), output);
+        assert_eq!(tokens::keywords(Span::new(b\"ECHO\")), output);
+        assert_eq!(tokens::keywords(Span::new(b\"EcHo\")), output);
         # }
         ```
     "],

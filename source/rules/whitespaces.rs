@@ -47,9 +47,16 @@ named_attr!(
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::rules::whitespaces::whitespace;
+        use tagua_parser::tokens::Span;
 
         # fn main () {
-        assert_eq!(whitespace(b\"\\n \\r\\tabc\"), Result::Done(&b\"abc\"[..], &b\"\\n \\r\\t\"[..]));
+        assert_eq!(
+            whitespace(Span::new(b\"\\n \\r\\tabc\")),
+            Result::Done(
+                Span::new_at(b\"abc\", 4, 2, 4),
+                Span::new(b\"\\n \\r\\t\")
+            )
+        );
         # }
         ```
     "],
