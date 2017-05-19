@@ -262,7 +262,7 @@ named!(
 );
 
 #[inline]
-fn empty_array_mapper<'a>(_: Span<'a>) -> StdResult<Expression<'a>, ()> {
+fn empty_array_mapper(_: Span) -> StdResult<Expression, ()> {
     Ok(Expression::Array(vec![]))
 }
 
