@@ -314,7 +314,7 @@ fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult
             return Err(Error::Code(ErrorKind::Custom(FunctionError::InvalidVariadicParameterPosition as u32)));
         }
 
-        if parameters.iter().any(|p: &Parameter<'a>| p.name.0.as_slice() == parameter.name.0.as_slice()) {
+        if parameters.iter().any(|p: &Parameter<'a>| p.name == parameter.name) {
             return Err(Error::Code(ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32)));
         }
 
@@ -323,7 +323,7 @@ fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult
 
     match last_pair {
         Some((last_parameter, is_variadic)) => {
-            if parameters.iter().any(|p: &Parameter<'a>| p.name.0.as_slice() == last_parameter.name.0.as_slice()) {
+            if parameters.iter().any(|p: &Parameter<'a>| p.name == last_parameter.name) {
                 return Err(Error::Code(ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32)));
             }
 
