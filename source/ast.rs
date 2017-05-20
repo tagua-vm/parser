@@ -253,8 +253,34 @@ pub enum Literal<'a> {
 /// # }
 /// ```
 /// Note that the `$` is not present.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Variable<'a>(pub Span<'a>);
+
+impl<'a> PartialEq for Variable<'a> {
+    /// This method tests for `self` and `other` values to be equal,
+    /// and is used by `==`.
+    ///
+    /// In this case, a variable is equal to another variable if their
+    /// names are equals.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::ast::Variable;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// let variable1 = Variable(Span::new(b"x"));
+    /// let variable2 = Variable(Span::new(b"x"));
+    ///
+    /// assert!(variable1 == variable2);
+    /// # }
+    /// ```
+    fn eq(&self, other: &Variable<'a>) -> bool {
+        self.0.as_slice() == other.0.as_slice()
+    }
+}
 
 /// A name represents an entity name.
 #[derive(Debug, PartialEq)]
@@ -1308,4 +1334,27 @@ pub enum Scope {
 
     /// A static scope (when declared with the `static` keyword).
     Static
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::Variable;
+    use super::super::tokens::Span;
+
+    #[test]
+    fn case_variable_equal() {
+        let input1 = Variable(Span::new(b"foo"));
+        let input2 = Variable(Span::new(b"foo"));
+
+        assert!(input1 == input2);
+    }
+
+    #[test]
+    fn case_variable_not_equal() {
+        let input1 = Variable(Span::new(b"foo"));
+        let input2 = Variable(Span::new(b"bar"));
+
+        assert!(input1 != input2);
+    }
 }
