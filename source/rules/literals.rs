@@ -62,7 +62,7 @@ named_attr!(
     #[doc="
         Recognize all kind of literals.
 
-        A literal is either a boolean, an expotential, an integer or an integer.
+        A literal is either an expotential, an integer or a string.
 
         # Examples
 
@@ -89,51 +89,11 @@ named_attr!(
     "],
     pub literal<Span, Literal>,
     alt!(
-        boolean
-      | exponential
+        exponential
       | integer
       | string
     )
 );
-
-named_attr!(
-    #[doc="
-        Recognize a boolean.
-
-        # Examples
-
-        ```
-        # extern crate tagua_parser;
-        use tagua_parser::Result;
-        use tagua_parser::ast::Literal;
-        use tagua_parser::rules::literals::boolean;
-        use tagua_parser::tokens::{
-            Span,
-            Token
-        };
-
-        # fn main () {
-        assert_eq!(
-            boolean(Span::new(b\"true\")),
-            Result::Done(
-                Span::new_at(b\"\", 4, 1, 5),
-                Literal::Boolean(Token::new(true, Span::new(b\"true\")))
-            )
-        );
-        # }
-        ```
-    "],
-    pub boolean<Span, Literal>,
-    map_res!(
-        alt!(itag!(b"true") | itag!(b"false")),
-        boolean_mapper
-    )
-);
-
-#[inline]
-fn boolean_mapper(span: Span) -> StdResult<Literal, ()> {
-    Ok(Literal::Boolean(Token::new(span.as_slice()[0] == b't', span)))
-}
 
 named_attr!(
     #[doc="
@@ -658,7 +618,6 @@ mod tests {
     use super::{
         StringError,
         binary,
-        boolean,
         decimal,
         exponential,
         hexadecimal,
@@ -679,54 +638,6 @@ mod tests {
         Span,
         Token
     };
-
-    #[test]
-    fn case_boolean_true() {
-        let input  = Span::new(b"true");
-        let output = Result::Done(
-            Span::new_at(b"", 4, 1, 5),
-            Literal::Boolean(Token::new(true, input))
-        );
-
-        assert_eq!(boolean(input), output);
-        assert_eq!(literal(input), output);
-    }
-
-    #[test]
-    fn case_boolean_true_case_insensitive() {
-        let input  = Span::new(b"TrUe");
-        let output = Result::Done(
-            Span::new_at(b"", 4, 1, 5),
-            Literal::Boolean(Token::new(true, Span::new(b"true")))
-        );
-
-        assert_eq!(boolean(input), output);
-        assert_eq!(literal(input), output);
-    }
-
-    #[test]
-    fn case_boolean_false() {
-        let input  = Span::new(b"false");
-        let output = Result::Done(
-            Span::new_at(b"", 5, 1, 6),
-            Literal::Boolean(Token::new(false, input))
-        );
-
-        assert_eq!(boolean(input), output);
-        assert_eq!(literal(input), output);
-    }
-
-    #[test]
-    fn case_boolean_false_case_insensitive() {
-        let input  = Span::new(b"FaLsE");
-        let output = Result::Done(
-            Span::new_at(b"", 5, 1, 6),
-            Literal::Boolean(Token::new(false, Span::new(b"false")))
-        );
-
-        assert_eq!(boolean(input), output);
-        assert_eq!(literal(input), output);
-    }
 
     #[test]
     fn case_binary_lowercase_b() {
