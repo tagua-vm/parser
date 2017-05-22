@@ -62,7 +62,7 @@ named_attr!(
     #[doc="
         Recognize all kind of literals.
 
-        A literal is either a null, a boolean, an expotential, an integer or an integer.
+        A literal is either a boolean, an expotential, an integer or an integer.
 
         # Examples
 
@@ -89,52 +89,12 @@ named_attr!(
     "],
     pub literal<Span, Literal>,
     alt!(
-        null
-      | boolean
+        boolean
       | exponential
       | integer
       | string
     )
 );
-
-named_attr!(
-    #[doc="
-        Recognize a null value.
-
-        # Examples
-
-        ```
-        # extern crate tagua_parser;
-        use tagua_parser::Result;
-        use tagua_parser::ast::Literal;
-        use tagua_parser::rules::literals::null;
-        use tagua_parser::tokens::{
-            Span,
-            Token
-        };
-
-        # fn main () {
-        assert_eq!(
-            null(Span::new(b\"null\")),
-            Result::Done(
-                Span::new_at(b\"\", 4, 1, 5),
-                Literal::Null(Token::new((), Span::new(b\"null\")))
-            )
-        );
-        # }
-        ```
-    "],
-    pub null<Span, Literal>,
-    map_res!(
-        itag!(b"null"),
-        null_mapper
-    )
-);
-
-#[inline]
-fn null_mapper(span: Span) -> StdResult<Literal, ()> {
-    Ok(Literal::Null(Token::new((), span)))
-}
 
 named_attr!(
     #[doc="
@@ -704,7 +664,6 @@ mod tests {
         hexadecimal,
         integer,
         literal,
-        null,
         octal,
         string,
         string_nowdoc,
@@ -720,30 +679,6 @@ mod tests {
         Span,
         Token
     };
-
-    #[test]
-    fn case_null() {
-        let input  = Span::new(b"null");
-        let output = Result::Done(
-            Span::new_at(b"", 4, 1, 5),
-            Literal::Null(Token::new((), input))
-        );
-
-        assert_eq!(null(input), output);
-        assert_eq!(literal(input), output);
-    }
-
-    #[test]
-    fn case_null_case_insensitive() {
-        let input  = Span::new(b"NuLl");
-        let output = Result::Done(
-            Span::new_at(b"", 4, 1, 5),
-            Literal::Null(Token::new((), Span::new(b"null")))
-        );
-
-        assert_eq!(null(input), output);
-        assert_eq!(literal(input), output);
-    }
 
     #[test]
     fn case_boolean_true() {

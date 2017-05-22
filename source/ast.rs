@@ -135,32 +135,6 @@ pub enum Literal<'a> {
     /// ```
     Integer(Token<'a, i64>),
 
-    /// A null value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::Literal;
-    /// use tagua_parser::rules::literals::literal;
-    /// use tagua_parser::tokens::{
-    ///     Span,
-    ///     Token
-    /// };
-    ///
-    /// # fn main() {
-    /// assert_eq!(
-    ///     literal(Span::new(b"null")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 4, 1, 5),
-    ///         Literal::Null(Token::new((), Span::new(b"null")))
-    ///     )
-    /// );
-    /// # }
-    /// ```
-    Null(Token<'a, ()>),
-
     /// A real, for instance an exponential number.
     ///
     /// # Examples
