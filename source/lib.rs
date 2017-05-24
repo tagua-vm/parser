@@ -53,6 +53,9 @@
 //! much as possible zero copy. We try to enforce the zero copy property to
 //! hold.
 
+// Force all public items to be documented.
+#![deny(missing_docs)]
+
 // Increase the macro recursion limit.
 #![recursion_limit="128"]
 
