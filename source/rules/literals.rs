@@ -39,6 +39,7 @@ use nom::{
     InputLength,
     Slice
 };
+use std::borrow::Cow;
 use std::num::{
     ParseFloatError,
     ParseIntError
@@ -538,27 +539,41 @@ fn string_single_quoted(span: Span) -> Result<Span, Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
-    let mut output   = Vec::new();
-    let mut offset   = 1;
-    let mut iterator = input[offset..].iter().enumerate();
+    let mut output: Option<Cow<[u8]>> = None;
+    let mut offset                    = 1;
+    let mut iterator                  = input[offset..].iter().enumerate();
+    let mut range;
 
     while let Some((index, item)) = iterator.next() {
         if *item == b'\\' {
             if let Some((next_index, next_item)) = iterator.next() {
                 if *next_item == b'\'' ||
                    *next_item == b'\\' {
-                    output.extend(&input[offset..index + 1]);
+                    range = offset..index + 1;
+
+                    if let None = output {
+                        output = Some(Cow::Borrowed(&input[range]));
+                    } else if let Some(data) = output.as_mut() {
+                        data.to_mut().extend(&input[range]);
+                    }
+
                     offset = next_index + 1;
                 }
             } else {
                 return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
             }
         } else if *item == b'\'' {
-            output.extend(&input[offset..index + 1]);
+            range = offset..index + 1;
+
+            if let None = output {
+                output = Some(Cow::Borrowed(&input[range]));
+            } else if let Some(data) = output.as_mut() {
+                data.to_mut().extend(&input[range]);
+            }
 
             return Result::Done(
                 span.slice(index + 2..),
-                Literal::String(Token::new(output, span.slice(..index + 2)))
+                Literal::String(Token::new(output.unwrap(), span.slice(..index + 2)))
             );
         }
     }
@@ -671,7 +686,12 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                 if index == 0 {
                     return Result::Done(
                         next_span.slice(lookahead_offset + 1..),
-                        Literal::String(Token::new(Vec::new(), span.slice(..span_offset + lookahead_offset - ending_offset)))
+                        Literal::String(
+                            Token::new(
+                                Cow::Borrowed(&b""[..]),
+                                span.slice(..span_offset + lookahead_offset - ending_offset)
+                            )
+                        )
                     );
                 }
 
@@ -679,7 +699,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                     next_span.slice(lookahead_offset + 1..),
                     Literal::String(
                         Token::new(
-                            next_input[offset + 1..offset - ending_offset + index].to_vec(),
+                            Cow::Borrowed(&next_input[offset + 1..offset - ending_offset + index]),
                             span.slice(..span_offset + lookahead_offset - ending_offset)
                         )
                     )

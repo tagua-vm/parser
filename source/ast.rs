@@ -31,6 +31,7 @@
 
 //! Structures that will constitute the Abstract Syntax Tree.
 
+use std::borrow::Cow;
 use super::tokens::{
     Span,
     Token
@@ -225,7 +226,7 @@ pub enum Literal<'a> {
     /// );
     /// # }
     /// ```
-    String(Token<'a, Vec<u8>>)
+    String(Token<'a, Cow<'a, [u8]>>)
 }
 
 /// A variable.
