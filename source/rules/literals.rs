@@ -1351,6 +1351,26 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_without_copy() {
+        let input = Span::new(b"'foobar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_single_quoted_escaped_quote() {
         let input  = Span::new(b"'foo\\'bar'tail");
         let output = Result::Done(
@@ -1366,6 +1386,26 @@ mod tests {
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_single_quoted_escaped_quote_with_copy() {
+        let input = Span::new(b"'foo\\'bar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Owned(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
     }
 
     #[test]
@@ -1387,6 +1427,26 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_escaped_backslash_with_copy() {
+        let input = Span::new(b"'foo\\\\bar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Owned(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_single_quoted_escaped_any() {
         let input  = Span::new(b"'foo\\nbar'tail");
         let output = Result::Done(
@@ -1402,6 +1462,26 @@ mod tests {
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_single_quoted_escaped_any_without_copy() {
+        let input = Span::new(b"'foo\\nbar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
     }
 
     #[test]
@@ -1438,6 +1518,26 @@ mod tests {
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_single_quoted_empty_without_copy() {
+        let input = Span::new(b"''tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
     }
 
     #[test]
@@ -1565,6 +1665,26 @@ mod tests {
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
+    }
+
+    #[test]
+    fn case_string_nowdoc_without_copy() {
+        let input = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\ntail");
+
+        match string_nowdoc(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
     }
 
     #[test]
