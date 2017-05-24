@@ -767,6 +767,21 @@ pub struct Token<'a, T> {
 }
 
 impl<'a, T> Token<'a, T> {
+    /// Associate a span to a datum, i.e. to the token value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::tokens::{
+    ///     Span,
+    ///     Token
+    /// };
+    ///
+    /// # fn main() {
+    /// let token = Token::new(42, Span::new(b"42"));
+    /// # }
+    /// ```
     pub fn new(value: T, span: Span<'a>) -> Self {
         Token {
             value: value,

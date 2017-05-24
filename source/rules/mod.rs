@@ -45,6 +45,30 @@ use super::ast::Expression;
 use super::internal::*;
 use super::tokens::Span;
 
+/// The `root` parser is the axiom of the grammar, i.e. the entry
+/// point of all the parsers.
+///
+/// # Examples
+///
+/// ```
+/// # extern crate tagua_parser;
+/// use tagua_parser::ast::{
+///     Expression,
+///     Literal
+/// };
+/// use tagua_parser::tokens::{
+///     Span,
+///     Token
+/// };
+/// use tagua_parser::rules::root;
+///
+/// # fn main() {
+/// let input  = Span::new(b"'Hello, World!'");
+/// let output = Expression::Literal(Literal::String(Token::new(b"Hello, World!".to_vec(), input)));
+///
+/// assert_eq!(root(input), output);
+/// # }
+/// ```
 pub fn root(input: Span) -> Expression {
     match expressions::expression(input) {
         Result::Done(_, ast) => ast,

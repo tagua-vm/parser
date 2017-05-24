@@ -41,7 +41,10 @@ use super::super::ast::Statement;
 use super::super::tokens;
 use super::super::tokens::Span;
 
-named!(
+named_attr!(
+    #[doc="
+        Recognize a group of statements.
+    "],
     pub compound_statement<Span, Vec<Statement>>,
     map_res!(
         terminated!(
@@ -58,6 +61,9 @@ named!(
 );
 
 named!(
+    #[doc="
+        Recognize a statement.
+    "],
     pub statement<Span, Statement>,
     alt!(
         call!(function::function)
