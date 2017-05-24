@@ -204,6 +204,12 @@ pub enum Literal<'a> {
 
     /// A string.
     ///
+    /// A string can borrow (`&[u8]`) or own (`Vec<u8>`) the data. It
+    /// is represented as a clone-on-write smart pointer. By default,
+    /// if the string does not contain any escaped character, it will
+    /// borrow its data. As soon as the string is extended, it will
+    /// own the data.
+    ///
     /// # Examples
     ///
     /// ```
@@ -219,10 +225,10 @@ pub enum Literal<'a> {
     ///
     /// # fn main() {
     /// assert_eq!(
-    ///     literal(Span::new(b"'foo\\'bar'")),
+    ///     literal(Span::new(b"'foobar'")),
     ///     Result::Done(
-    ///         Span::new_at(b"", 10, 1, 11),
-    ///         Literal::String(Token::new(Cow::from(&b"foo'bar"[..]), Span::new(b"'foo\\'bar'")))
+    ///         Span::new_at(b"", 8, 1, 9),
+    ///         Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new(b"'foobar'")))
     ///     )
     /// );
     /// # }
