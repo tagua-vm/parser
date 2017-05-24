@@ -52,6 +52,7 @@ use super::tokens::Span;
 ///
 /// ```
 /// # extern crate tagua_parser;
+/// use std::borrow::Cow;
 /// use tagua_parser::ast::{
 ///     Expression,
 ///     Literal
@@ -64,7 +65,7 @@ use super::tokens::Span;
 ///
 /// # fn main() {
 /// let input  = Span::new(b"'Hello, World!'");
-/// let output = Expression::Literal(Literal::String(Token::new(b"Hello, World!".to_vec(), input)));
+/// let output = Expression::Literal(Literal::String(Token::new(Cow::from(&b"Hello, World!"[..]), input)));
 ///
 /// assert_eq!(root(input), output);
 /// # }
@@ -79,6 +80,7 @@ pub fn root(input: Span) -> Expression {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use super::root;
     use super::super::ast::{
         Expression,
@@ -92,7 +94,7 @@ mod tests {
     #[test]
     fn case_root() {
         let input  = Span::new(b"'Hello, World!'");
-        let output = Expression::Literal(Literal::String(Token::new(b"Hello, World!".to_vec(), input)));
+        let output = Expression::Literal(Literal::String(Token::new(Cow::from(&b"Hello, World!"[..]), input)));
 
         assert_eq!(root(input), output);
     }

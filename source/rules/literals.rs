@@ -493,6 +493,7 @@ named_attr!(
 
         ```
         # extern crate tagua_parser;
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::string;
@@ -506,7 +507,7 @@ named_attr!(
             string(Span::new(b\"'foobar'\")),
             Result::Done(
                 Span::new_at(b\"\", 8, 1, 9),
-                Literal::String(Token::new(b\"foobar\".to_vec(), Span::new(b\"'foobar'\")))
+                Literal::String(Token::new(Cow::from(&b\"foobar\"[..]), Span::new(b\"'foobar'\")))
             )
         );
         # }
@@ -715,6 +716,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 #[cfg(test)]
 mod tests {
     use nom::Slice;
+    use std::borrow::Cow;
     use super::{
         StringError,
         binary,
@@ -1337,7 +1339,7 @@ mod tests {
             Span::new_at(b"tail", 8, 1, 9),
             Literal::String(
                 Token::new(
-                    b"foobar".to_vec(),
+                    Cow::from(&b"foobar"[..]),
                     Span::new(b"'foobar'")
                 )
             )
@@ -1355,7 +1357,7 @@ mod tests {
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
-                    b"foo'bar".to_vec(),
+                    Cow::from(&b"foo'bar"[..]),
                     Span::new(b"'foo\\'bar'")
                 )
             )
@@ -1373,7 +1375,7 @@ mod tests {
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
-                    b"foo\\bar".to_vec(),
+                    Cow::from(&b"foo\\bar"[..]),
                     Span::new(b"'foo\\\\bar'")
                 )
             )
@@ -1391,7 +1393,7 @@ mod tests {
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
-                    b"foo\\nbar".to_vec(),
+                    Cow::from(&b"foo\\nbar"[..]),
                     Span::new(b"'foo\\nbar'")
                 )
             )
@@ -1409,7 +1411,7 @@ mod tests {
             Span::new_at(b"tail", 15, 1, 16),
             Literal::String(
                 Token::new(
-                    b"'f\\oo\\bar\\".to_vec(),
+                    Cow::from(&b"'f\\oo\\bar\\"[..]),
                     Span::new(b"'\\'f\\oo\\\\bar\\\\'")
                 )
             )
@@ -1427,7 +1429,7 @@ mod tests {
             Span::new_at(b"tail", 2, 1, 3),
             Literal::String(
                 Token::new(
-                    Vec::new(),
+                    Cow::from(&b""[..]),
                     Span::new(b"''")
                 )
             )
@@ -1443,7 +1445,7 @@ mod tests {
         let input  = Span::new(b"b'foobar'");
         let output = Result::Done(
             Span::new_at(b"", 9, 1, 10),
-            Literal::String(Token::new(b"foobar".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"foobar"[..]), input.slice(1..)))
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1456,7 +1458,7 @@ mod tests {
         let input  = Span::new(b"B'foobar'");
         let output = Result::Done(
             Span::new_at(b"", 9, 1, 10),
-            Literal::String(Token::new(b"foobar".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"foobar"[..]), input.slice(1..)))
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1469,7 +1471,7 @@ mod tests {
         let input  = Span::new(b"b'\\'f\\oo\\\\bar'");
         let output = Result::Done(
             Span::new_at(b"", 14, 1, 15),
-            Literal::String(Token::new(b"'f\\oo\\bar".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"'f\\oo\\bar"[..]), input.slice(1..)))
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1554,7 +1556,7 @@ mod tests {
             Span::new_at(b"tail", 30, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \n  world ".to_vec(),
+                    Cow::from(&b"hello \n  world "[..]),
                     Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\n")
                 )
             )
@@ -1572,7 +1574,7 @@ mod tests {
             Span::new_at(b"tail", 34, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \r\n  world ".to_vec(),
+                    Cow::from(&b"hello \r\n  world "[..]),
                     Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\n")
                 )
             )
@@ -1590,7 +1592,7 @@ mod tests {
             Span::new_at(b"tail", 29, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \n  world ".to_vec(),
+                    Cow::from(&b"hello \n  world "[..]),
                     Span::new(b"<<<'FOO'\nhello \n  world \nFOO\n")
                 )
             )
@@ -1608,7 +1610,7 @@ mod tests {
             Span::new_at(b"tail", 33, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \r\n  world ".to_vec(),
+                    Cow::from(&b"hello \r\n  world "[..]),
                     Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
                 )
             )
@@ -1626,7 +1628,7 @@ mod tests {
             Span::new_at(b"tail", 13, 3, 1),
             Literal::String(
                 Token::new(
-                    Vec::new(),
+                    Cow::from(&b""[..]),
                     Span::new(b"<<<'FOO'\nFOO\n")
                 )
             )
@@ -1644,7 +1646,7 @@ mod tests {
             Span::new_at(b"tail", 15, 3, 1),
             Literal::String(
                 Token::new(
-                    Vec::new(),
+                    Cow::from(&b""[..]),
                     Span::new(b"<<<'FOO'\r\nFOO\r\n")
                 )
             )
@@ -1662,7 +1664,7 @@ mod tests {
             Span::new_at(b"tail", 35, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \n  world ".to_vec(),
+                    Cow::from(&b"hello \n  world "[..]),
                     Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\n")
                 )
             )
@@ -1680,7 +1682,7 @@ mod tests {
             Span::new_at(b"tail", 39, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \r\n  world ".to_vec(),
+                    Cow::from(&b"hello \r\n  world "[..]),
                     Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
                 )
             )
@@ -1696,7 +1698,7 @@ mod tests {
         let input  = Span::new(b"b<<<'FOO'\nhello \n  world \nFOO\n");
         let output = Result::Done(
             Span::new_at(b"", 30, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1709,7 +1711,7 @@ mod tests {
         let input  = Span::new(b"b<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
         let output = Result::Done(
             Span::new_at(b"", 34, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \r\n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1722,7 +1724,7 @@ mod tests {
         let input  = Span::new(b"B<<<'FOO'\nhello \n  world \nFOO\n");
         let output = Result::Done(
             Span::new_at(b"", 30, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1735,7 +1737,7 @@ mod tests {
         let input  = Span::new(b"B<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
         let output = Result::Done(
             Span::new_at(b"", 34, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \r\n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
