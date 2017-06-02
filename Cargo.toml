@@ -60,7 +60,7 @@ bytecount   = "~0.1"
 memchr      = "~1.0"
 
 [dependencies.nom]
-version  = "~2.2"
+version  = "~3.0"
 features = ["regexp", "regexp_macros", "verbose-errors"]
 
 [dev-dependencies]
