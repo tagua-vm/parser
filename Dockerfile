@@ -1,12 +1,14 @@
 FROM debian:jessie
 
 ENV ARCH=x86_64-unknown-linux-gnu
-ENV RUST_RELEASE=1.11.0
+ENV RUST_RELEASE=1.13.0
 ENV CARGO_RELEASE=nightly
 
+# see https://github.com/rust-lang/cargo/issues/598 & https://github.com/rust-lang/cargo/pull/3342
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
 RUN apt-get update && \
-    apt-get install -y curl vim gcc libssl-dev libedit-dev libstdc++-4.9-dev && \
-    find /usr/bin -executable -iname llvm* | xargs -n1 -I file echo ln -s file file | sed s/-$LLVM_RELEASE$// | bash
+    apt-get install -y curl vim gcc libssl-dev libedit-dev libstdc++-4.9-dev
 
 RUN curl -sL https://static.rust-lang.org/dist/rust-$RUST_RELEASE-$ARCH.tar.gz | tar xvz -C /tmp && \
     /tmp/rust-$RUST_RELEASE-$ARCH/install.sh && \

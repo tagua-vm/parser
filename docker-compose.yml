@@ -1,0 +1,6 @@
+version: "2"
+services:
+  dev:
+    build: .
+    volumes:
+      - ./:/source/:rw
