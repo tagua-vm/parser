@@ -31,6 +31,8 @@
 
 //! Internal utilities for the parser.
 
+use smallvec::VecLike;
+
 /// Contain the error that a parser can return.
 pub use nom::Err as Error;
 
@@ -75,7 +77,7 @@ pub type Input<'a> = &'a [InputElement];
 /// assert_eq!(test(&b"abcabc"[..]), Result::Done(&b""[..], vec![&b"abc"[..], &b"abc"[..]]));
 /// # }
 /// ```
-pub fn fold_into_vector<T>(mut accumulator: Vec<T>, item: T) -> Vec<T> {
+pub fn fold_into_vector<I, V: VecLike<I>>(mut accumulator: V, item: I) -> V {
     accumulator.push(item);
 
     accumulator

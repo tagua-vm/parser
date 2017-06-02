@@ -59,13 +59,14 @@
 // Increase the macro recursion limit.
 #![recursion_limit="128"]
 
+extern crate bytecount;
 #[macro_use]
 extern crate lazy_static;
+extern crate memchr;
 #[macro_use]
 extern crate nom;
 extern crate regex;
-extern crate memchr;
-extern crate bytecount;
+extern crate smallvec;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;

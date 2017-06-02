@@ -35,6 +35,7 @@
 //! the [Grammar chapter, Tokens
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#tokens).
 
+use smallvec::SmallVec;
 use super::super::ast::{
     Name,
     Variable
@@ -157,8 +158,8 @@ named_attr!(
 );
 
 #[inline]
-fn wrap_into_vector_mapper(span: Span) -> Result<Vec<Span>, ()> {
-    Ok(vec![span])
+fn wrap_into_vector_mapper(span: Span) -> Result<SmallVec<[Span; 5]>, ()> {
+    Ok(smallvec![span])
 }
 
 named_attr!(

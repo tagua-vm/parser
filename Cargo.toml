@@ -54,10 +54,11 @@ simd = ["bytecount/simd-accel"]
 avx  = ["bytecount/avx-accel"]
 
 [dependencies]
-lazy_static = "~0.2"
-regex       = "~0.2"
 bytecount   = "~0.1"
+lazy_static = "~0.2"
 memchr      = "~1.0"
+regex       = "~0.2"
+smallvec    = "~0.4"
 
 [dependencies.nom]
 version  = "~3.0"

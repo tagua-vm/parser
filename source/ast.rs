@@ -31,6 +31,7 @@
 
 //! Structures that will constitute the Abstract Syntax Tree.
 
+use smallvec::SmallVec;
 use std::borrow::Cow;
 use super::tokens::{
     Span,
@@ -347,7 +348,7 @@ pub enum Name<'a> {
     /// );
     /// # }
     /// ```
-    Qualified(Vec<Span<'a>>),
+    Qualified(SmallVec<[Span<'a>; 5]>),
 
     /// A relative qualified name, i.e. a name in a relative namespace
     /// restricted to the current namespace, like `namespace\Foo\Bar`.
@@ -378,7 +379,7 @@ pub enum Name<'a> {
     /// # }
     /// ```
     /// Note that the `namespace` part is not present.
-    RelativeQualified(Vec<Span<'a>>),
+    RelativeQualified(SmallVec<[Span<'a>; 5]>),
 
     /// A fully qualified name, i.e. a name in an absolute namespace, like
     /// `\Foo\Bar`.
@@ -409,7 +410,7 @@ pub enum Name<'a> {
     /// # }
     /// ```
     /// Note that the leading `\` part is not present.
-    FullyQualified(Vec<Span<'a>>)
+    FullyQualified(SmallVec<[Span<'a>; 5]>)
 }
 
 /// An expression.

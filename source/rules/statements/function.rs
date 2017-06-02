@@ -438,7 +438,7 @@ named!(
 
 #[inline]
 fn native_type_mapper(native_type_name: Span) -> Result<Name, ()> {
-    Ok(Name::FullyQualified(vec![native_type_name]))
+    Ok(Name::FullyQualified(smallvec![native_type_name]))
 }
 
 #[inline]

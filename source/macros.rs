@@ -349,6 +349,16 @@ macro_rules! regex (
     )
 );
 
+#[macro_export]
+macro_rules! smallvec [
+    ($($e:expr),*) => ({
+        let mut output = ::smallvec::SmallVec::new();
+        $(output.push($e);)*
+
+        output
+    })
+];
+
 
 #[cfg(test)]
 mod tests {
