@@ -68,7 +68,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::literal;
@@ -105,7 +104,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::null;
@@ -144,7 +142,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::boolean;
@@ -185,7 +182,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::integer;
@@ -221,7 +217,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::binary;
@@ -269,7 +264,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::octal;
@@ -323,7 +317,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::decimal;
@@ -381,7 +374,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::decimal;
@@ -429,7 +421,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::exponential;
@@ -492,7 +483,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;

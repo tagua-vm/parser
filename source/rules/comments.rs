@@ -47,7 +47,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::rules::comments::comment;
         use tagua_parser::tokens::Span;

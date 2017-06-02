@@ -48,7 +48,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};

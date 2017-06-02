@@ -90,6 +90,9 @@ named_attr!(
         The arity of this function is finite.
 
         ```
+        # extern crate smallvec;
+        # #[macro_use]
+        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::{
             Arity,
@@ -121,12 +124,12 @@ named_attr!(
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"I\", 17, 1, 18), Span::new_at(b\"J\", 19, 1, 20)]))),
+                                ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b\"I\", 17, 1, 18), Span::new_at(b\"J\", 19, 1, 20)]))),
                                 name : Variable(Span::new_at(b\"y\", 22, 1, 23)),
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 25, 1, 26)]))),
+                                ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b\"int\", 25, 1, 26)]))),
                                 name : Variable(Span::new_at(b\"z\", 31, 1, 32)),
                                 value: None
                             }
@@ -145,6 +148,9 @@ named_attr!(
         arguments.
 
         ```
+        # extern crate smallvec;
+        # #[macro_use]
+        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::{
             Arity,
@@ -176,7 +182,7 @@ named_attr!(
                                 value: None
                             },
                             Parameter {
-                                ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 15, 1, 16)]))),
+                                ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b\"int\", 15, 1, 16)]))),
                                 name : Variable(Span::new_at(b\"y\", 23, 1, 24)),
                                 value: None
                             }
@@ -225,6 +231,9 @@ named_attr!(
         # Examples
 
         ```
+        # extern crate smallvec;
+        # #[macro_use]
+        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::{
             Arity,
@@ -251,12 +260,12 @@ named_attr!(
                         value: None
                     },
                     Parameter {
-                        ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b\"I\", 6, 1, 7), Span::new_at(b\"J\", 8, 1, 9)]))),
+                        ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b\"I\", 6, 1, 7), Span::new_at(b\"J\", 8, 1, 9)]))),
                         name : Variable(Span::new_at(b\"y\", 11, 1, 12)),
                         value: None
                     },
                     Parameter {
-                        ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b\"int\", 14, 1, 15)]))),
+                        ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b\"int\", 14, 1, 15)]))),
                         name : Variable(Span::new_at(b\"z\", 20, 1, 21)),
                         value: None
                     }
@@ -402,6 +411,9 @@ named!(
         # Examples
 
         ```
+        # extern crate smallvec;
+        # #[macro_use]
+        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Name;
         use tagua_parser::rules::statements::function::native_type;
@@ -415,7 +427,7 @@ named!(
             native_type(Span::new(b\"int\")),
             Result::Done(
                 Span::new_at(b\"\", 3, 1, 4),
-                Name::FullyQualified(vec![Span::new(b\"int\")])
+                Name::FullyQualified(smallvec![Span::new(b\"int\")])
             )
         );
         # }
@@ -560,17 +572,17 @@ mod tests {
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"I", 15, 1, 16), Span::new_at(b"J", 17, 1, 18)]))),
+                            ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"I", 15, 1, 16), Span::new_at(b"J", 17, 1, 18)]))),
                             name : Variable(Span::new_at(b"b", 20, 1, 21)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 23, 1, 24)]))),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 23, 1, 24)]))),
                             name : Variable(Span::new_at(b"c", 29, 1, 30)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"K", 33, 1, 34)]))),
+                            ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b"K", 33, 1, 34)]))),
                             name : Variable(Span::new_at(b"d", 36, 1, 37)),
                             value: None
                         }
@@ -600,12 +612,12 @@ mod tests {
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"I", 15, 1, 16), Span::new_at(b"J", 17, 1, 18)]))),
+                            ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"I", 15, 1, 16), Span::new_at(b"J", 17, 1, 18)]))),
                             name : Variable(Span::new_at(b"b", 20, 1, 21)),
                             value: None
                         },
                         Parameter {
-                            ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 23, 1, 24)]))),
+                            ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 23, 1, 24)]))),
                             name : Variable(Span::new_at(b"c", 32, 1, 33)),
                             value: None
                         }
@@ -629,7 +641,7 @@ mod tests {
                 Function {
                     name  : Span::new_at(b"f", 9, 1, 10),
                     inputs: Arity::Constant,
-                    output: Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"O", 15, 1, 16)]))),
+                    output: Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b"O", 15, 1, 16)]))),
                     body  : vec![Statement::Return]
                 }
             )
@@ -648,7 +660,7 @@ mod tests {
                 Function {
                     name  : Span::new_at(b"f", 10, 1, 11),
                     inputs: Arity::Constant,
-                    output: Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 15, 1, 16)]))),
+                    output: Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 15, 1, 16)]))),
                     body  : vec![Statement::Return]
                 }
             )
@@ -707,7 +719,7 @@ mod tests {
             Span::new_at(b"", 10, 1, 11),
             Arity::Finite(vec![
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"A", 1, 1, 2), Span::new_at(b"B", 3, 1, 4), Span::new_at(b"C", 5, 1, 6)]))),
+                    ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"A", 1, 1, 2), Span::new_at(b"B", 3, 1, 4), Span::new_at(b"C", 5, 1, 6)]))),
                     name : Variable(Span::new_at(b"x", 8, 1, 9)),
                     value: None
                 }
@@ -724,7 +736,7 @@ mod tests {
             Span::new_at(b"", 9, 1, 10),
             Arity::Finite(vec![
                 Parameter {
-                    ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 1, 1, 2)]))),
+                    ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 1, 1, 2)]))),
                     name : Variable(Span::new_at(b"x", 7, 1, 8)),
                     value: None
                 }
@@ -809,7 +821,7 @@ mod tests {
             Span::new_at(b"", 16, 1, 17),
             Arity::Finite(vec![
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"float", 1, 1, 2)]))),
+                    ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b"float", 1, 1, 2)]))),
                     name : Variable(Span::new_at(b"x", 8, 1, 9)),
                     value: Some(Expression::Literal(Literal::Real(Token::new(4.2f64, Span::new_at(b"4.2", 12, 1, 13)))))
                 }
@@ -826,7 +838,7 @@ mod tests {
             Span::new_at(b"", 29, 1, 30),
             Arity::Finite(vec![
                 Parameter {
-                    ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"array", 1, 1, 2)]))),
+                    ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"array", 1, 1, 2)]))),
                     name : Variable(Span::new_at(b"x", 9, 1, 10)),
                     value: Some(
                         Expression::Array(vec![
@@ -884,7 +896,7 @@ mod tests {
             Span::new_at(b"", 13, 1, 14),
             Arity::Infinite(vec![
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"A", 1, 1, 2), Span::new_at(b"B", 3, 1, 4), Span::new_at(b"C", 5, 1, 6)]))),
+                    ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"A", 1, 1, 2), Span::new_at(b"B", 3, 1, 4), Span::new_at(b"C", 5, 1, 6)]))),
                     name : Variable(Span::new_at(b"x", 11, 1, 12)),
                     value: None
                 }
@@ -901,7 +913,7 @@ mod tests {
             Span::new_at(b"", 12, 1, 13),
             Arity::Infinite(vec![
                 Parameter {
-                    ty   : Ty::Reference(Some(Name::FullyQualified(vec![Span::new_at(b"int", 1, 1, 2)]))),
+                    ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 1, 1, 2)]))),
                     name : Variable(Span::new_at(b"x", 10, 1, 11)),
                     value: None
                 }
@@ -923,12 +935,12 @@ mod tests {
                     value: None
                 },
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"int", 6, 1, 7)]))),
+                    ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 6, 1, 7)]))),
                     name : Variable(Span::new_at(b"y", 11, 1, 12)),
                     value: None
                 },
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"I", 14, 1, 15), Span::new_at(b"J", 16, 1, 17)]))),
+                    ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"I", 14, 1, 15), Span::new_at(b"J", 16, 1, 17)]))),
                     name : Variable(Span::new_at(b"z", 19, 1, 20)),
                     value: None
                 }
@@ -950,12 +962,12 @@ mod tests {
                     value: None
                 },
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::FullyQualified(vec![Span::new_at(b"int", 6, 1, 7)]))),
+                    ty   : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 6, 1, 7)]))),
                     name : Variable(Span::new_at(b"y", 11, 1, 12)),
                     value: None
                 },
                 Parameter {
-                    ty   : Ty::Copy(Some(Name::Qualified(vec![Span::new_at(b"I", 14, 1, 15), Span::new_at(b"J", 16, 1, 17)]))),
+                    ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"I", 14, 1, 15), Span::new_at(b"J", 16, 1, 17)]))),
                     name : Variable(Span::new_at(b"z", 22, 1, 23)),
                     value: None
                 }
@@ -996,7 +1008,7 @@ mod tests {
                 let input  = Span::new($name);
                 let output = Result::Done(
                     Span::new_at(b"", $name.len(), 1, $name.len() as u32 + 1),
-                    Name::FullyQualified(vec![input])
+                    Name::FullyQualified(smallvec![input])
                 );
 
                 assert_eq!(native_type(input), output);

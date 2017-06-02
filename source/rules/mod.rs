@@ -51,7 +51,6 @@ use super::tokens::Span;
 /// # Examples
 ///
 /// ```
-/// # extern crate tagua_parser;
 /// use std::borrow::Cow;
 /// use tagua_parser::ast::{
 ///     Expression,

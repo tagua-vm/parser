@@ -326,6 +326,8 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
+    /// # extern crate smallvec;
+    /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
@@ -340,7 +342,7 @@ pub enum Name<'a> {
     ///     qualified_name(Span::new(b"Foo\\Bar")),
     ///     Result::Done(
     ///         Span::new_at(b"", 7, 1, 8),
-    ///         Name::Qualified(vec![
+    ///         Name::Qualified(smallvec![
     ///             Span::new(b"Foo"),
     ///             Span::new_at(b"Bar", 4, 1, 5)
     ///         ])
@@ -356,6 +358,8 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
+    /// # extern crate smallvec;
+    /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
@@ -370,7 +374,7 @@ pub enum Name<'a> {
     ///     qualified_name(Span::new(b"namespace\\Foo\\Bar")),
     ///     Result::Done(
     ///         Span::new_at(b"", 17, 1, 18),
-    ///         Name::RelativeQualified(vec![
+    ///         Name::RelativeQualified(smallvec![
     ///             Span::new_at(b"Foo", 10, 1, 11),
     ///             Span::new_at(b"Bar", 14, 1, 15)
     ///         ])
@@ -387,6 +391,8 @@ pub enum Name<'a> {
     /// # Examples
     ///
     /// ```
+    /// # extern crate smallvec;
+    /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
@@ -401,7 +407,7 @@ pub enum Name<'a> {
     ///     qualified_name(Span::new(b"\\Foo\\Bar")),
     ///     Result::Done(
     ///         Span::new_at(b"", 8, 1, 9),
-    ///         Name::FullyQualified(vec![
+    ///         Name::FullyQualified(smallvec![
     ///             Span::new_at(b"Foo", 1, 1, 2),
     ///             Span::new_at(b"Bar", 5, 1, 6)
     ///         ])
@@ -790,6 +796,8 @@ pub enum Expression<'a> {
     /// # Examples
     ///
     /// ```
+    /// # extern crate smallvec;
+    /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Name};
@@ -805,7 +813,7 @@ pub enum Expression<'a> {
     ///     Result::Done(
     ///         Span::new_at(b"", 7, 1, 8),
     ///         Expression::Name(
-    ///             Name::Qualified(vec![
+    ///             Name::Qualified(smallvec![
     ///                 Span::new(b"Foo"),
     ///                 Span::new_at(b"Bar", 4, 1, 5)
     ///             ])

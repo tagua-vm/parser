@@ -50,7 +50,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Variable;
         use tagua_parser::rules::tokens::variable;
@@ -92,6 +91,8 @@ named_attr!(
         # Examples
 
         ```
+        # extern crate smallvec;
+        # #[macro_use]
         # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::Name;
@@ -103,7 +104,7 @@ named_attr!(
             qualified_name(Span::new(b\"Foo\\\\Bar\\\\Baz\")),
             Result::Done(
                 Span::new_at(b\"\", 11, 1, 12),
-                Name::Qualified(vec![
+                Name::Qualified(smallvec![
                     Span::new_at(b\"Foo\", 0, 1, 1),
                     Span::new_at(b\"Bar\", 4, 1, 5),
                     Span::new_at(b\"Baz\", 8, 1, 9)
@@ -169,7 +170,6 @@ named_attr!(
         # Examples
 
         ```
-        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::rules::tokens::name;
         use tagua_parser::tokens::Span;
@@ -262,7 +262,7 @@ mod tests {
         let input  = Span::new(b"Foo\\Bar\\Baz");
         let output = Result::Done(
             Span::new_at(b"", 11, 1, 12),
-            Name::Qualified(vec![
+            Name::Qualified(smallvec![
                 Span::new(b"Foo"),
                 Span::new_at(b"Bar", 4, 1, 5),
                 Span::new_at(b"Baz", 8, 1, 9)
@@ -275,8 +275,8 @@ mod tests {
     #[test]
     fn case_qualified_name_vector_capacity() {
         if let Result::Done(_, Name::Qualified(vector)) = qualified_name(Span::new(b"Foo\\Bar\\Baz")) {
-            assert_eq!(vector.capacity(), vector.len());
-            assert_eq!(vector.len(), 3);
+            assert!(vector.capacity() >= vector.len());
+            assert!(vector.len() >= 3);
         } else {
             assert!(false);
         }
@@ -287,7 +287,7 @@ mod tests {
         let input  = Span::new(b"Foo\n/* baz */ \\ Bar /* qux */\\");
         let output = Result::Done(
             Span::new_at(b" /* qux */\\", 19, 2, 16),
-            Name::Qualified(vec![
+            Name::Qualified(smallvec![
                 Span::new(b"Foo"),
                 Span::new_at(b"Bar", 16, 2, 13)
             ])
@@ -319,7 +319,7 @@ mod tests {
         let input  = Span::new(b"namespace\\Foo\\Bar\\Baz");
         let output = Result::Done(
             Span::new_at(b"", 21, 1, 22),
-            Name::RelativeQualified(vec![
+            Name::RelativeQualified(smallvec![
                 Span::new_at(b"Foo", 10, 1, 11),
                 Span::new_at(b"Bar", 14, 1, 15),
                 Span::new_at(b"Baz", 18, 1, 19)
@@ -332,8 +332,8 @@ mod tests {
     #[test]
     fn case_relative_qualified_name_vector_capacity() {
         if let Result::Done(_, Name::RelativeQualified(vector)) = qualified_name(Span::new(b"namespace\\Foo\\Bar\\Baz")) {
-            assert_eq!(vector.capacity(), vector.len());
-            assert_eq!(vector.len(), 3);
+            assert!(vector.capacity() >= vector.len());
+            assert!(vector.len() >= 3);
         } else {
             assert!(false);
         }
@@ -344,7 +344,7 @@ mod tests {
         let input  = Span::new(b"NaMeSpAcE\\Foo\\Bar\\Baz");
         let output = Result::Done(
             Span::new_at(b"", 21, 1, 22),
-            Name::RelativeQualified(vec![
+            Name::RelativeQualified(smallvec![
                 Span::new_at(b"Foo", 10, 1, 11),
                 Span::new_at(b"Bar", 14, 1, 15),
                 Span::new_at(b"Baz", 18, 1, 19)
@@ -359,7 +359,7 @@ mod tests {
         let input  = Span::new(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\");
         let output = Result::Done(
             Span::new_at(b" /* hello */\\", 40, 2, 16),
-            Name::RelativeQualified(vec![
+            Name::RelativeQualified(smallvec![
                 Span::new_at(b"Foo", 21, 1, 22),
                 Span::new_at(b"Bar", 37, 2, 13)
             ])
@@ -377,14 +377,14 @@ mod tests {
             qualified_name(input1),
             Result::Done(
                 Span::new_at(b"\\namespace\\Baz", 13, 1, 14),
-                Name::RelativeQualified(vec![Span::new_at(b"Foo", 10, 1, 11)])
+                Name::RelativeQualified(smallvec![Span::new_at(b"Foo", 10, 1, 11)])
             )
         );
         assert_eq!(
             qualified_name(input2),
             Result::Done(
                 Span::new_at(b"\\NaMeSpAcE\\Baz", 13, 1, 14),
-                Name::RelativeQualified(vec![Span::new_at(b"Foo", 10, 1, 11)])
+                Name::RelativeQualified(smallvec![Span::new_at(b"Foo", 10, 1, 11)])
             )
         );
     }
@@ -403,7 +403,7 @@ mod tests {
         let input  = Span::new(b"\\Foo\\Bar\\Baz");
         let output = Result::Done(
             Span::new_at(b"", 12, 1, 13),
-            Name::FullyQualified(vec![
+            Name::FullyQualified(smallvec![
                 Span::new_at(b"Foo", 1, 1, 2),
                 Span::new_at(b"Bar", 5, 1, 6),
                 Span::new_at(b"Baz", 9, 1, 10)
@@ -416,8 +416,8 @@ mod tests {
     #[test]
     fn case_fully_qualified_name_vector_capacity() {
         if let Result::Done(_, Name::FullyQualified(vector)) = qualified_name(Span::new(b"\\Foo\\Bar\\Baz")) {
-            assert_eq!(vector.capacity(), vector.len());
-            assert_eq!(vector.len(), 3);
+            assert!(vector.capacity() >= vector.len());
+            assert!(vector.len() >= 3);
         } else {
             assert!(false);
         }
@@ -428,7 +428,7 @@ mod tests {
         let input  = Span::new(b"\\Foo");
         let output = Result::Done(
             Span::new_at(b"", 4, 1, 5),
-            Name::FullyQualified(vec![Span::new_at(b"Foo", 1, 1, 2)])
+            Name::FullyQualified(smallvec![Span::new_at(b"Foo", 1, 1, 2)])
         );
 
         assert_eq!(qualified_name(input), output);
@@ -455,7 +455,7 @@ mod tests {
         let input  = Span::new(b"Foo\\Bar\\");
         let output = Result::Done(
             Span::new_at(b"\\", 7, 1, 8),
-            Name::Qualified(vec![
+            Name::Qualified(smallvec![
                 Span::new(b"Foo"),
                 Span::new_at(b"Bar", 4, 1, 5)
             ])
