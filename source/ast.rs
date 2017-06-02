@@ -31,6 +31,7 @@
 
 //! Structures that will constitute the Abstract Syntax Tree.
 
+use std::borrow::Cow;
 use super::tokens::{
     Span,
     Token
@@ -203,10 +204,17 @@ pub enum Literal<'a> {
 
     /// A string.
     ///
+    /// A string can borrow (`&[u8]`) or own (`Vec<u8>`) the data. It
+    /// is represented as a clone-on-write smart pointer. By default,
+    /// if the string does not contain any escaped character, it will
+    /// borrow its data. As soon as the string is extended, it will
+    /// own the data.
+    ///
     /// # Examples
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
@@ -217,15 +225,15 @@ pub enum Literal<'a> {
     ///
     /// # fn main() {
     /// assert_eq!(
-    ///     literal(Span::new(b"'foo\\'bar'")),
+    ///     literal(Span::new(b"'foobar'")),
     ///     Result::Done(
-    ///         Span::new_at(b"", 10, 1, 11),
-    ///         Literal::String(Token::new(b"foo'bar".to_vec(), Span::new(b"'foo\\'bar'")))
+    ///         Span::new_at(b"", 8, 1, 9),
+    ///         Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new(b"'foobar'")))
     ///     )
     /// );
     /// # }
     /// ```
-    String(Token<'a, Vec<u8>>)
+    String(Token<'a, Cow<'a, [u8]>>)
 }
 
 /// A variable.
@@ -471,6 +479,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
@@ -487,14 +496,14 @@ pub enum Expression<'a> {
     ///         Expression::Array(vec![
     ///             (
     ///                 None,
-    ///                 Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))))
+    ///                 Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 1, 1, 2))))
     ///             ),
     ///             (
     ///                 Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 8, 1, 9))))),
-    ///                 Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 14, 1, 15))))
+    ///                 Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 14, 1, 15))))
     ///             ),
     ///             (
-    ///                 Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 21, 1, 22))))),
+    ///                 Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 21, 1, 22))))),
     ///                 Expression::Variable(Variable(Span::new_at(b"qux", 31, 1, 32)))
     ///             )
     ///         ])
@@ -512,6 +521,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
@@ -526,7 +536,7 @@ pub enum Expression<'a> {
     ///     Result::Done(
     ///         Span::new_at(b"", 26, 1, 27),
     ///         Expression::Echo(vec![
-    ///             Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 5, 1, 6)))),
+    ///             Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 5, 1, 6)))),
     ///             Expression::Variable(Variable(Span::new_at(b"bazqux", 16, 1, 17))),
     ///             Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 24, 1, 25))))
     ///         ])
@@ -543,6 +553,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
@@ -559,7 +570,7 @@ pub enum Expression<'a> {
     ///         Expression::Empty(
     ///             Box::new(
     ///                 Expression::Literal(
-    ///                     Literal::String(Token::new(b"".to_vec(), Span::new_at(b"''", 6, 1, 7)))
+    ///                     Literal::String(Token::new(Cow::from(&b""[..]), Span::new_at(b"''", 6, 1, 7)))
     ///                 )
     ///             )
     ///         )
@@ -575,6 +586,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
@@ -591,7 +603,7 @@ pub enum Expression<'a> {
     ///         Expression::Eval(
     ///             Box::new(
     ///                 Expression::Literal(
-    ///                     Literal::String(Token::new(b"1 + 2;".to_vec(), Span::new_at(b"'1 + 2;'", 5, 1, 6)))
+    ///                     Literal::String(Token::new(Cow::from(&b"1 + 2;"[..]), Span::new_at(b"'1 + 2;'", 5, 1, 6)))
     ///                 )
     ///             )
     ///         )
@@ -674,6 +686,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal, Variable};
     /// use tagua_parser::rules::expressions::expression;
@@ -689,15 +702,15 @@ pub enum Expression<'a> {
     ///         Span::new_at(b"", 49, 1, 50),
     ///         Expression::List(vec![
     ///             Some((
-    ///                 Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+    ///                 Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 5, 1, 6))))),
     ///                 Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
     ///             )),
     ///             Some((
-    ///                 Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 20, 1, 21))))),
+    ///                 Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 20, 1, 21))))),
     ///                 Expression::Variable(Variable(Span::new_at(b"bar", 30, 1, 31)))
     ///             )),
     ///             Some((
-    ///                 Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 35, 1, 36))))),
+    ///                 Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 35, 1, 36))))),
     ///                 Expression::Variable(Variable(Span::new_at(b"baz", 45, 1, 46)))
     ///             ))
     ///         ])
@@ -750,6 +763,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
@@ -763,7 +777,7 @@ pub enum Expression<'a> {
     ///     expression(Span::new(b"'Hello, World!'")),
     ///     Result::Done(
     ///         Span::new_at(b"", 15, 1, 16),
-    ///         Expression::Literal(Literal::String(Token::new(b"Hello, World!".to_vec(), Span::new(b"'Hello, World!'"))))
+    ///         Expression::Literal(Literal::String(Token::new(Cow::from(&b"Hello, World!"[..]), Span::new(b"'Hello, World!'"))))
     ///     )
     /// );
     /// # }

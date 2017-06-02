@@ -468,6 +468,7 @@ fn into_function<'a>(
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use super::{
         function,
         native_type,
@@ -793,7 +794,7 @@ mod tests {
                 Parameter {
                     ty   : Ty::Reference(None),
                     name : Variable(Span::new_at(b"x", 3, 1, 4)),
-                    value: Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 7, 1, 8)))))
+                    value: Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 7, 1, 8)))))
                 }
             ])
         );
@@ -830,7 +831,7 @@ mod tests {
                     value: Some(
                         Expression::Array(vec![
                             (
-                                Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 14, 1, 15))))),
+                                Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 14, 1, 15))))),
                                 Expression::Name(Name::Unqualified(Span::new_at(b"true", 23, 1, 24)))
                             )
                         ])

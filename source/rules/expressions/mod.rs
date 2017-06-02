@@ -49,6 +49,7 @@ named_attr!(
 
         ```
         # extern crate tagua_parser;
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::expression;
@@ -66,7 +67,7 @@ named_attr!(
                     Expression::Literal(
                         Literal::String(
                             Token::new(
-                                b\"Hello, World!\".to_vec(),
+                                Cow::from(&b\"Hello, World!\"[..]),
                                 Span::new_at(b\"'Hello, World!'\", 5, 1, 6)
                             )
                         )

@@ -39,6 +39,7 @@ use nom::{
     InputLength,
     Slice
 };
+use std::borrow::Cow;
 use std::num::{
     ParseFloatError,
     ParseIntError
@@ -492,6 +493,7 @@ named_attr!(
 
         ```
         # extern crate tagua_parser;
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
         use tagua_parser::rules::literals::string;
@@ -505,7 +507,7 @@ named_attr!(
             string(Span::new(b\"'foobar'\")),
             Result::Done(
                 Span::new_at(b\"\", 8, 1, 9),
-                Literal::String(Token::new(b\"foobar\".to_vec(), Span::new(b\"'foobar'\")))
+                Literal::String(Token::new(Cow::from(&b\"foobar\"[..]), Span::new(b\"'foobar'\")))
             )
         );
         # }
@@ -538,27 +540,41 @@ fn string_single_quoted(span: Span) -> Result<Span, Literal> {
         return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
     }
 
-    let mut output   = Vec::new();
-    let mut offset   = 1;
-    let mut iterator = input[offset..].iter().enumerate();
+    let mut output: Option<Cow<[u8]>> = None;
+    let mut offset                    = 1;
+    let mut iterator                  = input[offset..].iter().enumerate();
+    let mut range;
 
     while let Some((index, item)) = iterator.next() {
         if *item == b'\\' {
             if let Some((next_index, next_item)) = iterator.next() {
                 if *next_item == b'\'' ||
                    *next_item == b'\\' {
-                    output.extend(&input[offset..index + 1]);
+                    range = offset..index + 1;
+
+                    if let None = output {
+                        output = Some(Cow::Borrowed(&input[range]));
+                    } else if let Some(data) = output.as_mut() {
+                        data.to_mut().extend(&input[range]);
+                    }
+
                     offset = next_index + 1;
                 }
             } else {
                 return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
             }
         } else if *item == b'\'' {
-            output.extend(&input[offset..index + 1]);
+            range = offset..index + 1;
+
+            if let None = output {
+                output = Some(Cow::Borrowed(&input[range]));
+            } else if let Some(data) = output.as_mut() {
+                data.to_mut().extend(&input[range]);
+            }
 
             return Result::Done(
                 span.slice(index + 2..),
-                Literal::String(Token::new(output, span.slice(..index + 2)))
+                Literal::String(Token::new(output.unwrap(), span.slice(..index + 2)))
             );
         }
     }
@@ -671,7 +687,12 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                 if index == 0 {
                     return Result::Done(
                         next_span.slice(lookahead_offset + 1..),
-                        Literal::String(Token::new(Vec::new(), span.slice(..span_offset + lookahead_offset - ending_offset)))
+                        Literal::String(
+                            Token::new(
+                                Cow::Borrowed(&b""[..]),
+                                span.slice(..span_offset + lookahead_offset - ending_offset)
+                            )
+                        )
                     );
                 }
 
@@ -679,7 +700,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                     next_span.slice(lookahead_offset + 1..),
                     Literal::String(
                         Token::new(
-                            next_input[offset + 1..offset - ending_offset + index].to_vec(),
+                            Cow::Borrowed(&next_input[offset + 1..offset - ending_offset + index]),
                             span.slice(..span_offset + lookahead_offset - ending_offset)
                         )
                     )
@@ -695,6 +716,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 #[cfg(test)]
 mod tests {
     use nom::Slice;
+    use std::borrow::Cow;
     use super::{
         StringError,
         binary,
@@ -1317,7 +1339,7 @@ mod tests {
             Span::new_at(b"tail", 8, 1, 9),
             Literal::String(
                 Token::new(
-                    b"foobar".to_vec(),
+                    Cow::from(&b"foobar"[..]),
                     Span::new(b"'foobar'")
                 )
             )
@@ -1329,13 +1351,33 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_without_copy() {
+        let input = Span::new(b"'foobar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_single_quoted_escaped_quote() {
         let input  = Span::new(b"'foo\\'bar'tail");
         let output = Result::Done(
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
-                    b"foo'bar".to_vec(),
+                    Cow::from(&b"foo'bar"[..]),
                     Span::new(b"'foo\\'bar'")
                 )
             )
@@ -1347,13 +1389,33 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_escaped_quote_with_copy() {
+        let input = Span::new(b"'foo\\'bar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Owned(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_single_quoted_escaped_backslash() {
         let input  = Span::new(b"'foo\\\\bar'tail");
         let output = Result::Done(
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
-                    b"foo\\bar".to_vec(),
+                    Cow::from(&b"foo\\bar"[..]),
                     Span::new(b"'foo\\\\bar'")
                 )
             )
@@ -1365,13 +1427,33 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_escaped_backslash_with_copy() {
+        let input = Span::new(b"'foo\\\\bar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Owned(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_single_quoted_escaped_any() {
         let input  = Span::new(b"'foo\\nbar'tail");
         let output = Result::Done(
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
-                    b"foo\\nbar".to_vec(),
+                    Cow::from(&b"foo\\nbar"[..]),
                     Span::new(b"'foo\\nbar'")
                 )
             )
@@ -1383,13 +1465,33 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_escaped_any_without_copy() {
+        let input = Span::new(b"'foo\\nbar'tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_single_quoted_escaped_many() {
         let input  = Span::new(b"'\\'f\\oo\\\\bar\\\\'tail");
         let output = Result::Done(
             Span::new_at(b"tail", 15, 1, 16),
             Literal::String(
                 Token::new(
-                    b"'f\\oo\\bar\\".to_vec(),
+                    Cow::from(&b"'f\\oo\\bar\\"[..]),
                     Span::new(b"'\\'f\\oo\\\\bar\\\\'")
                 )
             )
@@ -1407,7 +1509,7 @@ mod tests {
             Span::new_at(b"tail", 2, 1, 3),
             Literal::String(
                 Token::new(
-                    Vec::new(),
+                    Cow::from(&b""[..]),
                     Span::new(b"''")
                 )
             )
@@ -1419,11 +1521,31 @@ mod tests {
     }
 
     #[test]
+    fn case_string_single_quoted_empty_without_copy() {
+        let input = Span::new(b"''tail");
+
+        match string_single_quoted(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_binary_single_quoted() {
         let input  = Span::new(b"b'foobar'");
         let output = Result::Done(
             Span::new_at(b"", 9, 1, 10),
-            Literal::String(Token::new(b"foobar".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"foobar"[..]), input.slice(1..)))
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1436,7 +1558,7 @@ mod tests {
         let input  = Span::new(b"B'foobar'");
         let output = Result::Done(
             Span::new_at(b"", 9, 1, 10),
-            Literal::String(Token::new(b"foobar".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"foobar"[..]), input.slice(1..)))
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1449,7 +1571,7 @@ mod tests {
         let input  = Span::new(b"b'\\'f\\oo\\\\bar'");
         let output = Result::Done(
             Span::new_at(b"", 14, 1, 15),
-            Literal::String(Token::new(b"'f\\oo\\bar".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"'f\\oo\\bar"[..]), input.slice(1..)))
         );
 
         assert_eq!(string_single_quoted(input), output);
@@ -1534,7 +1656,7 @@ mod tests {
             Span::new_at(b"tail", 30, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \n  world ".to_vec(),
+                    Cow::from(&b"hello \n  world "[..]),
                     Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\n")
                 )
             )
@@ -1546,13 +1668,33 @@ mod tests {
     }
 
     #[test]
+    fn case_string_nowdoc_without_copy() {
+        let input = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\ntail");
+
+        match string_nowdoc(input) {
+            Result::Done(
+                Span { .. },
+                Literal::String(
+                    Token { value: Cow::Borrowed(..), .. }
+                )
+            ) => {
+                assert!(true);
+            },
+
+            _ => {
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
     fn case_string_nowdoc_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\ntail");
         let output = Result::Done(
             Span::new_at(b"tail", 34, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \r\n  world ".to_vec(),
+                    Cow::from(&b"hello \r\n  world "[..]),
                     Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\n")
                 )
             )
@@ -1570,7 +1712,7 @@ mod tests {
             Span::new_at(b"tail", 29, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \n  world ".to_vec(),
+                    Cow::from(&b"hello \n  world "[..]),
                     Span::new(b"<<<'FOO'\nhello \n  world \nFOO\n")
                 )
             )
@@ -1588,7 +1730,7 @@ mod tests {
             Span::new_at(b"tail", 33, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \r\n  world ".to_vec(),
+                    Cow::from(&b"hello \r\n  world "[..]),
                     Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
                 )
             )
@@ -1606,7 +1748,7 @@ mod tests {
             Span::new_at(b"tail", 13, 3, 1),
             Literal::String(
                 Token::new(
-                    Vec::new(),
+                    Cow::from(&b""[..]),
                     Span::new(b"<<<'FOO'\nFOO\n")
                 )
             )
@@ -1624,7 +1766,7 @@ mod tests {
             Span::new_at(b"tail", 15, 3, 1),
             Literal::String(
                 Token::new(
-                    Vec::new(),
+                    Cow::from(&b""[..]),
                     Span::new(b"<<<'FOO'\r\nFOO\r\n")
                 )
             )
@@ -1642,7 +1784,7 @@ mod tests {
             Span::new_at(b"tail", 35, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \n  world ".to_vec(),
+                    Cow::from(&b"hello \n  world "[..]),
                     Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\n")
                 )
             )
@@ -1660,7 +1802,7 @@ mod tests {
             Span::new_at(b"tail", 39, 5, 1),
             Literal::String(
                 Token::new(
-                    b"hello \r\n  world ".to_vec(),
+                    Cow::from(&b"hello \r\n  world "[..]),
                     Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
                 )
             )
@@ -1676,7 +1818,7 @@ mod tests {
         let input  = Span::new(b"b<<<'FOO'\nhello \n  world \nFOO\n");
         let output = Result::Done(
             Span::new_at(b"", 30, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1689,7 +1831,7 @@ mod tests {
         let input  = Span::new(b"b<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
         let output = Result::Done(
             Span::new_at(b"", 34, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \r\n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1702,7 +1844,7 @@ mod tests {
         let input  = Span::new(b"B<<<'FOO'\nhello \n  world \nFOO\n");
         let output = Result::Done(
             Span::new_at(b"", 30, 5, 1),
-            Literal::String(Token::new(b"hello \n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);
@@ -1715,7 +1857,7 @@ mod tests {
         let input  = Span::new(b"B<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
         let output = Result::Done(
             Span::new_at(b"", 34, 5, 1),
-            Literal::String(Token::new(b"hello \r\n  world ".to_vec(), input.slice(1..)))
+            Literal::String(Token::new(Cow::from(&b"hello \r\n  world "[..]), input.slice(1..)))
         );
 
         assert_eq!(string_nowdoc(input), output);

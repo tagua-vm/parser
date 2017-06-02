@@ -88,6 +88,7 @@ named_attr!(
 
         ```
         # extern crate tagua_parser;
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::primary;
@@ -105,7 +106,7 @@ named_attr!(
                     Expression::Literal(
                         Literal::String(
                             Token::new(
-                                b\"Hello, World!\".to_vec(),
+                                Cow::from(&b\"Hello, World!\"[..]),
                                 Span::new_at(b\"'Hello, World!'\", 5, 1, 6)
                             )
                         )
@@ -157,6 +158,7 @@ named_attr!(
 
         ```
         # extern crate tagua_parser;
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal, Variable};
         use tagua_parser::rules::expressions::primaries::array;
@@ -176,7 +178,7 @@ named_attr!(
                         Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b\"42\", 1, 1, 2))))
                     ),
                     (
-                        Some(Expression::Literal(Literal::String(Token::new(b\"foo\".to_vec(), Span::new_at(b\"'foo'\", 5, 1, 6))))),
+                        Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b\"foo\"[..]), Span::new_at(b\"'foo'\", 5, 1, 6))))),
                         Expression::Variable(Variable(Span::new_at(b\"bar\", 15, 1, 16)))
                     )
                 ])
@@ -283,6 +285,7 @@ named_attr!(
         # Examples
 
         ```
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic;
@@ -300,7 +303,7 @@ named_attr!(
                     Expression::Literal(
                         Literal::String(
                             Token::new(
-                                b\"Hello, World!\".to_vec(),
+                                Cow::from(&b\"Hello, World!\"[..]),
                                 Span::new_at(b\"'Hello, World!'\", 5, 1, 6)
                             )
                         )
@@ -345,6 +348,7 @@ named_attr!(
         # Examples
 
         ```
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_echo;
@@ -359,8 +363,8 @@ named_attr!(
             Result::Done(
                 Span::new_at(b\"\", 24, 1, 25),
                 Expression::Echo(vec![
-                    Expression::Literal(Literal::String(Token::new(b\"Hello,\".to_vec(), Span::new_at(b\"'Hello,'\", 5, 1, 6)))),
-                    Expression::Literal(Literal::String(Token::new(b\" World!\".to_vec(), Span::new_at(b\"' World!'\", 15, 1, 16))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b\"Hello,\"[..]), Span::new_at(b\"'Hello,'\", 5, 1, 6)))),
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b\" World!\"[..]), Span::new_at(b\"' World!'\", 15, 1, 16))))
                 ])
             )
         );
@@ -404,6 +408,7 @@ named_attr!(
         # Examples
 
         ```
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_list;
@@ -419,11 +424,11 @@ named_attr!(
                 Span::new_at(b\"\", 34, 1, 35),
                 Expression::List(vec![
                     Some((
-                        Some(Expression::Literal(Literal::String(Token::new(b\"foo\".to_vec(), Span::new_at(b\"'foo'\", 5, 1, 6))))),
+                        Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b\"foo\"[..]), Span::new_at(b\"'foo'\", 5, 1, 6))))),
                         Expression::Variable(Variable(Span::new_at(b\"foo\", 15, 1, 16)))
                     )),
                     Some((
-                        Some(Expression::Literal(Literal::String(Token::new(b\"bar\".to_vec(), Span::new_at(b\"'bar'\", 20, 1, 21))))),
+                        Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b\"bar\"[..]), Span::new_at(b\"'bar'\", 20, 1, 21))))),
                         Expression::Variable(Variable(Span::new_at(b\"bar\", 30, 1, 31)))
                     ))
                 ])
@@ -597,6 +602,7 @@ named_attr!(
         # Examples
 
         ```
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_empty;
@@ -614,7 +620,7 @@ named_attr!(
                     Box::new(
                         Expression::Literal(
                             Literal::String(
-                                Token::new(b\"foo\".to_vec(), Span::new_at(b\"'foo'\", 6, 1, 7))
+                                Token::new(Cow::from(&b\"foo\"[..]), Span::new_at(b\"'foo'\", 6, 1, 7))
                             )
                         )
                     )
@@ -652,6 +658,7 @@ named_attr!(
         # Examples
 
         ```
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_eval;
@@ -668,7 +675,7 @@ named_attr!(
                 Expression::Eval(
                     Box::new(
                         Expression::Literal(
-                            Literal::String(Token::new(b\"1 + 2\".to_vec(), Span::new_at(b\"'1 + 2'\", 5, 1, 6)))
+                            Literal::String(Token::new(Cow::from(&b\"1 + 2\"[..]), Span::new_at(b\"'1 + 2'\", 5, 1, 6)))
                         )
                     )
                 )
@@ -841,6 +848,7 @@ named_attr!(
         # Examples
 
         ```
+        use std::borrow::Cow;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Literal};
         use tagua_parser::rules::expressions::primaries::intrinsic_print;
@@ -858,7 +866,7 @@ named_attr!(
                     Box::new(
                         Expression::Literal(
                             Literal::String(
-                                Token::new(b\"Hello, World!\".to_vec(), Span::new_at(b\"'Hello, World!'\", 6, 1, 7))
+                                Token::new(Cow::from(&b\"Hello, World!\"[..]), Span::new_at(b\"'Hello, World!'\", 6, 1, 7))
                             )
                         )
                     )
@@ -1083,6 +1091,7 @@ fn into_anonymous_function<'a>(
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use super::{
         anonymous_function,
         array,
@@ -1142,7 +1151,7 @@ mod tests {
                     None,
                     Expression::Literal(
                         Literal::String(
-                            Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))
+                            Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 1, 1, 2))
                         )
                     )
                 )
@@ -1162,7 +1171,7 @@ mod tests {
             Expression::Array(vec![
                 (
                     Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 1, 1, 2))))),
-                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 7, 1, 8))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 7, 1, 8))))
                 )
             ])
         );
@@ -1180,14 +1189,14 @@ mod tests {
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 1, 1, 2))))
                 ),
                 (
                     Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 8, 1, 9))))),
-                    Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 14, 1, 15))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 14, 1, 15))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 21, 1, 22))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 21, 1, 22))))),
                     Expression::Variable(Variable(Span::new_at(b"qux", 31, 1, 32)))
                 )
             ])
@@ -1242,7 +1251,7 @@ mod tests {
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 1, 1, 2))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 1, 1, 2))))
                 ),
                 (
                     Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 8, 1, 9))))),
@@ -1256,14 +1265,14 @@ mod tests {
                             Expression::Array(vec![
                                 (
                                     Some(Expression::Literal(Literal::Integer(Token::new(11i64, Span::new_at(b"11", 29, 1, 30))))),
-                                    Expression::Literal(Literal::String(Token::new(b"13".to_vec(), Span::new_at(b"'13'", 35, 1, 36))))
+                                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"13"[..]), Span::new_at(b"'13'", 35, 1, 36))))
                                 )
                             ])
                         )
                     ])
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 43, 1, 44))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 43, 1, 44))))),
                     Expression::Variable(Variable(Span::new_at(b"qux", 53, 1, 54)))
                 )
             ])
@@ -1338,7 +1347,7 @@ mod tests {
                     None,
                     Expression::Literal(
                         Literal::String(
-                            Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7))
+                            Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 6, 1, 7))
                         )
                     )
                 )
@@ -1358,7 +1367,7 @@ mod tests {
             Expression::Array(vec![
                 (
                     Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 6, 1, 7))))),
-                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 12, 1, 13))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 12, 1, 13))))
                 )
             ])
         );
@@ -1376,14 +1385,14 @@ mod tests {
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 6, 1, 7))))
                 ),
                 (
                     Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 13, 1, 14))))),
-                    Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 19, 1, 20))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 19, 1, 20))))
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 26, 1, 27))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 26, 1, 27))))),
                     Expression::Variable(Variable(Span::new_at(b"qux", 36, 1, 37)))
                 )
             ])
@@ -1428,7 +1437,7 @@ mod tests {
             Expression::Array(vec![
                 (
                     None,
-                    Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 6, 1, 7))))
                 ),
                 (
                     Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 13, 1, 14))))),
@@ -1442,14 +1451,14 @@ mod tests {
                             Expression::Array(vec![
                                 (
                                     Some(Expression::Literal(Literal::Integer(Token::new(11i64, Span::new_at(b"11", 44, 1, 45))))),
-                                    Expression::Literal(Literal::String(Token::new(b"13".to_vec(), Span::new_at(b"'13'", 50, 1, 51))))
+                                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"13"[..]), Span::new_at(b"'13'", 50, 1, 51))))
                                 )
                             ])
                         )
                     ])
                 ),
                 (
-                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 58, 1, 59))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 58, 1, 59))))),
                     Expression::Variable(Variable(Span::new_at(b"qux", 68, 1, 69)))
                 )
             ])
@@ -1520,7 +1529,7 @@ mod tests {
             Span::new_at(b"", 15, 1, 16),
             Expression::Literal(
                 Literal::String(
-                    Token::new(b"Hello, World!".to_vec(), input)
+                    Token::new(Cow::from(&b"Hello, World!"[..]), input)
                 )
             )
         );
@@ -1535,7 +1544,7 @@ mod tests {
         let output = Result::Done(
             Span::new_at(b"", 23, 1, 24),
             Expression::Echo(vec![
-                Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 15, 1, 16))))
+                Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 15, 1, 16))))
             ])
         );
 
@@ -1552,7 +1561,7 @@ mod tests {
         let output = Result::Done(
             Span::new_at(b"", 40, 2, 5),
             Expression::Echo(vec![
-                Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 15, 1, 16)))),
+                Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 15, 1, 16)))),
                 Expression::Variable(Variable(Span::new_at(b"bazqux", 27, 1, 28))),
                 Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 38, 2, 3))))
             ])
@@ -1594,7 +1603,7 @@ mod tests {
             Span::new_at(b"", 19, 1, 20),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 5, 1, 6))))),
                     Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 ))
             ])
@@ -1614,15 +1623,15 @@ mod tests {
             Span::new_at(b"", 49, 1, 50),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 5, 1, 6))))),
                     Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 20, 1, 21))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 20, 1, 21))))),
                     Expression::Variable(Variable(Span::new_at(b"bar", 30, 1, 31)))
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 35, 1, 36))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 35, 1, 36))))),
                     Expression::Variable(Variable(Span::new_at(b"baz", 45, 1, 46)))
                 ))
             ])
@@ -1652,11 +1661,11 @@ mod tests {
             Span::new_at(b"", 35, 1, 36),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 5, 1, 6))))),
                     Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 20, 1, 21))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 20, 1, 21))))),
                     Expression::Variable(Variable(Span::new_at(b"bar", 30, 1, 31)))
                 ))
             ])
@@ -1676,16 +1685,16 @@ mod tests {
             Span::new_at(b"", 57, 1, 58),
             Expression::List(vec![
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 5, 1, 6))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 5, 1, 6))))),
                     Expression::List(vec![
                         Some((
-                            Some(Expression::Literal(Literal::String(Token::new(b"bar".to_vec(), Span::new_at(b"'bar'", 19, 1, 20))))),
+                            Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"bar"[..]), Span::new_at(b"'bar'", 19, 1, 20))))),
                             Expression::Variable(Variable(Span::new_at(b"bar", 29, 1, 30)))
                         ))
                     ])
                 )),
                 Some((
-                    Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 35, 1, 36))))),
+                    Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 35, 1, 36))))),
                     Expression::List(vec![
                         None,
                         Some((
@@ -1817,7 +1826,7 @@ mod tests {
                     None,
                     Expression::List(vec![
                         Some((
-                            Some(Expression::Literal(Literal::String(Token::new(b"baz".to_vec(), Span::new_at(b"'baz'", 28, 1, 29))))),
+                            Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"baz"[..]), Span::new_at(b"'baz'", 28, 1, 29))))),
                             Expression::Variable(Variable(Span::new_at(b"baz", 38, 1, 39)))
                         ))
                     ])
@@ -1934,7 +1943,7 @@ mod tests {
             Expression::Empty(
                 Box::new(
                     Expression::Literal(
-                        Literal::String(Token::new(b"foo".to_vec(), Span::new_at(b"'foo'", 6, 1, 7)))
+                        Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 6, 1, 7)))
                     )
                 )
             )
@@ -1988,7 +1997,7 @@ mod tests {
             Expression::Eval(
                 Box::new(
                     Expression::Literal(
-                        Literal::String(Token::new(b"1 + 2;".to_vec(), Span::new_at(b"'1 + 2;'", 5, 1, 6)))
+                        Literal::String(Token::new(Cow::from(&b"1 + 2;"[..]), Span::new_at(b"'1 + 2;'", 5, 1, 6)))
                     )
                 )
             )
@@ -2242,7 +2251,7 @@ mod tests {
             Span::new_at(b"", 24, 1, 25),
             Expression::Print(
                 Box::new(
-                    Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 16, 1, 17))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 16, 1, 17))))
                 )
             )
         );
@@ -2273,7 +2282,7 @@ mod tests {
             Span::new_at(b"", 22, 1, 23),
             Expression::Print(
                 Box::new(
-                    Expression::Literal(Literal::String(Token::new(b"foobar".to_vec(), Span::new_at(b"'foobar'", 10, 1, 11))))
+                    Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 10, 1, 11))))
                 )
             )
         );
