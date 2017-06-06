@@ -275,8 +275,8 @@ mod tests {
     #[test]
     fn case_qualified_name_vector_capacity() {
         if let Result::Done(_, Name::Qualified(vector)) = qualified_name(Span::new(b"Foo\\Bar\\Baz")) {
-            assert!(vector.capacity() >= vector.len());
-            assert!(vector.len() >= 3);
+            assert_eq!(vector.capacity(), 5);
+            assert_eq!(vector.len(), 3);
         } else {
             assert!(false);
         }
@@ -416,8 +416,8 @@ mod tests {
     #[test]
     fn case_fully_qualified_name_vector_capacity() {
         if let Result::Done(_, Name::FullyQualified(vector)) = qualified_name(Span::new(b"\\Foo\\Bar\\Baz")) {
-            assert!(vector.capacity() >= vector.len());
-            assert!(vector.len() >= 3);
+            assert_eq!(vector.capacity(), 5);
+            assert_eq!(vector.len(), 3);
         } else {
             assert!(false);
         }
