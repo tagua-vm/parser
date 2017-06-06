@@ -349,19 +349,85 @@ macro_rules! regex (
     )
 );
 
+/// Create a `SmallVec` and push items into it.
+///
+/// This macro almost works like `vec![]`. It allows to create a
+/// `SmallVec` and push items into it. This macro does not define the
+/// type of the data, so the type of items and capacity must be
+/// infered.
+///
+/// # Examples
+///
+/// The following example creates a small vector. Since its size is
+/// lower or equal to 3, it is stored on the stack (inline), i.e. it has not “spilled”.
+///
+/// ```
+/// # extern crate smallvec;
+/// use smallvec::SmallVec;
+/// # #[macro_use]
+/// # extern crate tagua_parser;
+///
+/// # fn main() {
+/// let handle: SmallVec<[_; 3]> = smallvec![1i32, 2, 3];
+///
+/// assert_eq!(handle[0], 1);
+/// assert_eq!(handle.len(), 3);
+/// assert!(!handle.spilled());
+/// # }
+/// ```
+///
+/// The following example is similar to the previous one, but the
+/// small vector will spilled into the heap after a new item is pushed
+/// because it overflows the initial capacity. Note that `handle` must
+/// be mutable to be able to push a new item.
+///
+/// ```
+/// # extern crate smallvec;
+/// use smallvec::SmallVec;
+/// # #[macro_use]
+/// # extern crate tagua_parser;
+///
+/// # fn main() {
+/// let mut handle: SmallVec<[_; 3]> = smallvec![1i32, 2, 3];
+///
+/// assert!(!handle.spilled());
+///
+/// handle.push(4);
+///
+/// assert!(handle.spilled());
+/// # }
+/// ```
+///
+/// This example will **not** compile, because the type for `handle` cannot be infered.
+///
+/// ```rust,ignore
+/// # extern crate smallvec;
+/// # #[macro_use]
+/// # extern crate tagua_parser;
+/// #
+/// # fn main() {
+/// let handle = smallvec![1i32, 2, 3];
+/// # }
+/// ```
+
 #[macro_export]
 macro_rules! smallvec [
-    ($($e:expr),*) => ({
+    ($($e:expr),+) => ({
         let mut output = ::smallvec::SmallVec::new();
-        $(output.push($e);)*
+        $(output.push($e);)+
 
         output
-    })
+    });
+
+    () => (
+        ::smallvec::SmallVec::new()
+    );
 ];
 
 
 #[cfg(test)]
 mod tests {
+    use smallvec::SmallVec;
     use super::ErrorKindCustom;
     use super::super::internal::{
         Error,
@@ -566,5 +632,43 @@ mod tests {
         } else {
             assert!(false);
         }
+    }
+
+    #[test]
+    fn case_smallvec_empty() {
+        let input: SmallVec<[i32; 3]> = smallvec![];
+
+        assert_eq!(input.len(), 0);
+        assert_eq!(input.capacity(), 3);
+    }
+
+    #[test]
+    fn case_smallvec_capacity() {
+        let input1: SmallVec<[i32; 3]> = smallvec![];
+        let input2: SmallVec<[i32; 5]> = smallvec![];
+
+        assert_eq!(input1.capacity(), 3);
+        assert_eq!(input2.capacity(), 5);
+    }
+
+    #[test]
+    fn case_smallvec_length() {
+        let input: SmallVec<[_; 3]> = smallvec![1i32, 2];
+
+        assert_eq!(input.len(), 2);
+    }
+
+    #[test]
+    fn case_smallvec_on_the_stack() {
+        let input: SmallVec<[_; 3]> = smallvec![1i32, 2, 3];
+
+        assert_eq!(false, input.spilled());
+    }
+
+    #[test]
+    fn case_smallvec_on_the_heap() {
+        let input: SmallVec<[_; 3]> = smallvec![1i32, 2, 3, 4];
+
+        assert_eq!(true, input.spilled());
     }
 }
