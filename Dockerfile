@@ -1,8 +1,9 @@
 FROM debian:jessie
 
 ENV ARCH=x86_64-unknown-linux-gnu
-ENV RUST_RELEASE=1.11.0
+ENV RUST_RELEASE=1.17.0
 ENV CARGO_RELEASE=nightly
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 RUN apt-get update && \
     apt-get install -y curl vim gcc libssl-dev libedit-dev libstdc++-4.9-dev && \
