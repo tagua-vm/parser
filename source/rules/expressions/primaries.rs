@@ -118,9 +118,9 @@ named_attr!(
     "],
     pub primary<Span, Expression>,
     alt!(
-        variable       => { variable_mapper }
-      | qualified_name => { qualified_name_mapper }
-      | literal        => { literal_mapper }
+        variable        => { variable_mapper }
+      | constant_access => { constant_access_mapper }
+      | literal         => { literal_mapper }
       | array
       | intrinsic
       | anonymous_function
@@ -140,7 +140,7 @@ fn variable_mapper(variable: Variable) -> Expression {
 }
 
 #[inline]
-fn qualified_name_mapper(name: Name) -> Expression {
+fn constant_access_mapper(name: Name) -> Expression {
     Expression::Name(name)
 }
 
@@ -148,6 +148,16 @@ fn qualified_name_mapper(name: Name) -> Expression {
 fn literal_mapper(literal: Literal) -> Expression {
     Expression::Literal(literal)
 }
+
+named_attr!(
+    #[doc="
+        Recognize a constant access.
+
+        This parser is an alias to the `qualified_name` parser.
+    "],
+    pub constant_access<Span, Name>,
+    call!(qualified_name)
+);
 
 named_attr!(
     #[doc="
