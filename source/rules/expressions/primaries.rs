@@ -124,14 +124,14 @@ named_attr!(
         ```
     "],
     pub primary<Span, Expression>,
-    alt!(
+    alt_complete!(
         variable              => { variable_mapper }
-      | class_constant_access
       | constant_access       => { constant_access_mapper }
       | literal               => { literal_mapper }
       | array
       | intrinsic
       | anonymous_function
+      | class_constant_access
       | preceded!(
             tag!(tokens::LEFT_PARENTHESIS),
             terminated!(
@@ -160,7 +160,10 @@ named_attr!(
     #[doc=""],
     pub class_constant_access<Span, Expression>,
     do_parse!(
-        scope: terminated!(scope_resolution_qualifier, tag!(tokens::STATIC_CALL)) >>
+        scope: terminated!(
+            scope_resolution_qualifier,
+            tag!(tokens::STATIC_CALL)
+        ) >>
         name: name >>
         ( class_constant_access_mapper(scope, name) )
     )
