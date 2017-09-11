@@ -59,6 +59,7 @@ use super::super::super::ast::{
     Literal,
     Name,
     RelativeScope,
+    ScopeResolver,
     Statement,
     Ty,
     Variable
@@ -163,6 +164,33 @@ named_attr!(
     pub constant_access<Span, Name>,
     call!(qualified_name)
 );
+
+named_attr!(
+    #[doc="
+        Recognize a scope resolution qualifier.
+    "],
+    pub scope_resolution_qualifier<Span, ScopeResolver>,
+    alt!(
+        relative_scope            => { scope_resolution_relative_mapper }
+      | qualified_name            => { scope_resolution_name_mapper }
+      | dereferencable_expression => { scope_resolution_dereferencable_mapper }
+    )
+);
+
+#[inline]
+fn scope_resolution_relative_mapper<'a>(scope: RelativeScope) -> ScopeResolver<'a> {
+    ScopeResolver::ByRelative(scope)
+}
+
+#[inline]
+fn scope_resolution_name_mapper<'a>(name: Name<'a>) -> ScopeResolver<'a> {
+    ScopeResolver::ByName(name)
+}
+
+#[inline]
+fn scope_resolution_dereferencable_mapper<'a>(expression: DereferencableExpression<'a>) -> ScopeResolver<'a> {
+    ScopeResolver::ByExpression(expression)
+}
 
 named_attr!(
     #[doc="
@@ -1194,7 +1222,8 @@ mod tests {
         intrinsic_print,
         intrinsic_unset,
         primary,
-        relative_scope
+        relative_scope,
+        scope_resolution_qualifier
     };
     use super::super::expression;
     use super::super::super::super::ast::{
@@ -1207,6 +1236,7 @@ mod tests {
         Name,
         Parameter,
         RelativeScope,
+        ScopeResolver,
         Statement,
         Ty,
         Variable
@@ -1220,6 +1250,45 @@ mod tests {
         Span,
         Token
     };
+
+    #[test]
+    fn case_scope_resolution_qualifier_by_relative() {
+        let input  = Span::new(b"self");
+        let output = Result::Done(
+            Span::new_at(b"", 4, 1, 5),
+            ScopeResolver::ByRelative(RelativeScope::ToSelf)
+        );
+
+        assert_eq!(scope_resolution_qualifier(input), output);
+    }
+
+    #[test]
+    fn case_scope_resolution_qualifier_by_name() {
+        let input  = Span::new(b"Foo");
+        let output = Result::Done(
+            Span::new_at(b"", 3, 1, 4),
+            ScopeResolver::ByName(Name::Unqualified(Span::new(b"Foo")))
+        );
+
+        assert_eq!(scope_resolution_qualifier(input), output);
+    }
+
+    #[test]
+    fn case_scope_resolution_qualifier_by_dereferencable_expression() {
+        let input  = Span::new(b"$foo");
+        let output = Result::Done(
+            Span::new_at(b"", 4, 1, 5),
+            ScopeResolver::ByExpression(
+                DereferencableExpression::Variable(
+                    Variable(
+                        Span::new_at(b"foo", 1, 1, 2)
+                    )
+                )
+            )
+        );
+
+        assert_eq!(scope_resolution_qualifier(input), output);
+    }
 
     #[test]
     fn case_dereferencable_expression_variable() {
