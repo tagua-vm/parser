@@ -50,11 +50,11 @@ use super::super::tokens::{
 use super::super::super::ast::{
     AnonymousFunction,
     Arity,
+    DeclarationScope,
     Expression,
     Literal,
     Name,
     RelativeScope,
-    Scope,
     Statement,
     Ty,
     Variable
@@ -948,7 +948,7 @@ named_attr!(
             Expression,
             Name,
             Parameter,
-            Scope,
+            DeclarationScope,
             Statement,
             Ty,
             Variable
@@ -966,7 +966,7 @@ named_attr!(
                 Span::new_at(b\"\", 61, 1, 62),
                 Expression::AnonymousFunction(
                     AnonymousFunction {
-                        declaration_scope: Scope::Dynamic,
+                        declaration_scope: DeclarationScope::Dynamic,
                         inputs           : Arity::Finite(vec![
                             Parameter {
                                 ty   : Ty::Copy(None),
@@ -1022,11 +1022,11 @@ named_attr!(
             into_anonymous_function(
                 match static_scope {
                     Some(_) => {
-                        Scope::Static
+                        DeclarationScope::Static
                     },
 
                     None => {
-                        Scope::Dynamic
+                        DeclarationScope::Dynamic
                     }
                 },
                 output_is_a_reference.is_some(),
@@ -1107,7 +1107,7 @@ fn into_anonymous_function_use_list_item(reference: bool, name: Variable) -> Exp
 
 #[inline]
 fn into_anonymous_function<'a>(
-    declaration_scope    : Scope,
+    declaration_scope    : DeclarationScope,
     output_is_a_reference: bool,
     inputs               : Arity<'a>,
     output_type          : Option<Name<'a>>,
@@ -1156,12 +1156,12 @@ mod tests {
     use super::super::super::super::ast::{
         AnonymousFunction,
         Arity,
+        DeclarationScope,
         Expression,
         Literal,
         Name,
         Parameter,
         RelativeScope,
-        Scope,
         Statement,
         Ty,
         Variable
@@ -2370,7 +2370,7 @@ mod tests {
             Span::new_at(b"", 46, 1, 47),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(Some(Name::Unqualified(Span::new_at(b"I", 10, 1, 11)))),
@@ -2402,7 +2402,7 @@ mod tests {
             Span::new_at(b"", 14, 1, 15),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : None,
@@ -2423,7 +2423,7 @@ mod tests {
             Span::new_at(b"", 16, 1, 17),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
@@ -2450,7 +2450,7 @@ mod tests {
             Span::new_at(b"", 17, 1, 18),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(None),
@@ -2477,7 +2477,7 @@ mod tests {
             Span::new_at(b"", 22, 1, 23),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(Some(Name::Qualified(smallvec![Span::new_at(b"A", 10, 1, 11), Span::new_at(b"B", 12, 1, 13), Span::new_at(b"C", 14, 1, 15)]))),
@@ -2504,7 +2504,7 @@ mod tests {
             Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 10, 1, 11)]))),
@@ -2531,7 +2531,7 @@ mod tests {
             Span::new_at(b"", 40, 1, 41),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Finite(vec![
                         Parameter {
                             ty   : Ty::Copy(None),
@@ -2573,7 +2573,7 @@ mod tests {
             Span::new_at(b"", 18, 1, 19),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(Some(Name::FullyQualified(smallvec![Span::new_at(b"O", 14, 1, 15)]))),
                     enclosing_scope  : None,
@@ -2594,7 +2594,7 @@ mod tests {
             Span::new_at(b"", 20, 1, 21),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Reference(Some(Name::FullyQualified(smallvec![Span::new_at(b"int", 14, 1, 15)]))),
                     enclosing_scope  : None,
@@ -2615,7 +2615,7 @@ mod tests {
             Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![]),
@@ -2636,7 +2636,7 @@ mod tests {
             Span::new_at(b"", 23, 1, 24),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
@@ -2659,7 +2659,7 @@ mod tests {
             Span::new_at(b"", 24, 1, 25),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
@@ -2686,7 +2686,7 @@ mod tests {
             Span::new_at(b"", 32, 1, 33),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Dynamic,
+                    declaration_scope: DeclarationScope::Dynamic,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : Some(vec![
@@ -2715,7 +2715,7 @@ mod tests {
             Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
-                    declaration_scope: Scope::Static,
+                    declaration_scope: DeclarationScope::Static,
                     inputs           : Arity::Constant,
                     output           : Ty::Copy(None),
                     enclosing_scope  : None,

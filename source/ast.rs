@@ -437,7 +437,7 @@ pub enum Expression<'a> {
     ///     Expression,
     ///     Name,
     ///     Parameter,
-    ///     Scope,
+    ///     DeclarationScope,
     ///     Statement,
     ///     Ty,
     ///     Variable
@@ -455,7 +455,7 @@ pub enum Expression<'a> {
     ///         Span::new_at(b"", 46, 1, 47),
     ///         Expression::AnonymousFunction(
     ///             AnonymousFunction {
-    ///                 declaration_scope: Scope::Dynamic,
+    ///                 declaration_scope: DeclarationScope::Dynamic,
     ///                 inputs           : Arity::Finite(vec![
     ///                     Parameter {
     ///                         ty   : Ty::Copy(Some(Name::Unqualified(Span::new_at(b"I", 10, 1, 11)))),
@@ -1278,7 +1278,7 @@ pub struct Function<'a> {
 ///     Expression,
 ///     Name,
 ///     Parameter,
-///     Scope,
+///     DeclarationScope,
 ///     Statement,
 ///     Ty,
 ///     Variable
@@ -1296,7 +1296,7 @@ pub struct Function<'a> {
 ///         Span::new_at(b"", 55, 1, 56),
 ///         Expression::AnonymousFunction(
 ///             AnonymousFunction {
-///                 declaration_scope: Scope::Static,
+///                 declaration_scope: DeclarationScope::Static,
 ///                 inputs           : Arity::Infinite(vec![
 ///                     Parameter {
 ///                         ty   : Ty::Copy(Some(Name::Unqualified(Span::new_at(b"I", 18, 1, 19)))),
@@ -1323,7 +1323,7 @@ pub struct Function<'a> {
 #[derive(Debug, PartialEq)]
 pub struct AnonymousFunction<'a> {
     /// Declaration scope of the anonymous function.
-    pub declaration_scope: Scope,
+    pub declaration_scope: DeclarationScope,
 
     /// Inputs, aka parameters, of the anonymous function.
     pub inputs: Arity<'a>,
@@ -1349,9 +1349,9 @@ pub enum Statement<'a> {
     Return
 }
 
-/// A scope.
+/// A declaration scope.
 #[derive(Debug, PartialEq)]
-pub enum Scope {
+pub enum DeclarationScope {
     /// A dynamic scope (default one).
     Dynamic,
 
