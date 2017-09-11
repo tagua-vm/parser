@@ -520,6 +520,9 @@ pub enum Expression<'a> {
     /// ```
     Array(Vec<(Option<Expression<'a>>, Expression<'a>)>),
 
+    /// Class constant access.
+    ClassConstantAccess(ScopeResolver<'a>, Span<'a>),
+
     /// Echo converts each of its expression's values into strings,
     /// concatenates them in order given, and writes the result to the
     /// output stream.
@@ -951,10 +954,10 @@ pub enum DereferencableExpression<'a> {
     Variable(Variable<'a>),
 
     /// An expression evaluating to either an array or a string.
-    Expression(Expression<'a>),
+    Expression(Box<Expression<'a>>),
 
     /// An array.
-    Array(Expression<'a>),
+    Array(Box<Expression<'a>>),
 
     /// A string.
     String(Literal<'a>)
