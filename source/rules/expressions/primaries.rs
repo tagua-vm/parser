@@ -53,6 +53,7 @@ use super::super::super::ast::{
     Expression,
     Literal,
     Name,
+    RelativeScope,
     Scope,
     Statement,
     Ty,
@@ -157,6 +158,37 @@ named_attr!(
     "],
     pub constant_access<Span, Name>,
     call!(qualified_name)
+);
+
+named_attr!(
+    #[doc="
+        Recognize a scope resolution qualifier.
+
+        # Examples
+
+        ```
+        use tagua_parser::Result;
+        use tagua_parser::ast::RelativeScope;
+        use tagua_parser::rules::expressions::primaries::relative_scope;
+        use tagua_parser::tokens::Span;
+
+        # fn main() {
+        assert_eq!(
+            relative_scope(Span::new(b\"self\")),
+            Result::Done(
+                Span::new_at(b\"\", 4, 1, 5),
+                RelativeScope::ToSelf
+            )
+        );
+        # }
+        ```
+    "],
+    pub relative_scope<Span, RelativeScope>,
+    alt!(
+        tag!(tokens::SELF)   => { |_| { RelativeScope::ToSelf } }
+      | tag!(tokens::PARENT) => { |_| { RelativeScope::ToParent } }
+      | tag!(tokens::STATIC) => { |_| { RelativeScope::ToStatic } }
+    )
 );
 
 named_attr!(
@@ -1117,7 +1149,8 @@ mod tests {
         intrinsic_operator,
         intrinsic_print,
         intrinsic_unset,
-        primary
+        primary,
+        relative_scope
     };
     use super::super::expression;
     use super::super::super::super::ast::{
@@ -1127,6 +1160,7 @@ mod tests {
         Literal,
         Name,
         Parameter,
+        RelativeScope,
         Scope,
         Statement,
         Ty,
@@ -1141,6 +1175,30 @@ mod tests {
         Span,
         Token
     };
+
+    #[test]
+    fn case_relative_scope_self() {
+        let input  = Span::new(b"self");
+        let output = Result::Done(Span::new_at(b"", 4, 1, 5), RelativeScope::ToSelf);
+
+        assert_eq!(relative_scope(input), output);
+    }
+
+    #[test]
+    fn case_relative_scope_parent() {
+        let input  = Span::new(b"parent");
+        let output = Result::Done(Span::new_at(b"", 6, 1, 7), RelativeScope::ToParent);
+
+        assert_eq!(relative_scope(input), output);
+    }
+
+    #[test]
+    fn case_relative_scope_static() {
+        let input  = Span::new(b"static");
+        let output = Result::Done(Span::new_at(b"", 6, 1, 7), RelativeScope::ToStatic);
+
+        assert_eq!(relative_scope(input), output);
+    }
 
     #[test]
     fn case_array_empty() {

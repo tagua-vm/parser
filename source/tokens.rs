@@ -500,6 +500,10 @@ token!(
     "The `OR` token.\n\nRepresent the inclusive disjunction operator, used in a logical expression, e.g. `$x or $y`."
 );
 token!(
+    pub PARENT: b"parent";
+    "The `PARENT` token.\n\nRepresent the parent scope resolution qualifier, e.g. `parent::$x`."
+);
+token!(
     pub POW: b"**";
     "The `POW` token.\n\nRepresent the power operator, e.g. `$x ** $y`."
 );
@@ -552,12 +556,16 @@ token!(
     "The `RIGHT_SQUARE_BRACKET` token.\n\nUsed to close an array construction or an array access for instance, e.g. `[2, 4, 6, 9][0]`."
 );
 token!(
+    pub SELF: b"self";
+    "The `SELF` token.\n\nRepresent the self scope resolution qualifier, e.g. `self::$x`."
+);
+token!(
     pub SEMICOLON: b";";
     "The `SEMICOLON` token.\n\nRepresent the end of an instruction, e.g. `$x = …;`."
 );
 token!(
     pub STATIC: b"static";
-    "The `STATIC` token.\n\nRepresent the stack declaration operator, e.g. `static $x`."
+    "The `STATIC` token.\n\nRepresent the stack declaration operator or the static scope resolution qualifier, e.g. `static $x` or `static::$x`."
 );
 token!(
     pub STATIC_CALL: b"::";

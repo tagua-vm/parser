@@ -1359,6 +1359,24 @@ pub enum Scope {
     Static
 }
 
+/// A relative scope designates the class with relation to the current
+/// class scope.
+#[derive(Debug, PartialEq)]
+pub enum RelativeScope {
+    /// From within a class, `self` refers to the same class.
+    ToSelf,
+
+    /// From within a class, `parent` refers to the class the current
+    /// class extends from.
+    ToParent,
+
+    /// From within a method, `static` refers to the class corresponds
+    /// to the class inheritance context in whcih the method is
+    /// called. This allows late static binding, when class resolution
+    /// depends on the dynamic call context.
+    ToStatic
+}
+
 
 #[cfg(test)]
 mod tests {
