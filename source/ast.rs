@@ -1396,6 +1396,19 @@ pub enum RelativeScope {
     ToStatic
 }
 
+/// A scope resolution qualifier.
+#[derive(Debug, PartialEq)]
+pub enum ScopeResolver<'a> {
+    /// A relative scope.
+    ByRelative(RelativeScope),
+
+    /// A scope defined by a name.
+    ByName(Name<'a>),
+
+    /// A scope defined by a dereferencable expression.
+    ByExpression(DereferencableExpression<'a>)
+}
+
 
 #[cfg(test)]
 mod tests {
