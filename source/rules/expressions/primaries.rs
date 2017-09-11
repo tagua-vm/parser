@@ -37,7 +37,10 @@
 
 use std::result::Result as StdResult;
 use super::expression;
-use super::super::literals::literal;
+use super::super::literals::{
+    literal,
+    string
+};
 use super::super::statements::compound_statement;
 use super::super::statements::function::{
     native_type,
@@ -51,6 +54,7 @@ use super::super::super::ast::{
     AnonymousFunction,
     Arity,
     DeclarationScope,
+    DereferencableExpression,
     Expression,
     Literal,
     Name,
@@ -159,6 +163,45 @@ named_attr!(
     pub constant_access<Span, Name>,
     call!(qualified_name)
 );
+
+named_attr!(
+    #[doc="
+        Recognize a dereferencable expression.
+    "],
+    pub dereferencable_expression<Span, DereferencableExpression>,
+    alt!(
+        variable => { dereferencable_variable_mapper }
+      | preceded!(
+            tag!(tokens::LEFT_PARENTHESIS),
+            terminated!(
+                first!(expression),
+                first!(tag!(tokens::RIGHT_PARENTHESIS))
+            )
+        )        => { dereferencable_sub_expression_mapper }
+      | array    => { dereferencable_array_mapper }
+      | string   => { dereferencable_string_mapper }
+    )
+);
+
+#[inline]
+fn dereferencable_variable_mapper<'a>(variable: Variable<'a>) -> DereferencableExpression<'a> {
+    DereferencableExpression::Variable(variable)
+}
+
+#[inline]
+fn dereferencable_sub_expression_mapper<'a>(expression: Expression<'a>) -> DereferencableExpression<'a> {
+    DereferencableExpression::Expression(expression)
+}
+
+#[inline]
+fn dereferencable_array_mapper<'a>(array: Expression<'a>) -> DereferencableExpression<'a> {
+    DereferencableExpression::Array(array)
+}
+
+#[inline]
+fn dereferencable_string_mapper<'a>(string: Literal<'a>) -> DereferencableExpression<'a> {
+    DereferencableExpression::String(string)
+}
 
 named_attr!(
     #[doc="
@@ -1138,6 +1181,7 @@ mod tests {
     use super::{
         anonymous_function,
         array,
+        dereferencable_expression,
         intrinsic,
         intrinsic_construct,
         intrinsic_echo,
@@ -1157,6 +1201,7 @@ mod tests {
         AnonymousFunction,
         Arity,
         DeclarationScope,
+        DereferencableExpression,
         Expression,
         Literal,
         Name,
@@ -1175,6 +1220,83 @@ mod tests {
         Span,
         Token
     };
+
+    #[test]
+    fn case_dereferencable_expression_variable() {
+        let input  = Span::new(b"$foo");
+        let output = Result::Done(
+            Span::new_at(b"", 4, 1, 5),
+            DereferencableExpression::Variable(
+                Variable(
+                    Span::new_at(b"foo", 1, 1, 2)
+                )
+            )
+        );
+
+        assert_eq!(dereferencable_expression(input), output);
+    }
+
+    #[test]
+    fn case_dereferencable_expression_sub_expression() {
+        let input  = Span::new(b"($foo)");
+        let output = Result::Done(
+            Span::new_at(b"", 6, 1, 7),
+            DereferencableExpression::Expression(
+                Expression::Variable(
+                    Variable(
+                        Span::new_at(b"foo", 2, 1, 3)
+                    )
+                )
+            )
+        );
+
+        assert_eq!(dereferencable_expression(input), output);
+    }
+
+    #[test]
+    fn case_dereferencable_expression_array() {
+        let input  = Span::new(b"['C', 'f']");
+        let output = Result::Done(
+            Span::new_at(b"", 10, 1, 11),
+            DereferencableExpression::Array(
+                Expression::Array(vec![
+                    (
+                        None,
+                        Expression::Literal(
+                            Literal::String(
+                                Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 1, 1, 2))
+                            )
+                        )
+                    ),
+                    (
+                        None,
+                        Expression::Literal(
+                            Literal::String(
+                                Token::new(Cow::from(&b"f"[..]), Span::new_at(b"'f'", 6, 1, 7))
+                            )
+                        )
+                    )
+                ])
+            )
+        );
+
+        assert_eq!(dereferencable_expression(input), output);
+    }
+
+    #[test]
+    fn case_dereferencable_expression_string() {
+        let input  = Span::new(b"'C'");
+        let output = Result::Done(
+            Span::new_at(b"", 3, 1, 4),
+            DereferencableExpression::String(
+                Literal::String(
+                    Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 0, 1, 1))
+                )
+            )
+        );
+
+        assert_eq!(dereferencable_expression(input), output);
+    }
 
     #[test]
     fn case_relative_scope_self() {
