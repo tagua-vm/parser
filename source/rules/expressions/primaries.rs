@@ -47,6 +47,7 @@ use super::super::statements::function::{
     parameters
 };
 use super::super::tokens::{
+    name,
     qualified_name,
     variable
 };
@@ -124,9 +125,10 @@ named_attr!(
     "],
     pub primary<Span, Expression>,
     alt!(
-        variable        => { variable_mapper }
-      | constant_access => { constant_access_mapper }
-      | literal         => { literal_mapper }
+        variable              => { variable_mapper }
+      | class_constant_access
+      | constant_access       => { constant_access_mapper }
+      | literal               => { literal_mapper }
       | array
       | intrinsic
       | anonymous_function
@@ -153,6 +155,20 @@ fn constant_access_mapper(name: Name) -> Expression {
 #[inline]
 fn literal_mapper(literal: Literal) -> Expression {
     Expression::Literal(literal)
+}
+named_attr!(
+    #[doc=""],
+    pub class_constant_access<Span, Expression>,
+    do_parse!(
+        scope: terminated!(scope_resolution_qualifier, tag!(tokens::STATIC_CALL)) >>
+        name: name >>
+        ( class_constant_access_mapper(scope, name) )
+    )
+);
+
+#[inline]
+fn class_constant_access_mapper<'a>(scope: ScopeResolver<'a>, name: Span<'a>) -> Expression<'a> {
+    Expression::ClassConstantAccess(scope, name)
 }
 
 named_attr!(
@@ -218,12 +234,12 @@ fn dereferencable_variable_mapper<'a>(variable: Variable<'a>) -> DereferencableE
 
 #[inline]
 fn dereferencable_sub_expression_mapper<'a>(expression: Expression<'a>) -> DereferencableExpression<'a> {
-    DereferencableExpression::Expression(expression)
+    DereferencableExpression::Expression(Box::new(expression))
 }
 
 #[inline]
 fn dereferencable_array_mapper<'a>(array: Expression<'a>) -> DereferencableExpression<'a> {
-    DereferencableExpression::Array(array)
+    DereferencableExpression::Array(Box::new(array))
 }
 
 #[inline]
@@ -1311,9 +1327,11 @@ mod tests {
         let output = Result::Done(
             Span::new_at(b"", 6, 1, 7),
             DereferencableExpression::Expression(
-                Expression::Variable(
-                    Variable(
-                        Span::new_at(b"foo", 2, 1, 3)
+                Box::new(
+                    Expression::Variable(
+                        Variable(
+                            Span::new_at(b"foo", 2, 1, 3)
+                        )
                     )
                 )
             )
@@ -1328,24 +1346,26 @@ mod tests {
         let output = Result::Done(
             Span::new_at(b"", 10, 1, 11),
             DereferencableExpression::Array(
-                Expression::Array(vec![
-                    (
-                        None,
-                        Expression::Literal(
-                            Literal::String(
-                                Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 1, 1, 2))
+                Box::new(
+                    Expression::Array(vec![
+                        (
+                            None,
+                            Expression::Literal(
+                                Literal::String(
+                                    Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 1, 1, 2))
+                                )
+                            )
+                        ),
+                        (
+                            None,
+                            Expression::Literal(
+                                Literal::String(
+                                    Token::new(Cow::from(&b"f"[..]), Span::new_at(b"'f'", 6, 1, 7))
+                                )
                             )
                         )
-                    ),
-                    (
-                        None,
-                        Expression::Literal(
-                            Literal::String(
-                                Token::new(Cow::from(&b"f"[..]), Span::new_at(b"'f'", 6, 1, 7))
-                            )
-                        )
-                    )
-                ])
+                    ])
+                )
             )
         );
 
