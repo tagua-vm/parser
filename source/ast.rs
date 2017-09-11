@@ -941,6 +941,25 @@ pub enum Expression<'a> {
     Variable(Variable<'a>)
 }
 
+/// A dereferencable expression.
+///
+/// A dereferencable expression can be used as the left hand side of
+/// dereferencing operators, such as `[]`, `->`, and `::`.
+#[derive(Debug, PartialEq)]
+pub enum DereferencableExpression<'a> {
+    /// A variable.
+    Variable(Variable<'a>),
+
+    /// An expression evaluating to either an array or a string.
+    Expression(Expression<'a>),
+
+    /// An array.
+    Array(Expression<'a>),
+
+    /// A string.
+    String(Literal<'a>)
+}
+
 /// A type declaration.
 ///
 /// A type holds two informations: Name, and copy or reference. A type
