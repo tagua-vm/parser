@@ -165,9 +165,9 @@ named_attr!(
     do_parse!(
         scope: terminated!(
             scope_resolution_qualifier,
-            tag!(tokens::STATIC_CALL)
+            first!(tag!(tokens::STATIC_CALL))
         ) >>
-        name: name >>
+        name: first!(name) >>
         ( class_constant_access_mapper(scope, name) )
     )
 );
