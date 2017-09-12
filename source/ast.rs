@@ -488,7 +488,11 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -533,7 +537,11 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -565,7 +573,10 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -598,7 +609,10 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -665,7 +679,10 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -698,7 +715,11 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -733,7 +754,10 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -775,7 +799,10 @@ pub enum Expression<'a> {
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -803,7 +830,10 @@ pub enum Expression<'a> {
     /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Name};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Name
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -835,7 +865,10 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -865,7 +898,11 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Literal, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Literal,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -898,7 +935,10 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
@@ -927,7 +967,10 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
-    /// use tagua_parser::ast::{Expression, Variable};
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     Variable
+    /// };
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
     ///     Span,
