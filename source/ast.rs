@@ -1614,12 +1614,88 @@ pub enum RelativeScope {
 #[derive(Debug, PartialEq)]
 pub enum ScopeResolver<'a> {
     /// A relative scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     RelativeScope,
+    ///     ScopeResolver
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::scope_resolution_qualifier;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     scope_resolution_qualifier(Span::new(b"self")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 4, 1, 5),
+    ///         ScopeResolver::ByRelative(RelativeScope::ToSelf)
+    ///     )
+    /// );
+    /// # }
+    /// ```
     ByRelative(RelativeScope),
 
     /// A scope defined by a name.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Name,
+    ///     ScopeResolver
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::scope_resolution_qualifier;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     scope_resolution_qualifier(Span::new(b"Foo")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 3, 1, 4),
+    ///         ScopeResolver::ByName(Name::Unqualified(Span::new(b"Foo")))
+    ///     )
+    /// );
+    /// # }
+    /// ```
     ByName(Name<'a>),
 
     /// A scope defined by a dereferencable expression.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     DereferencableExpression,
+    ///     ScopeResolver,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::scope_resolution_qualifier;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     scope_resolution_qualifier(Span::new(b"$foo")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 4, 1, 5),
+    ///         ScopeResolver::ByExpression(
+    ///             DereferencableExpression::Variable(
+    ///                 Variable(
+    ///                     Span::new_at(b"foo", 1, 1, 2)
+    ///                 )
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     ByExpression(DereferencableExpression<'a>)
 }
 
