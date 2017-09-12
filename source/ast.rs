@@ -1225,6 +1225,8 @@ pub enum Ty<'a> {
     /// ```
     Copy(Option<Name<'a>>),
 
+    NullableCopy(Name<'a>),
+
     /// A type representing a datum passed by reference.
     ///
     /// # Examples
@@ -1261,7 +1263,9 @@ pub enum Ty<'a> {
     /// );
     /// # }
     /// ```
-    Reference(Option<Name<'a>>)
+    Reference(Option<Name<'a>>),
+
+    NullableReference(Name<'a>)
 }
 
 /// A parameter, aka input, of a function.
