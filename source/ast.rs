@@ -524,7 +524,35 @@ pub enum Expression<'a> {
     /// ```
     Array(Vec<(Option<Expression<'a>>, Expression<'a>)>),
 
-    /// Class constant access.
+    /// Class constant access is used to access a class constant given
+    /// by a certain scope resolver.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Expression,
+    ///     RelativeScope,
+    ///     ScopeResolver
+    /// };
+    /// use tagua_parser::rules::expressions::expression;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     expression(Span::new(b"self::FOO")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 9, 1, 10),
+    ///         Expression::ClassConstantAccess(
+    ///             ScopeResolver::ByRelative(RelativeScope::ToSelf),
+    ///             Span::new_at(b"FOO", 6, 1, 7)
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     ClassConstantAccess(ScopeResolver<'a>, Span<'a>),
 
     /// Echo converts each of its expression's values into strings,
