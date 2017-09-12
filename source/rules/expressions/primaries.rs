@@ -125,13 +125,13 @@ named_attr!(
     "],
     pub primary<Span, Expression>,
     alt_complete!(
-        variable              => { variable_mapper }
+        class_constant_access
+      | variable              => { variable_mapper }
       | constant_access       => { constant_access_mapper }
       | literal               => { literal_mapper }
       | array
       | intrinsic
       | anonymous_function
-      | class_constant_access
       | preceded!(
             tag!(tokens::LEFT_PARENTHESIS),
             terminated!(
@@ -156,8 +156,11 @@ fn constant_access_mapper(name: Name) -> Expression {
 fn literal_mapper(literal: Literal) -> Expression {
     Expression::Literal(literal)
 }
+
 named_attr!(
-    #[doc=""],
+    #[doc="
+        Recognize a class constant access.
+    "],
     pub class_constant_access<Span, Expression>,
     do_parse!(
         scope: terminated!(
@@ -1228,6 +1231,7 @@ mod tests {
     use super::{
         anonymous_function,
         array,
+        class_constant_access,
         dereferencable_expression,
         intrinsic,
         intrinsic_construct,
@@ -1269,6 +1273,95 @@ mod tests {
         Span,
         Token
     };
+
+    #[test]
+    fn case_class_constant_access_relative_self() {
+        let input  = Span::new(b"self::FOO");
+        let output = Result::Done(
+            Span::new_at(b"", 9, 1, 10),
+            Expression::ClassConstantAccess(
+                ScopeResolver::ByRelative(RelativeScope::ToSelf),
+                Span::new_at(b"FOO", 6, 1, 7)
+            )
+        );
+
+        assert_eq!(class_constant_access(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_class_constant_access_relative_parent() {
+        let input  = Span::new(b"parent::FOO");
+        let output = Result::Done(
+            Span::new_at(b"", 11, 1, 12),
+            Expression::ClassConstantAccess(
+                ScopeResolver::ByRelative(RelativeScope::ToParent),
+                Span::new_at(b"FOO", 8, 1, 9)
+            )
+        );
+
+        assert_eq!(class_constant_access(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_class_constant_access_relative_static() {
+        let input  = Span::new(b"static::FOO");
+        let output = Result::Done(
+            Span::new_at(b"", 11, 1, 12),
+            Expression::ClassConstantAccess(
+                ScopeResolver::ByRelative(RelativeScope::ToStatic),
+                Span::new_at(b"FOO", 8, 1, 9)
+            )
+        );
+
+        assert_eq!(class_constant_access(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_class_constant_access_qualified_name() {
+        let input  = Span::new(b"Foo\\Bar::BAZ");
+        let output = Result::Done(
+            Span::new_at(b"", 12, 1, 13),
+            Expression::ClassConstantAccess(
+                ScopeResolver::ByName(
+                    Name::Qualified(smallvec![
+                        Span::new(b"Foo"),
+                        Span::new_at(b"Bar", 4, 1, 5)
+                    ])
+                ),
+                Span::new_at(b"BAZ", 9, 1, 10)
+            )
+        );
+
+        assert_eq!(class_constant_access(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
+
+    #[test]
+    fn case_class_constant_access_dereferencable_expression() {
+        let input  = Span::new(b"$this::FOO");
+        let output = Result::Done(
+            Span::new_at(b"", 10, 1, 11),
+            Expression::ClassConstantAccess(
+                ScopeResolver::ByExpression(
+                    DereferencableExpression::Variable(
+                        Variable(Span::new_at(b"this", 2, 1, 3))
+                    )
+                ),
+                Span::new_at(b"FOO", 7, 1, 8),
+            )
+        );
+
+        assert_eq!(class_constant_access(input), output);
+        assert_eq!(primary(input), output);
+        assert_eq!(expression(input), output);
+    }
 
     #[test]
     fn case_scope_resolution_qualifier_by_relative() {
