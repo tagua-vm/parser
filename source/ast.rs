@@ -1021,16 +1021,156 @@ pub enum Expression<'a> {
 /// dereferencing operators, such as `[]`, `->`, and `::`.
 #[derive(Debug, PartialEq)]
 pub enum DereferencableExpression<'a> {
-    /// A variable.
+    /// A variable representing either an object, a string, or an
+    /// array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     DereferencableExpression,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::dereferencable_expression;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     dereferencable_expression(Span::new(b"$foo")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 4, 1, 5),
+    ///         DereferencableExpression::Variable(
+    ///             Variable(
+    ///                 Span::new_at(b"foo", 1, 1, 2)
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Variable(Variable<'a>),
 
     /// An expression evaluating to either an array or a string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     DereferencableExpression,
+    ///     Expression,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::dereferencable_expression;
+    /// use tagua_parser::tokens::Span;
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     dereferencable_expression(Span::new(b"($foo)")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 6, 1, 7),
+    ///         DereferencableExpression::Expression(
+    ///             Box::new(
+    ///                 Expression::Variable(
+    ///                     Variable(
+    ///                         Span::new_at(b"foo", 2, 1, 3)
+    ///                     )
+    ///                 )
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Expression(Box<Expression<'a>>),
 
-    /// An array.
+    /// An array representing a callable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     DereferencableExpression,
+    ///     Expression,
+    ///     Literal
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::dereferencable_expression;
+    /// use tagua_parser::tokens::{
+    ///     Span,
+    ///     Token
+    /// };
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     dereferencable_expression(Span::new(b"['C', 'f']")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 10, 1, 11),
+    ///         DereferencableExpression::Array(
+    ///             Box::new(
+    ///                 Expression::Array(vec![
+    ///                     (
+    ///                         None,
+    ///                         Expression::Literal(
+    ///                             Literal::String(
+    ///                                 Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 1, 1, 2))
+    ///                             )
+    ///                         )
+    ///                     ),
+    ///                     (
+    ///                         None,
+    ///                         Expression::Literal(
+    ///                             Literal::String(
+    ///                                 Token::new(Cow::from(&b"f"[..]), Span::new_at(b"'f'", 6, 1, 7))
+    ///                             )
+    ///                         )
+    ///                     )
+    ///                 ])
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Array(Box<Expression<'a>>),
 
-    /// A string.
+    /// A string representing a qualified name.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use std::borrow::Cow;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     DereferencableExpression,
+    ///     Literal
+    /// };
+    /// use tagua_parser::rules::expressions::primaries::dereferencable_expression;
+    /// use tagua_parser::tokens::{
+    ///     Span,
+    ///     Token
+    /// };
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     dereferencable_expression(Span::new(b"'C'")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 3, 1, 4),
+    ///         DereferencableExpression::String(
+    ///             Literal::String(
+    ///                 Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 0, 1, 1))
+    ///             )
+    ///         )
+    ///     )
+    /// );
+    /// # }
+    /// ```
     String(Literal<'a>)
 }
 
