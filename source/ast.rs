@@ -1187,9 +1187,15 @@ pub enum DereferencableExpression<'a> {
 /// means this is a new binding over an existing binding.
 #[derive(Debug, PartialEq)]
 pub enum Ty<'a> {
-    /// A type representing a datum passed by copy.
+    /// A type representing a set of values passed by copy.
+    ///
+    /// The option is required because the type is not necessarily
+    /// specified, which is equivalent to the `mixed` type, i.e. all
+    /// possible types.
     ///
     /// # Examples
+    ///
+    /// This example shows a named copy type:
     ///
     /// ```
     /// # extern crate tagua_parser;
@@ -1223,13 +1229,89 @@ pub enum Ty<'a> {
     /// );
     /// # }
     /// ```
+    ///
+    /// This example shows an unnamed copy type, it means all types by copy:
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # use tagua_parser::Result;
+    /// # use tagua_parser::ast::{
+    /// #     Arity,
+    /// #     Parameter,
+    /// #     Ty,
+    /// #     Variable
+    /// # };
+    /// # use tagua_parser::rules::statements::function::parameters;
+    /// # use tagua_parser::tokens::Span;
+    /// #
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(Span::new(b"($x)")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 4, 1, 5),
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::Copy(None),
+    ///                 name : Variable(Span::new_at(b"x", 2, 1, 3)),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Copy(Option<Name<'a>>),
 
-    NullableCopy(Name<'a>),
-
-    /// A type representing a datum passed by reference.
+    /// A type representing a set of values that includes the `NULL`
+    /// value, passed by copy.
+    ///
+    /// Contrary to `Copy`, there is no option because a nullable type
+    /// must have a name. It is not possible to have a “nullable mixed
+    /// type”.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Arity,
+    ///     Name,
+    ///     Parameter,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::statements::function::parameters;
+    /// use tagua_parser::tokens::{
+    ///     Span,
+    ///     Token
+    /// };
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(Span::new(b"(?I $x)")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 7, 1, 8),
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::NullableCopy(Name::Unqualified(Span::new_at(b"I", 2, 1, 3))),
+    ///                 name : Variable(Span::new_at(b"x", 5, 1, 6)),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
+    NullableCopy(Name<'a>),
+
+    /// A type representing a set of values passed by reference.
+    ///
+    /// The option is required for the same reason than `Copy`.
+    ///
+    /// # Examples
+    ///
+    /// This example shows a named reference type:
     ///
     /// ```
     /// # extern crate tagua_parser;
@@ -1263,8 +1345,79 @@ pub enum Ty<'a> {
     /// );
     /// # }
     /// ```
+    ///
+    /// This example shows an unnamed reference type, it means all types by reference:
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// # use tagua_parser::Result;
+    /// # use tagua_parser::ast::{
+    /// #     Arity,
+    /// #     Parameter,
+    /// #     Ty,
+    /// #     Variable
+    /// # };
+    /// # use tagua_parser::rules::statements::function::parameters;
+    /// # use tagua_parser::tokens::Span;
+    /// #
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(Span::new(b"(&$x)")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 5, 1, 6),
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::Reference(None),
+    ///                 name : Variable(Span::new_at(b"x", 3, 1, 4)),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     Reference(Option<Name<'a>>),
 
+    /// A type representing a set of values that includes the `NULL`
+    /// values, passed by reference.
+    ///
+    /// Contrary to `Reference`, there is no option for the same
+    /// reason than `NullableCopy`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate tagua_parser;
+    /// use tagua_parser::Result;
+    /// use tagua_parser::ast::{
+    ///     Arity,
+    ///     Name,
+    ///     Parameter,
+    ///     Ty,
+    ///     Variable
+    /// };
+    /// use tagua_parser::rules::statements::function::parameters;
+    /// use tagua_parser::tokens::{
+    ///     Span,
+    ///     Token
+    /// };
+    ///
+    /// # fn main() {
+    /// assert_eq!(
+    ///     parameters(Span::new(b"(?I &$x)")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 8, 1, 9),
+    ///         Arity::Finite(vec![
+    ///             Parameter {
+    ///                 ty   : Ty::NullableReference(Name::Unqualified(Span::new_at(b"I", 2, 1, 3))),
+    ///                 name : Variable(Span::new_at(b"x", 6, 1, 7)),
+    ///                 value: None
+    ///             }
+    ///         ])
+    ///     )
+    /// );
+    /// # }
+    /// ```
     NullableReference(Name<'a>)
 }
 
