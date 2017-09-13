@@ -1191,7 +1191,9 @@ macro_rules! impl_slice_for_range {
                                 (next_offset - last_newline_position) as u32
                             },
 
-                            None => 0 // unreachable
+                            None => {
+                                unreachable!();
+                            }
                         }
                     };
 
