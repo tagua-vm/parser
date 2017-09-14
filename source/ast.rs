@@ -705,6 +705,8 @@ pub enum Expression<'a> {
     /// # Examples
     ///
     /// ```
+    /// # extern crate smallvec;
+    /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
@@ -722,15 +724,15 @@ pub enum Expression<'a> {
     ///     expression(Span::new(b"isset($foo, $bar)")),
     ///     Result::Done(
     ///         Span::new_at(b"", 17, 1, 18),
-    ///         Expression::Isset(vec![
-    ///             Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8))),
-    ///             Expression::Variable(Variable(Span::new_at(b"bar", 13, 1, 14)))
+    ///         Expression::Isset(smallvec![
+    ///             Variable(Span::new_at(b"foo", 7, 1, 8)),
+    ///             Variable(Span::new_at(b"bar", 13, 1, 14))
     ///         ])
     ///     )
     /// );
     /// # }
     /// ```
-    Isset(Vec<Expression<'a>>),
+    Isset(SmallVec<[Variable<'a>; 1]>),
 
     /// Match and assign one or more elements of the source array to
     /// the target variables.
