@@ -711,7 +711,7 @@ named_attr!(
                     first!(variable)
                 )
             ),
-            into_unset_smallvector_mapper
+            into_smallvector_mapper
         ) >>
         result: terminated!(
             fold_into_vector_many0!(
@@ -728,7 +728,7 @@ named_attr!(
 );
 
 #[inline]
-fn into_unset_smallvector_mapper(variable: Variable) -> StdResult<SmallVec<[Variable; 1]>, ()> {
+fn into_smallvector_mapper(variable: Variable) -> StdResult<SmallVec<[Variable; 1]>, ()> {
     Ok(smallvec![variable])
 }
 
@@ -930,6 +930,9 @@ named_attr!(
         # Examples
 
         ```
+        # extern crate smallvec;
+        # #[macro_use]
+        # extern crate tagua_parser;
         use tagua_parser::Result;
         use tagua_parser::ast::{Expression, Variable};
         use tagua_parser::rules::expressions::primaries::intrinsic_isset;
@@ -943,9 +946,9 @@ named_attr!(
             intrinsic_isset(Span::new(b\"isset($foo, $bar)\")),
             Result::Done(
                 Span::new_at(b\"\", 17, 1, 18),
-                Expression::Isset(vec![
-                    Expression::Variable(Variable(Span::new_at(b\"foo\", 7, 1, 8))),
-                    Expression::Variable(Variable(Span::new_at(b\"bar\", 13, 1, 14)))
+                Expression::Isset(smallvec![
+                    Variable(Span::new_at(b\"foo\", 7, 1, 8)),
+                    Variable(Span::new_at(b\"bar\", 13, 1, 14))
                 ])
             )
         );
@@ -959,16 +962,16 @@ named_attr!(
                 keyword!(tokens::ISSET),
                 preceded!(
                     first!(tag!(tokens::LEFT_PARENTHESIS)),
-                    first!(expression)
+                    first!(variable)
                 )
             ),
-            into_vector_mapper
+            into_smallvector_mapper
         ) >>
         result: terminated!(
             fold_into_vector_many0!(
                 preceded!(
                     first!(tag!(tokens::COMMA)),
-                    first!(expression)
+                    first!(variable)
                 ),
                 accumulator
             ),
@@ -979,8 +982,8 @@ named_attr!(
 );
 
 #[inline]
-fn into_isset(expressions: Vec<Expression>) -> Expression {
-    Expression::Isset(expressions)
+fn into_isset(variables: SmallVec<[Variable; 1]>) -> Expression {
+    Expression::Isset(variables)
 }
 
 named_attr!(
@@ -2576,8 +2579,8 @@ mod tests {
         let input  = Span::new(b"isset($foo)");
         let output = Result::Done(
             Span::new_at(b"", 11, 1, 12),
-            Expression::Isset(vec![
-                Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8)))
+            Expression::Isset(smallvec![
+                Variable(Span::new_at(b"foo", 7, 1, 8))
             ])
         );
 
@@ -2593,10 +2596,10 @@ mod tests {
         let input  = Span::new(b"isset($foo, $bar, $baz)");
         let output = Result::Done(
             Span::new_at(b"", 23, 1, 24),
-            Expression::Isset(vec![
-                Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8))),
-                Expression::Variable(Variable(Span::new_at(b"bar", 13, 1, 14))),
-                Expression::Variable(Variable(Span::new_at(b"baz", 19, 1, 20)))
+            Expression::Isset(smallvec![
+                Variable(Span::new_at(b"foo", 7, 1, 8)),
+                Variable(Span::new_at(b"bar", 13, 1, 14)),
+                Variable(Span::new_at(b"baz", 19, 1, 20))
             ])
         );
 
@@ -2622,7 +2625,7 @@ mod tests {
         let input  = Span::new(b"isset()");
         let output = Result::Error(Error::Position(ErrorKind::Alt, input));
 
-        assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 6, 1, 7))));
+        assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Tag, Span::new_at(b")", 6, 1, 7))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
