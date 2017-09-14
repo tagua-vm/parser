@@ -962,6 +962,7 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate smallvec;
+    /// # #[macro_use]
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
