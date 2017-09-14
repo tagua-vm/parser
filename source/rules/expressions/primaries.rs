@@ -39,7 +39,7 @@ use std::result::Result as StdResult;
 use super::expression;
 use super::super::literals::{
     literal,
-    string
+    string_single_quoted
 };
 use super::super::statements::compound_statement;
 use super::super::statements::function::{
@@ -227,9 +227,9 @@ named_attr!(
                 first!(expression),
                 first!(tag!(tokens::RIGHT_PARENTHESIS))
             )
-        )        => { dereferencable_sub_expression_mapper }
-      | array    => { dereferencable_array_mapper }
-      | string   => { dereferencable_string_mapper }
+        )                    => { dereferencable_sub_expression_mapper }
+      | array                => { dereferencable_array_mapper }
+      | string_single_quoted => { dereferencable_string_mapper }
     )
 );
 

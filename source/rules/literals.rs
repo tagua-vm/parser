@@ -510,7 +510,10 @@ named_attr!(
     )
 );
 
-fn string_single_quoted(span: Span) -> Result<Span, Literal> {
+/// Recognize a single quoted string.
+///
+/// See the `string` parser for more details.
+pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
     let input        = span.as_slice();
     let input_length = span.input_len();
 
