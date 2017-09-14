@@ -956,11 +956,12 @@ pub enum Expression<'a> {
     /// ```
     Reference(Box<Expression<'a>>),
 
-    /// Unset the variables designated by each expression.
+    /// Unset a set of variables.
     ///
     /// # Examples
     ///
     /// ```
+    /// # extern crate smallvec;
     /// # extern crate tagua_parser;
     /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
@@ -978,15 +979,15 @@ pub enum Expression<'a> {
     ///     expression(Span::new(b"unset($foo, $bar)")),
     ///     Result::Done(
     ///         Span::new_at(b"", 17, 1, 18),
-    ///         Expression::Unset(vec![
-    ///             Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8))),
-    ///             Expression::Variable(Variable(Span::new_at(b"bar", 13, 1, 14)))
+    ///         Expression::Unset(smallvec![
+    ///             Variable(Span::new_at(b"foo", 7, 1, 8)),
+    ///             Variable(Span::new_at(b"bar", 13, 1, 14))
     ///         ])
     ///     )
     /// );
     /// # }
     /// ```
-    Unset(Vec<Expression<'a>>),
+    Unset(SmallVec<[Variable<'a>; 1]>),
 
     /// A variable.
     ///
