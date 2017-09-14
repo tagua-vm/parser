@@ -57,39 +57,6 @@ pub struct Addition<'a> {
 /// A literal represents a fixed value, aka an atom.
 #[derive(Debug, PartialEq)]
 pub enum Literal<'a> {
-    /// A boolean, either `true` or `false`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::Literal;
-    /// use tagua_parser::rules::literals::literal;
-    /// use tagua_parser::tokens::{
-    ///     Span,
-    ///     Token
-    /// };
-    ///
-    /// # fn main() {
-    /// assert_eq!(
-    ///     literal(Span::new(b"true")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 4, 1, 5),
-    ///         Literal::Boolean(Token::new(true, Span::new(b"true")))
-    ///     )
-    /// );
-    /// assert_eq!(
-    ///     literal(Span::new(b"false")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 5, 1, 6),
-    ///         Literal::Boolean(Token::new(false, Span::new(b"false")))
-    ///     )
-    /// );
-    /// # }
-    /// ```
-    Boolean(Token<'a, bool>),
-
     /// An integer, for instance a binary, octal, decimal or hexadecimal number.
     ///
     /// # Examples
@@ -136,32 +103,6 @@ pub enum Literal<'a> {
     /// # }
     /// ```
     Integer(Token<'a, i64>),
-
-    /// A null value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
-    /// use tagua_parser::ast::Literal;
-    /// use tagua_parser::rules::literals::literal;
-    /// use tagua_parser::tokens::{
-    ///     Span,
-    ///     Token
-    /// };
-    ///
-    /// # fn main() {
-    /// assert_eq!(
-    ///     literal(Span::new(b"null")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 4, 1, 5),
-    ///         Literal::Null(Token::new((), Span::new(b"null")))
-    ///     )
-    /// );
-    /// # }
-    /// ```
-    Null(Token<'a, ()>),
 
     /// A real, for instance an exponential number.
     ///

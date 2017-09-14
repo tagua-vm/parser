@@ -292,7 +292,7 @@ mod tests {
                 Span::new_at(b"Bar", 16, 2, 13)
             ])
         );
-        
+
         assert_eq!(qualified_name(input), output);
     }
 
