@@ -248,25 +248,6 @@ mod tests {
     }
 
     #[test]
-    fn case_special_unqualified_name() {
-        let tests = vec![
-            ("null", 4, 1, 5),
-            ("NuLl", 4, 1, 5),
-            ("true", 4, 1, 5),
-            ("TrUe", 4, 1, 5),
-            ("false", 5, 1, 6),
-            ("FaLsE", 5, 1, 6),
-        ];
-
-        for &(name, offset, line, column) in &tests {
-            let input  = Span::new(name.as_bytes());
-            let output = Result::Done(Span::new_at(b"", offset, line, column), Name::Unqualified(input));
-
-            assert_eq!(qualified_name(input), output);
-        }
-    }
-
-    #[test]
     fn case_invalid_unqualified_name() {
         let input1 = Span::new(b"class");
         let input2 = Span::new(b"ClAsS");
