@@ -38,22 +38,6 @@ use super::tokens::{
     Token
 };
 
-/// A term.
-#[derive(Debug, PartialEq)]
-pub struct Term<'a> {
-    /// The term value.
-    pub t: Literal<'a>
-}
-
-/// An addition of two terms.
-#[derive(Debug, PartialEq)]
-pub struct Addition<'a> {
-    /// The left-hand side of the addition.
-    pub a: Term<'a>,
-    /// The right-hand side of the addition.
-    pub b: Term<'a>
-}
-
 /// A literal represents a fixed value, aka an atom.
 #[derive(Debug, PartialEq)]
 pub enum Literal<'a> {
