@@ -488,6 +488,10 @@ token!(
     "The `NOT_EQUAL` token.\n\nRepresent the not equal comparison operator, e.g. `$x != $y`."
 );
 token!(
+    pub NOT_EQUAL_BIS: b"<>";
+    "The `NOT_EQUAL_BIS` token.\n\nRepresent the not equal comparison operator (alias of `!=`), e.g. `$x <> $y`."
+);
+token!(
     pub NOT_IDENTICAL: b"!==";
     "The `NOT_IDENTICAL` token.\n\nRepresent the strict not equal comparison operator, e.g. `$x !== $y`."
 );
@@ -576,12 +580,12 @@ token!(
     "The `STRING` token.\n\nRepresent the string type, e.g. `function f(string $x) { … }`."
 );
 token!(
-    pub SUBTRACT: b"-";
-    "The `SUBTRACT` token.\n\nRepresent the subtraction operator, e.g. `$x - $y`."
+    pub SUBSTRACT: b"-";
+    "The `SUBSTRACT` token.\n\nRepresent the subtraction operator, e.g. `$x - $y`."
 );
 token!(
-    pub SUBTRACT_AND_ASSIGN: b"-=";
-    "The `SUBTRACT_AND_ASSIGN` token.\n\nRepresent the subtraction assignment operator, e.g. `$x -= $y;`."
+    pub SUBSTRACT_AND_ASSIGN: b"-=";
+    "The `SUBSTRACT_AND_ASSIGN` token.\n\nRepresent the subtraction assignment operator, e.g. `$x -= $y;`."
 );
 token!(
     pub SWITCH: b"switch";

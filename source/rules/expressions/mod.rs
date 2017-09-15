@@ -35,6 +35,7 @@
 //! in the [Grammar chapter, Expressions
 //! section](https://github.com/php/php-langspec/blob/master/spec/19-grammar.md#expressions).
 
+pub mod assignment;
 pub mod constant;
 pub mod primaries;
 
