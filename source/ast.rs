@@ -812,6 +812,9 @@ pub enum Expression<'a> {
     /// ```
     Name(Name<'a>),
 
+    /// A n-ary operation.
+    NAryOperation(NAryOperation<'a>),
+
     /// Unlike `echo`, `print` can be used in any context allowing an
     /// expression. It always returns the value `1`.
     ///
@@ -1656,6 +1659,168 @@ pub struct AnonymousFunction<'a> {
 
     /// Body of the anonymous function, i.e. a set of statements.
     pub body: Vec<Statement<'a>>
+}
+
+/// A n-ary operation.
+#[derive(Debug, PartialEq)]
+pub enum NAryOperation<'a> {
+    /// An operation with zero operator and one operand.
+    Nullary(Box<Expression<'a>>),
+
+    /// An operation with one operator and one operand: `op x`.
+    Unary {
+        /// The operator.
+        operator: UnaryOperator,
+
+        /// The operand (`x`).
+        operand: Box<NAryOperation<'a>>
+    },
+
+    /// An operation with one operator and two operands: `x op y`.
+    Binary {
+        /// The operator.
+        operator: BinaryOperator,
+
+        /// The left operand (`x`).
+        left_operand: Box<NAryOperation<'a>>,
+
+        /// The right operand (`y`).
+        right_operand: Box<NAryOperation<'a>>
+    }
+}
+
+/// A unary operator.
+#[derive(Debug, PartialEq)]
+pub enum UnaryOperator {
+    /// `~$x`.
+    BitwiseComplement,
+
+    /// `(int) $x`.
+    Cast(CastType),
+
+    /// `--$x`.
+    Decrement,
+
+    /// `@$x`.
+    ErrorControl,
+
+    /// `++$x`.
+    Increment,
+
+    /// `-$x`.
+    Minus,
+
+    /// `!$x`.
+    Negate,
+
+    /// `+$x`.
+    Plus
+}
+
+/// A binary operator.
+#[derive(Debug, PartialEq)]
+pub enum BinaryOperator {
+    /// `$x & $y`.
+    BitwiseAnd,
+
+    /// `$x | $y`.
+    BitwiseOr,
+
+    /// `$x << $y`.
+    BitwiseShiftLeft,
+
+    /// `$x >> $y`.
+    BitwiseShiftRight,
+
+    /// `$x ^ $y`.
+    BitwiseXor,
+
+    /// `$x ?? $y`.
+    Coalesce,
+
+    /// `$x <=> $y`.
+    Comparison,
+
+    /// `$x / $y`.
+    Division,
+
+    /// `$x . $y`.
+    Dot,
+
+    /// `$x == $y`.
+    Equal,
+
+    /// `$x > $y`.
+    GreaterThan,
+
+    /// `$x >= $y`.
+    GreaterThanOrEqualTo,
+
+    /// `$x === $y`.
+    Identical,
+
+    /// `$x instanceof $y`.
+    InstanceOf,
+
+    /// `$x < $y`.
+    LessThan,
+
+    /// `$x <= $y`.
+    LessThanOrEqualTo,
+
+    /// `$x && $y`.
+    LogicalAnd,
+
+    /// `$x || $y`.
+    LogicalOr,
+
+    /// `$x - $y`.
+    Minus,
+
+    /// `$x % $y`.
+    Modulo,
+
+    /// `$x * $y`.
+    Multiplication,
+
+    /// `$x != $y` or `$x <> $y`.
+    NotEqual,
+
+    /// `$x !== $y`.
+    NotIdentical,
+
+    /// `$x + $y`.
+    Plus
+}
+
+/// A cast type.
+///
+/// A datum can be casted into another type by using the `(x) $y`
+/// notation where `x` is the targeted type. Some type aliases exist,
+/// like `bool` and `boolean`. In this case, they are represented by
+/// the same variant.
+#[derive(Debug, PartialEq)]
+pub enum CastType {
+    /// `(array)`.
+    Array,
+
+    /// `(binary)`.
+    Binary,
+
+    /// `(bool)` or `(boolean)`.
+    Boolean,
+
+    /// `(double)`, `(float)`, or `(real)`.
+    Float,
+
+    /// `(int)` or `(integer)`.
+    Integer,
+
+    /// `(object)`.
+    Object,
+
+    /// `(string)`.
+    String
 }
 
 /// A statement.
