@@ -40,7 +40,8 @@ use super::super::expressions::expression;
 use super::super::super::ast::{
     NAryOperation,
     BinaryOperator,
-    Expression
+    Expression,
+    TernaryOperator,
 };
 use super::super::super::tokens::Span;
 use super::super::super::tokens;
@@ -50,16 +51,8 @@ named_attr!(
         Recognize all assignment expressions.
     "],
     pub assignment<Span, Expression>,
-    call!(conditional)
-);
-
-named_attr!(
-    #[doc="
-        Recognize a conditional expression.
-    "],
-    pub conditional<Span, Expression>,
     map_res!(
-        logical_or,
+        conditional,
         nary_expression_mapper
     )
 );
@@ -68,6 +61,48 @@ named_attr!(
 fn nary_expression_mapper<'a>(nary_operation: NAryOperation<'a>) -> Result<Expression<'a>, ()> {
     Ok(Expression::NAryOperation(nary_operation))
 }
+
+named_attr!(
+    #[doc="
+        Recognize a conditional expression.
+    "],
+    pub conditional<Span, NAryOperation>,
+    do_parse!(
+        left_operand: logical_or >>
+        result: fold_many0!(
+            do_parse!(
+                first!(tag!(tokens::TERNARY_THEN)) >>
+                middle_operand: opt!(first!(expression)) >>
+                first!(tag!(tokens::TERNARY_ELSE)) >>
+                right_operand: first!(logical_or) >>
+                (middle_operand, right_operand)
+            ),
+            left_operand,
+            |accumulator, (middle_operand, right_operand)| {
+                match middle_operand {
+                    Some(middle_operand) => {
+                        NAryOperation::Ternary {
+                            operator      : TernaryOperator::Conditional,
+                            left_operand  : Box::new(accumulator),
+                            middle_operand: Box::new(middle_operand),
+                            right_operand : Box::new(right_operand)
+                        }
+                    },
+
+                    None => {
+                        NAryOperation::Binary {
+                            operator     : BinaryOperator::Conditional,
+                            left_operand : Box::new(accumulator),
+                            right_operand: Box::new(right_operand)
+                        }
+                    }
+
+                }
+            }
+        ) >>
+        (result)
+    )
+);
 
 macro_rules! binary_operation {
     (
@@ -79,7 +114,7 @@ macro_rules! binary_operation {
         named!(
             $parser_name<Span, NAryOperation>,
             do_parse!(
-                left_operand: first!($left_parser) >>
+                left_operand: $left_parser >>
                 result: fold_many0!(
                     preceded!(
                         first!(tag!(tokens::$operator_token)),
@@ -108,7 +143,7 @@ macro_rules! binary_operation {
         named!(
             $parser_name<Span, NAryOperation>,
             do_parse!(
-                left_operand: first!($left_parser) >>
+                left_operand: $left_parser >>
                 result: fold_many0!(
                     do_parse!(
                         operator: first!(
@@ -210,15 +245,13 @@ named!(
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        assignment,
-        conditional
-    };
+    use super::assignment;
     use super::super::super::super::ast::{
         BinaryOperator,
         Expression,
         Literal,
-        NAryOperation
+        NAryOperation,
+        TernaryOperator
     };
     use super::super::super::super::internal::Result;
     use super::super::super::super::tokens::{
@@ -244,11 +277,67 @@ mod tests {
         )
     }
 
+    /// Build a ternary operation.
+    macro_rules! ternary_operation {
+        ($operator:ident, $left_operand:expr, $middle_operand:expr, $right_operand:expr) => (
+            NAryOperation::Ternary {
+                operator      : TernaryOperator::$operator,
+                left_operand  : Box::new($left_operand),
+                middle_operand: Box::new($middle_operand),
+                right_operand : Box::new($right_operand)
+            }
+        )
+    }
+
     /// Build a literal expression with an integer inside.
     macro_rules! integer {
         ($value:expr, $span:expr) => (
             Expression::Literal(Literal::Integer(Token::new($value, $span)))
         )
+    }
+
+    #[test]
+    fn case_conditional() {
+        let input  = Span::new(b"1 ? 2 : 3 ? 4 : 5");
+        let output = Result::Done(
+            Span::new_at(b"", 17, 1, 18),
+            Expression::NAryOperation(
+                ternary_operation!(
+                    Conditional,
+                    ternary_operation!(
+                        Conditional,
+                        nullary_operation!(integer!(1, Span::new(b"1"))),
+                        integer!(2, Span::new_at(b"2", 4, 1, 5)),
+                        nullary_operation!(integer!(3, Span::new_at(b"3", 8, 1, 9)))
+                    ),
+                    integer!(4, Span::new_at(b"4", 12, 1, 13)),
+                    nullary_operation!(integer!(5, Span::new_at(b"5", 16, 1, 17)))
+                )
+            )
+        );
+
+        assert_eq!(assignment(input), output);
+    }
+
+    #[test]
+    fn case_conditional_with_none_middle_operator() {
+        let input  = Span::new(b"1 ?: 2 ? : 3");
+        let output = Result::Done(
+            Span::new_at(b"", 12, 1, 13),
+            Expression::NAryOperation(
+                binary_operation!(
+                    Conditional,
+                    binary_operation!(
+                        Conditional,
+                        nullary_operation!(integer!(1, Span::new(b"1"))),
+                        nullary_operation!(integer!(2, Span::new_at(b"2", 5, 1, 6)))
+                    ),
+                    nullary_operation!(integer!(3, Span::new_at(b"3", 11, 1, 12)))
+                )
+            )
+        );
+
+        assert_eq!(assignment(input), output);
     }
 
     #[test]
@@ -270,7 +359,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -292,7 +380,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -314,7 +401,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -336,7 +422,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -358,7 +443,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -380,7 +464,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -402,7 +485,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -424,7 +506,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -446,7 +527,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -468,7 +548,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -490,7 +569,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -512,7 +590,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -534,7 +611,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -556,7 +632,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -578,7 +653,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -600,7 +674,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -622,7 +695,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -644,7 +716,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -666,7 +737,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -688,7 +758,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -710,7 +779,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -732,7 +800,6 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 
     #[test]
@@ -754,6 +821,5 @@ mod tests {
         );
 
         assert_eq!(assignment(input), output);
-        assert_eq!(conditional(input), output);
     }
 }
