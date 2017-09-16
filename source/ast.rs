@@ -1686,6 +1686,21 @@ pub enum NAryOperation<'a> {
 
         /// The right operand (`y`).
         right_operand: Box<NAryOperation<'a>>
+    },
+
+    /// An operation with one operator and three operands: `x op y op z`.
+    Ternary {
+        /// The operator.
+        operator: TernaryOperator,
+
+        /// The left operand (`x`).
+        left_operand: Box<NAryOperation<'a>>,
+
+        /// The middle operand (`y`).
+        middle_operand: Box<Expression<'a>>,
+
+        /// The right operand (`y`).
+        right_operand: Box<NAryOperation<'a>>
     }
 }
 
@@ -1741,6 +1756,9 @@ pub enum BinaryOperator {
     /// `$x <=> $y`.
     Comparison,
 
+    /// `$x ?: $z`, i.e. `$x ? $y : $z` with `$y` being optional.
+    Conditional,
+
     /// `$x / $y`.
     Division,
 
@@ -1791,6 +1809,13 @@ pub enum BinaryOperator {
 
     /// `$x + $y`.
     Plus
+}
+
+/// A ternary operator.
+#[derive(Debug, PartialEq)]
+pub enum TernaryOperator {
+    /// `$x ? $y : $z`.
+    Conditional
 }
 
 /// A cast type.
