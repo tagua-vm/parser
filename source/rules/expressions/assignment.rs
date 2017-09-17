@@ -53,7 +53,10 @@ named_attr!(
     "],
     pub assignment<Span, Expression>,
     map_res!(
-        conditional,
+        alt_complete!(
+            coalesce
+          | conditional
+        ),
         nary_expression_mapper
     )
 );
@@ -99,6 +102,22 @@ named!(
             }
         ) >>
         (result)
+    )
+);
+
+named!(
+    coalesce<Span, NAryOperation>,
+    do_parse!(
+        left_operand: logical_or >>
+        first!(tag!(tokens::COALESCE)) >>
+        right_operand: first!(expression) >>
+        (
+            NAryOperation::Binary {
+                operator     : BinaryOperator::Coalesce,
+                left_operand : Box::new(left_operand),
+                right_operand: Box::new(NAryOperation::Nullary(Box::new(right_operand)))
+            }
+        )
     )
 );
 
@@ -885,6 +904,23 @@ mod tests {
                     InstanceOf,
                     nullary_operation!(integer!(1, Span::new(b"1"))),
                     nullary_operation!(Expression::Variable(Variable(Span::new_at(b"c", 14, 1, 15))))
+                )
+            )
+        );
+
+        assert_eq!(assignment(input), output);
+    }
+
+    #[test]
+    fn case_coalesce() {
+        let input  = Span::new(b"1 ?? 2");
+        let output = Result::Done(
+            Span::new_at(b"", 6, 1, 7),
+            Expression::NAryOperation(
+                binary_operation!(
+                    Coalesce,
+                    nullary_operation!(integer!(1, Span::new(b"1"))),
+                    nullary_operation!(integer!(2, Span::new_at(b"2", 5, 1, 6)))
                 )
             )
         );
