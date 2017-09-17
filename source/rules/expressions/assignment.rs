@@ -45,6 +45,7 @@ use super::super::super::ast::{
 };
 use super::super::super::tokens::Span;
 use super::super::super::tokens;
+use super::super::tokens::qualified_name;
 
 named_attr!(
     #[doc="
@@ -223,13 +224,48 @@ binary_operation!(
 );
 binary_operation!(
     multiplicative:
-    leaf
+    instanceof
     (
         MULTIPLY as Multiplication,
         DIVIDE   as Division,
         MODULO   as Modulo
     )
-    leaf
+    instanceof
+);
+
+named!(
+    instanceof<Span, NAryOperation>,
+    alt_complete!(
+        do_parse!(
+            subject: expression >>
+            type_designator: preceded!(
+                first!(tag!(tokens::INSTANCEOF)),
+                first!(
+                    alt!(
+                        qualified_name => {
+                            |qualified_name| {
+                                Expression::Name(qualified_name)
+                            }
+                        }
+                      | expression
+                    )
+                )
+            ) >>
+            (
+                NAryOperation::Binary {
+                    operator     : BinaryOperator::InstanceOf,
+                    left_operand : Box::new(NAryOperation::Nullary(Box::new(subject))),
+                    right_operand: Box::new(NAryOperation::Nullary(Box::new(type_designator)))
+                }
+            )
+        )
+      | unary_operation
+    )
+);
+
+named!(
+    unary_operation<Span, NAryOperation>,
+    call!(leaf)
 );
 
 named!(
@@ -251,7 +287,9 @@ mod tests {
         Expression,
         Literal,
         NAryOperation,
-        TernaryOperator
+        Name,
+        TernaryOperator,
+        Variable
     };
     use super::super::super::super::internal::Result;
     use super::super::super::super::tokens::{
@@ -816,6 +854,40 @@ mod tests {
                         nullary_operation!(integer!(2, Span::new_at(b"2", 4, 1, 5)))
                     ),
                     nullary_operation!(integer!(3, Span::new_at(b"3", 8, 1, 9)))
+                )
+            )
+        );
+
+        assert_eq!(assignment(input), output);
+    }
+
+    #[test]
+    fn case_instanceof_with_qualified_name_type_designator() {
+        let input  = Span::new(b"1 instanceof C");
+        let output = Result::Done(
+            Span::new_at(b"", 14, 1, 15),
+            Expression::NAryOperation(
+                binary_operation!(
+                    InstanceOf,
+                    nullary_operation!(integer!(1, Span::new(b"1"))),
+                    nullary_operation!(Expression::Name(Name::Unqualified(Span::new_at(b"C", 13, 1, 14))))
+                )
+            )
+        );
+
+        assert_eq!(assignment(input), output);
+    }
+
+    #[test]
+    fn case_instanceof_with_expression_type_designator() {
+        let input  = Span::new(b"1 instanceof $c");
+        let output = Result::Done(
+            Span::new_at(b"", 15, 1, 16),
+            Expression::NAryOperation(
+                binary_operation!(
+                    InstanceOf,
+                    nullary_operation!(integer!(1, Span::new(b"1"))),
+                    nullary_operation!(Expression::Variable(Variable(Span::new_at(b"c", 14, 1, 15))))
                 )
             )
         );
