@@ -63,11 +63,8 @@ fn nary_expression_mapper<'a>(nary_operation: NAryOperation<'a>) -> Result<Expre
     Ok(Expression::NAryOperation(nary_operation))
 }
 
-named_attr!(
-    #[doc="
-        Recognize a conditional expression.
-    "],
-    pub conditional<Span, NAryOperation>,
+named!(
+    conditional<Span, NAryOperation>,
     do_parse!(
         left_operand: logical_or >>
         result: fold_many0!(
