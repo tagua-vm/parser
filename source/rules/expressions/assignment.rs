@@ -53,10 +53,7 @@ named_attr!(
     "],
     pub assignment<Span, Expression>,
     map_res!(
-        alt_complete!(
-            coalesce
-          | conditional
-        ),
+        conditional,
         nary_expression_mapper
     )
 );
@@ -69,13 +66,13 @@ fn nary_expression_mapper<'a>(nary_operation: NAryOperation<'a>) -> Result<Expre
 named!(
     conditional<Span, NAryOperation>,
     do_parse!(
-        left_operand: logical_or >>
+        left_operand: coalesce >>
         result: fold_many0!(
             do_parse!(
                 first!(tag!(tokens::TERNARY_THEN)) >>
                 middle_operand: opt!(first!(expression)) >>
                 first!(tag!(tokens::TERNARY_ELSE)) >>
-                right_operand: first!(logical_or) >>
+                right_operand: first!(coalesce) >>
                 (middle_operand, right_operand)
             ),
             left_operand,
@@ -102,22 +99,6 @@ named!(
             }
         ) >>
         (result)
-    )
-);
-
-named!(
-    coalesce<Span, NAryOperation>,
-    do_parse!(
-        left_operand: logical_or >>
-        first!(tag!(tokens::COALESCE)) >>
-        right_operand: first!(expression) >>
-        (
-            NAryOperation::Binary {
-                operator     : BinaryOperator::Coalesce,
-                left_operand : Box::new(left_operand),
-                right_operand: Box::new(NAryOperation::Nullary(Box::new(right_operand)))
-            }
-        )
     )
 );
 
@@ -183,6 +164,35 @@ macro_rules! left_to_right_binary_operation {
                     }
                 ) >>
                 (result)
+            )
+        );
+    )
+}
+
+macro_rules! right_to_left_binary_operation {
+    (
+        $parser_name:ident:
+        $operand:ident with
+        $operator_token:ident as $operator_representation:ident
+    ) => (
+        named!(
+            $parser_name<Span, NAryOperation>,
+            alt_complete!(
+                do_parse!(
+                    left_operand: $operand >>
+                    right_operand: preceded!(
+                        first!(tag!(tokens::$operator_token)),
+                        first!($parser_name)
+                    ) >>
+                    (
+                        NAryOperation::Binary {
+                            operator     : BinaryOperator::$operator_representation,
+                            left_operand : Box::new(left_operand),
+                            right_operand: Box::new(right_operand)
+                        }
+                    )
+                )
+              | $operand
             )
         );
     )
@@ -907,14 +917,18 @@ mod tests {
 
     #[test]
     fn case_coalesce() {
-        let input  = Span::new(b"1 ?? 2");
+        let input  = Span::new(b"1 ?? 2 ?? 3");
         let output = Result::Done(
-            Span::new_at(b"", 6, 1, 7),
+            Span::new_at(b"", 11, 1, 12),
             Expression::NAryOperation(
                 binary_operation!(
                     Coalesce,
                     nullary_operation!(integer!(1, Span::new(b"1"))),
-                    nullary_operation!(integer!(2, Span::new_at(b"2", 5, 1, 6)))
+                    binary_operation!(
+                        Coalesce,
+                        nullary_operation!(integer!(2, Span::new_at(b"2", 5, 1, 6))),
+                        nullary_operation!(integer!(3, Span::new_at(b"3", 10, 1, 11)))
+                    )
                 )
             )
         );
