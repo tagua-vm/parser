@@ -121,21 +121,20 @@ named!(
     )
 );
 
-macro_rules! binary_operation {
+macro_rules! left_to_right_binary_operation {
     (
         $parser_name:ident:
-        $left_parser:ident
-        ($operator_token:ident as $operator_representation:ident)
-        $right_parser:ident
+        $operand:ident with
+        $operator_token:ident as $operator_representation:ident
     ) => (
         named!(
             $parser_name<Span, NAryOperation>,
             do_parse!(
-                left_operand: $left_parser >>
+                left_operand: $operand >>
                 result: fold_many0!(
                     preceded!(
                         first!(tag!(tokens::$operator_token)),
-                        first!($right_parser)
+                        first!($operand)
                     ),
                     left_operand,
                     |accumulator, right_operand| {
@@ -153,14 +152,13 @@ macro_rules! binary_operation {
 
     (
         $parser_name:ident:
-        $left_parser:ident
+        $operand:ident with
         ($($operator_token:ident as $operator_representation:ident),*)
-        $right_parser:ident
     ) => (
         named!(
             $parser_name<Span, NAryOperation>,
             do_parse!(
-                left_operand: $left_parser >>
+                left_operand: $operand >>
                 result: fold_many0!(
                     do_parse!(
                         operator: first!(
@@ -172,7 +170,7 @@ macro_rules! binary_operation {
                                 )|*
                             )
                         ) >>
-                        right_operand: first!($right_parser) >>
+                        right_operand: first!($operand) >>
                         (operator, right_operand)
                     ),
                     left_operand,
@@ -190,14 +188,15 @@ macro_rules! binary_operation {
     )
 }
 
-binary_operation!(logical_or : logical_and (BOOLEAN_OR  as LogicalOr)  logical_and);
-binary_operation!(logical_and: bitwise_or  (BOOLEAN_AND as LogicalAnd) bitwise_or);
-binary_operation!(bitwise_or : bitwise_xor (BITWISE_OR  as BitwiseOr)  bitwise_xor);
-binary_operation!(bitwise_xor: bitwise_and (BITWISE_XOR as BitwiseXor) bitwise_and);
-binary_operation!(bitwise_and: equality    (BITWISE_AND as BitwiseAnd) equality);
-binary_operation!(
+right_to_left_binary_operation!(coalesce   : logical_or  with COALESCE    as Coalesce);
+left_to_right_binary_operation!(logical_or : logical_and with BOOLEAN_OR  as LogicalOr);
+left_to_right_binary_operation!(logical_and: bitwise_or  with BOOLEAN_AND as LogicalAnd);
+left_to_right_binary_operation!(bitwise_or : bitwise_xor with BITWISE_OR  as BitwiseOr);
+left_to_right_binary_operation!(bitwise_xor: bitwise_and with BITWISE_XOR as BitwiseXor);
+left_to_right_binary_operation!(bitwise_and: equality    with BITWISE_AND as BitwiseAnd);
+left_to_right_binary_operation!(
     equality:
-    relational
+    relational with
     (
         IDENTICAL     as Identical,
         NOT_IDENTICAL as NotIdentical,
@@ -205,11 +204,10 @@ binary_operation!(
         NOT_EQUAL     as NotEqual,
         NOT_EQUAL_BIS as NotEqual
     )
-    relational
 );
-binary_operation!(
+left_to_right_binary_operation!(
     relational:
-    shift
+    shift with
     (
         COMPARE                  as Comparison,
         LESS_THAN_OR_EQUAL_TO    as LessThanOrEqualTo,
@@ -217,36 +215,32 @@ binary_operation!(
         LESS_THAN                as LessThan,
         GREATER_THAN             as GreaterThan
     )
-    shift
 );
-binary_operation!(
+left_to_right_binary_operation!(
     shift:
-    additive
+    additive with
     (
         BITWISE_LEFT_SHIFT  as BitwiseShiftLeft,
         BITWISE_RIGHT_SHIFT as BitwiseShiftRight
     )
-    additive
 );
-binary_operation!(
+left_to_right_binary_operation!(
     additive:
-    multiplicative
+    multiplicative with
     (
         ADD         as Plus,
         SUBSTRACT   as Minus,
         CONCATENATE as Dot
     )
-    multiplicative
 );
-binary_operation!(
+left_to_right_binary_operation!(
     multiplicative:
-    instanceof
+    instanceof with
     (
         MULTIPLY as Multiplication,
         DIVIDE   as Division,
         MODULO   as Modulo
     )
-    instanceof
 );
 
 named!(
