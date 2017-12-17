@@ -57,31 +57,10 @@ pub enum Literal<'a> {
     ///
     /// # fn main() {
     /// assert_eq!(
-    ///     literal(Span::new(b"0b101010")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 8, 1, 9),
-    ///         Literal::Integer(Token::new(42, Span::new(b"0b101010")))
-    ///     )
-    /// );
-    /// assert_eq!(
-    ///     literal(Span::new(b"052")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 3, 1, 4),
-    ///         Literal::Integer(Token::new(42, Span::new(b"052")))
-    ///     )
-    /// );
-    /// assert_eq!(
     ///     literal(Span::new(b"42")),
     ///     Result::Done(
     ///         Span::new_at(b"", 2, 1, 3),
     ///         Literal::Integer(Token::new(42, Span::new(b"42")))
-    ///     )
-    /// );
-    /// assert_eq!(
-    ///     literal(Span::new(b"0x2a")),
-    ///     Result::Done(
-    ///         Span::new_at(b"", 4, 1, 5),
-    ///         Literal::Integer(Token::new(42, Span::new(b"0x2a")))
     ///     )
     /// );
     /// # }
@@ -122,6 +101,27 @@ pub enum Literal<'a> {
     ///     Result::Done(
     ///         Span::new_at(b"", 6, 1, 7),
     ///         Literal::Real(Token::new(4.2f64, Span::new(b"420e-2")))
+    ///     )
+    /// );
+    /// assert_eq!(
+    ///     literal(Span::new(b"0x2a")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 4, 1, 5),
+    ///         Literal::Real(Token::new(42f64, Span::new(b"0x2a")))
+    ///     )
+    /// );
+    /// assert_eq!(
+    ///     literal(Span::new(b"0b101010")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 8, 1, 9),
+    ///         Literal::Real(Token::new(42f64, Span::new(b"0b101010")))
+    ///     )
+    /// );
+    /// assert_eq!(
+    ///     literal(Span::new(b"052")),
+    ///     Result::Done(
+    ///         Span::new_at(b"", 3, 1, 4),
+    ///         Literal::Real(Token::new(42f64, Span::new(b"052")))
     ///     )
     /// );
     /// # }
