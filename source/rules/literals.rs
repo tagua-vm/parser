@@ -81,7 +81,7 @@ named_attr!(
             literal(Span::new(b\"0x2a\")),
             Result::Done(
                 Span::new_at(b\"\", 4, 1, 5),
-                Literal::Integer(Token::new(42i64, Span::new(b\"0x2a\")))
+                Literal::Real(Token::new(42f64, Span::new(b\"0x2a\")))
             )
         );
         # }
@@ -117,7 +117,7 @@ named_attr!(
             integer(Span::new(b\"0b101010\")),
             Result::Done(
                 Span::new_at(b\"\", 8, 1, 9),
-                Literal::Integer(Token::new(42i64, Span::new(b\"0b101010\")))
+                Literal::Real(Token::new(42f64, Span::new(b\"0b101010\")))
             )
         );
         # }
@@ -134,7 +134,7 @@ named_attr!(
 
 named_attr!(
     #[doc="
-        Recognize an integer with the binary notation.
+        Recognize a real with the binary notation.
 
         # Examples
 
@@ -152,7 +152,7 @@ named_attr!(
             binary(Span::new(b\"0b101010\")),
             Result::Done(
                 Span::new_at(b\"\", 8, 1, 9),
-                Literal::Integer(Token::new(42i64, Span::new(b\"0b101010\")))
+                Literal::Real(Token::new(42f64, Span::new(b\"0b101010\")))
             )
         );
         # }
@@ -174,14 +174,14 @@ fn binary_mapper(span: Span) -> StdResult<Literal, ParseIntError> {
         )
         .and_then(
             |binary| {
-                Ok(Literal::Integer(Token::new(binary, span)))
+                Ok(Literal::Real(Token::new(binary as f64, span)))
             }
         )
 }
 
 named_attr!(
     #[doc="
-        Recognize an integer with the octal notation.
+        Recognize a real with the octal notation.
 
         # Examples
 
@@ -199,7 +199,7 @@ named_attr!(
             octal(Span::new(b\"052\")),
             Result::Done(
                 Span::new_at(b\"\", 3, 1, 4),
-                Literal::Integer(Token::new(42i64, Span::new(b\"052\")))
+                Literal::Real(Token::new(42f64, Span::new(b\"052\")))
             )
         );
         # }
@@ -222,7 +222,7 @@ fn octal_mapper(span: Span) -> StdResult<Literal, ParseIntError> {
             )
             .and_then(
                 |octal| {
-                    Ok(Literal::Integer(Token::new(octal, span)))
+                    Ok(Literal::Real(Token::new(octal as f64, span)))
                 }
             )
     } else {
@@ -291,14 +291,14 @@ fn decimal_mapper(span: Span) -> StdResult<Literal, ParseFloatError> {
 
 named_attr!(
     #[doc="
-        Recognize an integer with the hexadecimal notation.
+        Recognize a real with the hexadecimal notation.
 
         # Examples
 
         ```
         use tagua_parser::Result;
         use tagua_parser::ast::Literal;
-        use tagua_parser::rules::literals::decimal;
+        use tagua_parser::rules::literals::hexadecimal;
         use tagua_parser::tokens::{
             Span,
             Token
@@ -306,10 +306,10 @@ named_attr!(
 
         # fn main () {
         assert_eq!(
-            decimal(Span::new(b\"42\")),
+            hexadecimal(Span::new(b\"0x2A\")),
             Result::Done(
-                Span::new_at(b\"\", 2, 1, 3),
-                Literal::Integer(Token::new(42i64, Span::new(b\"42\")))
+                Span::new_at(b\"\", 4, 1, 5),
+                Literal::Real(Token::new(42f64, Span::new(b\"0x2A\")))
             )
         );
         # }
@@ -331,7 +331,7 @@ fn hexadecimal_mapper(span: Span) -> StdResult<Literal, ParseIntError> {
         )
         .and_then(
             |hexadecimal| {
-                Ok(Literal::Integer(Token::new(hexadecimal, span)))
+                Ok(Literal::Real(Token::new(hexadecimal as f64, span)))
             }
         )
 }
@@ -661,7 +661,7 @@ mod tests {
         let input  = Span::new(b"0b101010");
         let output = Result::Done(
             Span::new_at(b"", 8, 1, 9),
-            Literal::Integer(Token::new(42i64, input))
+            Literal::Real(Token::new(42f64, input))
         );
 
         assert_eq!(binary(input),  output);
@@ -674,7 +674,7 @@ mod tests {
         let input  = Span::new(b"0B101010");
         let output = Result::Done(
             Span::new_at(b"", 8, 1, 9),
-            Literal::Integer(Token::new(42i64, input))
+            Literal::Real(Token::new(42f64, input))
         );
 
         assert_eq!(binary(input), output);
@@ -687,7 +687,7 @@ mod tests {
         let input  = Span::new(b"0b111111111111111111111111111111111111111111111111111111111111111");
         let output = Result::Done(
             Span::new_at(b"", 65, 1, 66),
-            Literal::Integer(Token::new(::std::i64::MAX, input))
+            Literal::Real(Token::new(::std::i64::MAX as f64, input))
         );
 
         assert_eq!(binary(input), output);
@@ -739,7 +739,7 @@ mod tests {
         let input  = Span::new(b"0b120");
         let output = Result::Done(
             Span::new_at(b"20", 3, 1, 4),
-            Literal::Integer(Token::new(1i64, Span::new(b"0b1")))
+            Literal::Real(Token::new(1f64, Span::new(b"0b1")))
         );
 
         assert_eq!(binary(input),  output);
@@ -752,7 +752,7 @@ mod tests {
         let input  = Span::new(b"052");
         let output = Result::Done(
             Span::new_at(b"", 3, 1, 4),
-            Literal::Integer(Token::new(42i64, input))
+            Literal::Real(Token::new(42f64, input))
         );
 
         assert_eq!(octal(input), output);
@@ -778,7 +778,7 @@ mod tests {
         let input  = Span::new(b"0777777777777777777777");
         let output = Result::Done(
             Span::new_at(b"", 22, 1, 23),
-            Literal::Integer(Token::new(::std::i64::MAX, input))
+            Literal::Real(Token::new(::std::i64::MAX as f64, input))
         );
 
         assert_eq!(octal(input), output);
@@ -935,7 +935,7 @@ mod tests {
         let input  = Span::new(b"0x2a");
         let output = Result::Done(
             Span::new_at(b"", 4, 1, 5),
-            Literal::Integer(Token::new(42i64, input))
+            Literal::Real(Token::new(42f64, input))
         );
 
         assert_eq!(hexadecimal(input), output);
@@ -948,7 +948,7 @@ mod tests {
         let input  = Span::new(b"0X2a");
         let output = Result::Done(
             Span::new_at(b"", 4, 1, 5),
-            Literal::Integer(Token::new(42i64, input))
+            Literal::Real(Token::new(42f64, input))
         );
 
         assert_eq!(hexadecimal(input), output);
@@ -961,7 +961,7 @@ mod tests {
         let input  = Span::new(b"0x2A");
         let output = Result::Done(
             Span::new_at(b"", 4, 1, 5),
-            Literal::Integer(Token::new(42i64, input))
+            Literal::Real(Token::new(42f64, input))
         );
 
         assert_eq!(hexadecimal(input), output);
@@ -1000,7 +1000,7 @@ mod tests {
         let input  = Span::new(b"0x7fffffffffffffff");
         let output = Result::Done(
             Span::new_at(b"", 18, 1, 19),
-            Literal::Integer(Token::new(::std::i64::MAX, input))
+            Literal::Real(Token::new(::std::i64::MAX as f64, input))
         );
 
         assert_eq!(hexadecimal(input), output);
