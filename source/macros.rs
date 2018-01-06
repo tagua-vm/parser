@@ -84,12 +84,12 @@ macro_rules! exclude(
                 Ok((i, o)) =>
                     match $submacro2!(o, $($arguments2)*) {
                         Ok((_, _)) =>
-                            Err($crate::Error::Error($crate::Context::Position($input, $crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32)))),
+                            Err($crate::Error::Error($crate::Context::Code($input, $crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32)))),
 
                         Err($crate::Err::Incomplete(_)) =>
                             Ok((i, o)),
 
-                        $crate::Error::Error(_) =>
+                        $crate::Err::Error(_) =>
                             Ok((i, o)),
                     },
 
@@ -209,7 +209,7 @@ macro_rules! itag(
                 },
 
                 CompareResult::Incomplete => {
-                    Err($crate::Err::Incomplete($crate::Needed::Size($tag.input_len())))
+                    Err($crate::Error::Incomplete($crate::Needed::Size($tag.input_len())))
                 },
 
                 CompareResult::Error => {
@@ -337,7 +337,7 @@ macro_rules! regex (
             if let Some(first_match) = RE.find($input.as_slice()) {
                 Ok(($input.slice(first_match.end()..), $input.slice(first_match.start()..first_match.end())))
             } else {
-                let output: $crate::Result<_, _> = $crate::Err::Error(Context::Code($input, $crate::ErrorKind::RegexpFind));
+                let output: $crate::Result<_, _> = $crate::Error::Error($crate::Context::Code($input, $crate::ErrorKind::RegexpFind));
 
                 output
             }
