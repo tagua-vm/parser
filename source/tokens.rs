@@ -44,6 +44,7 @@
 use bytecount;
 use memchr;
 use nom::{
+    AtEof,
     Compare,
     CompareResult,
     FindSubstring,
@@ -934,6 +935,12 @@ impl<'a> InputLength for Span<'a> {
     /// ```
     fn input_len(&self) -> usize {
         self.slice.len()
+    }
+}
+
+impl<'a> AtEof for Span<'a> {
+    fn at_eof(&self) -> bool {
+        self.slice.at_eof()
     }
 }
 
