@@ -86,11 +86,8 @@ macro_rules! exclude(
                         Ok((_, _)) =>
                             Err($crate::Error::Error($crate::Context::Code($input, $crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32)))),
 
-                        Err($crate::Err::Incomplete(_)) =>
-                            Ok((i, o)),
-
-                        $crate::Err::Error(_) =>
-                            Ok((i, o)),
+                        Err(_) =>
+                            Ok((i, o))
                     },
 
                 Err(e) => Err(e)
@@ -337,7 +334,7 @@ macro_rules! regex (
             if let Some(first_match) = RE.find($input.as_slice()) {
                 Ok(($input.slice(first_match.end()..), $input.slice(first_match.start()..first_match.end())))
             } else {
-                let output: $crate::Result<_, _> = $crate::Error::Error($crate::Context::Code($input, $crate::ErrorKind::RegexpFind));
+                let output: $crate::Result<_, _> = Err($crate::Error::Error($crate::Context::Code($input, $crate::ErrorKind::RegexpFind)));
 
                 output
             }

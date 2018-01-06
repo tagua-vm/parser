@@ -53,6 +53,7 @@ use super::super::tokens::{
     Token
 };
 use super::super::internal::{
+    Context,
     Error,
     ErrorKind,
     Result
@@ -440,19 +441,19 @@ pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
     let input_length = span.input_len();
 
     if input_length < 2 {
-        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
+        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::TooShort as u32))));
     }
 
     if input[0] == b'b' || input[0] == b'B' {
         if input_length < 3 {
-            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
+            return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::TooShort as u32))));
         } else if input[1] != b'\'' {
-            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+            return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         } else {
             return string_single_quoted(span.slice(1..));
         }
     } else if input[0] != b'\'' {
-        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
     }
 
     let mut output: Option<Cow<[u8]>> = None;
@@ -476,7 +477,7 @@ pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
                     offset = next_index + 1;
                 }
             } else {
-                return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
         } else if *item == b'\'' {
             range = offset..index + 1;
@@ -494,7 +495,7 @@ pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
         }
     }
 
-    Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))))
+    Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))))
 }
 
 const STRING_NOWDOC_OPENING: &'static [u8] = &[b'<', b'<', b'<'];
@@ -505,19 +506,19 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 
     // `<<<'A'\nA\n` is the shortest datum.
     if input_length < 9 {
-        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
+        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::TooShort as u32))));
     }
 
     if input[0] == b'b' || input[0] == b'B' {
         if input_length < 10 {
-            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
+            return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::TooShort as u32))));
         } else if !input[1..].starts_with(STRING_NOWDOC_OPENING) {
-            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+            return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         } else {
             return string_nowdoc(span.slice(1..));
         }
     } else if !input.starts_with(STRING_NOWDOC_OPENING) {
-        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
     }
 
     let mut offset = 3;
@@ -531,7 +532,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
     }
 
     if input[offset] != b'\'' {
-        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
     }
 
     offset += 1;
@@ -543,7 +544,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
         name_span = n;
         next_span = i;
     } else {
-        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))))
+        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))))
     }
 
     let name              = name_span.as_slice();
@@ -553,7 +554,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 
     if next_input_length < 3 + name_length || next_input[0] != b'\'' || next_input[1] != b'\n' {
         if next_input[1] != b'\r' || next_input[2] != b'\n' {
-            return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+            return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         }
     }
 
@@ -576,7 +577,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
             let mut lookahead_offset = offset + index + name_length + 1;
 
             if lookahead_offset >= next_input_length {
-                return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
 
             if next_input[lookahead_offset] == b';' {
@@ -584,14 +585,14 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
             }
 
             if lookahead_offset >= next_input_length {
-                return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
 
             let mut ending_offset = 0;
 
             if next_input[lookahead_offset] == b'\r' {
                 if lookahead_offset + 1 >= next_input_length {
-                    return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                    return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
                 }
 
                 ending_offset     = 1;
@@ -624,7 +625,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
         }
     }
 
-    Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))))
+    Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))))
 }
 
 
