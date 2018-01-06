@@ -72,8 +72,8 @@ pub enum ErrorKindCustom {
 ///     )
 /// );
 ///
-/// assert_eq!(test(&b"fedabc"[..]), Result::Done(&b""[..], &b"fedabc"[..]));
-/// assert_eq!(test(&b"abcabc"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
+/// assert_eq!(test(&b"fedabc"[..]), Ok((&b""[..], &b"fedabc"[..])));
+/// assert_eq!(test(&b"abcabc"[..]), Err(Error::Error(Context::Code(&b"abcabc"[..], ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
 /// # }
 /// ```
 #[macro_export]
@@ -81,23 +81,19 @@ macro_rules! exclude(
     ($input:expr, $submacro1:ident!($($arguments1:tt)*), $submacro2:ident!($($arguments2:tt)*)) => (
         {
             match $submacro1!($input, $($arguments1)*) {
-                $crate::Result::Done(i, o) =>
+                Ok((i, o)) =>
                     match $submacro2!(o, $($arguments2)*) {
-                        $crate::Result::Done(_, _) =>
-                            $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32), $input)),
+                        Ok((_, _)) =>
+                            Err($crate::Error::Error($crate::Context::Position($input, $crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::Exclude as u32)))),
 
-                        $crate::Result::Incomplete(_) =>
-                            $crate::Result::Done(i, o),
+                        Err($crate::Err::Incomplete(_)) =>
+                            Ok((i, o)),
 
-                        $crate::Result::Error(_) =>
-                            $crate::Result::Done(i, o),
+                        $crate::Error::Error(_) =>
+                            Ok((i, o)),
                     },
 
-                $crate::Result::Incomplete(e) =>
-                    $crate::Result::Incomplete(e),
-
-                $crate::Result::Error(e) =>
-                    $crate::Result::Error(e)
+                Err(e) => Err(e)
             }
         }
     );
@@ -137,10 +133,10 @@ macro_rules! exclude(
 ///
 /// assert_eq!(
 ///     test(Span::new(b"/* foo */bar")),
-///     Result::Done(
+///     Ok((
 ///         Span::new_at(b"", 12, 1, 13),
 ///         Span::new_at(b"bar", 9, 1, 10)
-///     )
+///     ))
 /// );
 /// # }
 /// ```
@@ -184,7 +180,7 @@ macro_rules! first(
 ///     itag!(b"foobar")
 /// );
 ///
-/// let output = Result::Done(Span::new_at(b"", 6, 1, 7), Span::new(b"foobar"));
+/// let output = Ok((Span::new_at(b"", 6, 1, 7), Span::new(b"foobar")));
 ///
 /// assert_eq!(test(Span::new(b"foobar")), output);
 /// assert_eq!(test(Span::new(b"FoObAr")), output);
@@ -209,15 +205,15 @@ macro_rules! itag(
                     let Span { offset, line, column, .. } = $input.slice(..tag_length);
                     let consumed = Span::new_at($tag, offset, line, column);
 
-                    $crate::Result::Done($input.slice(tag_length..), consumed)
+                    Ok(($input.slice(tag_length..), consumed))
                 },
 
                 CompareResult::Incomplete => {
-                    $crate::Result::Incomplete($crate::Needed::Size($tag.input_len()))
+                    Err($crate::Err::Incomplete($crate::Needed::Size($tag.input_len())))
                 },
 
                 CompareResult::Error => {
-                    $crate::Result::Error($crate::Error::Position($crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32), $input))
+                    Err($crate::Error::Error($crate::Context::Code($input, $crate::ErrorKind::Custom($crate::macros::ErrorKindCustom::ITag as u32))))
                 }
             };
 
@@ -254,7 +250,7 @@ macro_rules! itag(
 ///     keyword!(tokens::CLASS)
 /// );
 ///
-/// let output = Result::Done(Span::new_at(b"", 5, 1, 6), Span::new(tokens::CLASS));
+/// let output = Ok((Span::new_at(b"", 5, 1, 6), Span::new(tokens::CLASS)));
 ///
 /// assert_eq!(test(Span::new(b"class")), output);
 /// assert_eq!(test(Span::new(b"ClAsS")), output);
@@ -294,7 +290,7 @@ macro_rules! keyword(
 ///     )
 /// );
 ///
-/// if let Result::Done(_, vector) = test(b"abcabcabc") {
+/// if let Ok((_, vector)) = test(b"abcabcabc") {
 ///     assert_eq!(vector.capacity(), vector.len());
 /// }
 /// # }
@@ -310,10 +306,10 @@ macro_rules! fold_into_vector_many0(
                 $crate::internal::fold_into_vector
             );
 
-            if let ::nom::IResult::Done(input, mut output) = result {
+            if let Ok((input, mut output)) = result {
                 output.shrink_to_fit();
 
-                ::nom::IResult::Done(input, output)
+                Ok((input, output))
             } else {
                 result
             }
@@ -339,9 +335,9 @@ macro_rules! regex (
             regex_bytes!(RE, $regex);
 
             if let Some(first_match) = RE.find($input.as_slice()) {
-                $crate::Result::Done($input.slice(first_match.end()..), $input.slice(first_match.start()..first_match.end()))
+                Ok(($input.slice(first_match.end()..), $input.slice(first_match.start()..first_match.end())))
             } else {
-                let output: $crate::Result<_, _> = $crate::Result::Error(error_code!($crate::ErrorKind::RegexpFind));
+                let output: $crate::Result<_, _> = $crate::Err::Error(Context::Code($input, $crate::ErrorKind::RegexpFind));
 
                 output
             }
@@ -450,7 +446,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"fedabc"[..]), Result::Done(&b""[..], &b"fedabc"[..]));
+        assert_eq!(test(&b"fedabc"[..]), Ok((&b""[..], &b"fedabc"[..])));
     }
 
     #[test]
@@ -466,7 +462,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"abcabc"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"abcabc"[..])));
+        assert_eq!(test(&b"abcabc"[..]), Err(Error::Error(Context::Code(&b"abcabc"[..], ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
@@ -482,7 +478,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"acebdf"[..]), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), &b"acebdf"[..])));
+        assert_eq!(test(&b"acebdf"[..]), Err(Error::Error(Context::Code(&b"acebdf"[..], ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
@@ -498,7 +494,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"a"[..]), Result::Incomplete(Needed::Size(3)));
+        assert_eq!(test(&b"a"[..]), Err(Err::Incomplete(Needed::Size(3))));
     }
 
     #[test]
@@ -511,7 +507,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"abcdef"[..]), Result::Done(&b"def"[..], &b"abc"[..]));
+        assert_eq!(test(&b"abcdef"[..]), Ok((&b"def"[..], &b"abc"[..])));
     }
 
     #[test]
@@ -521,7 +517,7 @@ mod tests {
         named!(test2<Span, Span>, first!(hello));
 
         let input  = Span::new(b"  \nhello\t\r");
-        let output = Result::Done(Span::new_at(b"\t\r", 8, 2, 6), Span::new_at(b"hello", 3, 2, 1));
+        let output = Ok((Span::new_at(b"\t\r", 8, 2, 6), Span::new_at(b"hello", 3, 2, 1)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -534,7 +530,7 @@ mod tests {
         named!(test2<Span, Span>, first!(hello));
 
         let input  = Span::new(b"/* foo */hello/* bar */");
-        let output = Result::Done(Span::new_at(b"/* bar */", 14, 1, 15), Span::new_at(b"hello", 9, 1, 10));
+        let output = Ok((Span::new_at(b"/* bar */", 14, 1, 15), Span::new_at(b"hello", 9, 1, 10)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -547,7 +543,7 @@ mod tests {
         named!(test2<Span, Span>, first!(hello));
 
         let input  = Span::new(b"/* foo */  \nhello/* bar */\t");
-        let output = Result::Done(Span::new_at(b"/* bar */\t", 17, 2, 6), Span::new_at(b"hello", 12, 2, 1));
+        let output = Ok((Span::new_at(b"/* bar */\t", 17, 2, 6), Span::new_at(b"hello", 12, 2, 1)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -560,8 +556,8 @@ mod tests {
 
         let input = Span::new(&b"FoObArBaZQuX"[..]);
 
-        assert_eq!(test1(input), Result::Done(Span::new_at(&b"BaZQuX"[..], 6, 1, 7), Span::new_at(&b"foobar"[..], 0, 1, 1)));
-        assert_eq!(test2(input), Result::Done(Span::new_at(&b"BaZQuX"[..], 6, 1, 7), Span::new_at(&b"fOoBaR"[..], 0, 1, 1)));
+        assert_eq!(test1(input), Ok((Span::new_at(&b"BaZQuX"[..], 6, 1, 7), Span::new_at(&b"foobar"[..], 0, 1, 1))));
+        assert_eq!(test2(input), Ok((Span::new_at(&b"BaZQuX"[..], 6, 1, 7), Span::new_at(&b"fOoBaR"[..], 0, 1, 1))));
     }
 
     #[test]
@@ -570,7 +566,7 @@ mod tests {
         named!(test2<Span, Span>, itag!(b"FoObAR"));
 
         let input  = Span::new(&b"FoOb"[..]);
-        let output = Result::Incomplete(Needed::Size(6));
+        let output = Err(Err::Incomplete(Needed::Size(6)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -580,7 +576,7 @@ mod tests {
     fn case_itag_error() {
         named!(test<Span, Span>, itag!(b"foobar"));
 
-        assert_eq!(test(Span::new(&b"BaZQuX"[..])), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), Span::new(&b"BaZQuX"[..]))));
+        assert_eq!(test(Span::new(&b"BaZQuX"[..])), Err(Error::Error(Context::Code(Span::new(&b"BaZQuX"[..]), ErrorKind::Custom(ErrorKindCustom::ITag as u32)))));
     }
 
     #[test]
@@ -591,8 +587,8 @@ mod tests {
         let input  = Span::new(b"FoObArBaZQuX");
         let output = Span::new_at(b"BaZQuX", 6, 1, 7);
 
-        assert_eq!(test1(input), Result::Done(output, Span::new(b"foobar")));
-        assert_eq!(test2(input), Result::Done(output, Span::new(b"fOoBaR")));
+        assert_eq!(test1(input), Ok((output, Span::new(b"foobar"))));
+        assert_eq!(test2(input), Ok((output, Span::new(b"fOoBaR"))));
     }
 
     #[test]
@@ -601,7 +597,7 @@ mod tests {
         named!(test2<Span, Span>, keyword!(b"FoObAR"));
 
         let input  = Span::new(b"FoOb");
-        let output = Result::Incomplete(Needed::Size(6));
+        let output = Err(Err::Incomplete(Needed::Size(6)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -613,7 +609,7 @@ mod tests {
 
         let input = Span::new(b"BaZQuX");
 
-        assert_eq!(test(input), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::ITag as u32), input)));
+        assert_eq!(test(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(ErrorKindCustom::ITag as u32)))));
     }
 
     #[test]
@@ -626,7 +622,7 @@ mod tests {
             )
         );
 
-        if let Result::Done(_, vector) = test(&b"abcabcabc"[..]) {
+        if let Ok((_, vector)) = test(&b"abcabcabc"[..]) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {

@@ -61,7 +61,8 @@ regex       = "~0.2"
 smallvec    = "~0.4"
 
 [dependencies.nom]
-version  = "~3.1"
+git = "https://github.com/Geal/nom"
+branch = "master"
 features = ["regexp", "regexp_macros", "verbose-errors"]
 
 [dev-dependencies]

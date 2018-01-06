@@ -112,7 +112,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             function(Span::new(b\"function &f($x, \\\\I\\\\J $y, int &$z): O { return; }\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 48, 1, 49),
                 Statement::Function(
                     Function {
@@ -138,7 +138,7 @@ named_attr!(
                         body  : vec![Statement::Return]
                     }
                 )
-            )
+            ))
         );
         # }
         ```
@@ -170,7 +170,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             function(Span::new(b\"function f($x, int ...$y) { return; }\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 37, 1, 38),
                 Statement::Function(
                     Function {
@@ -191,7 +191,7 @@ named_attr!(
                         body  : vec![Statement::Return]
                     }
                 )
-            )
+            ))
         );
         # }
         ```
@@ -266,7 +266,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             parameters(Span::new(b\"($x, \\\\I\\\\J $y, int &$z)\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 22, 1, 23),
                 Arity::Finite(vec![
                     Parameter {
@@ -285,7 +285,7 @@ named_attr!(
                         value: None
                     }
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -473,10 +473,10 @@ named_attr!(
         # fn main() {
         assert_eq!(
             native_type(Span::new(b\"int\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 3, 1, 4),
                 Name::FullyQualified(smallvec![Span::new(b\"int\")])
-            )
+            ))
         );
         # }
         ```
@@ -552,7 +552,7 @@ mod tests {
     #[test]
     fn case_function() {
         let input  = Span::new(b"function f(I $x, J &$y): O { return; }");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 38, 1, 39),
             Statement::Function(
                 Function {
@@ -573,7 +573,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -582,7 +582,7 @@ mod tests {
     #[test]
     fn case_function_arity_zero() {
         let input  = Span::new(b"function f() {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 15, 1, 16),
             Statement::Function(
                 Function {
@@ -592,7 +592,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -601,7 +601,7 @@ mod tests {
     #[test]
     fn case_function_arity_many() {
         let input  = Span::new(b"function f($a, I\\J $b, int &$c, \\K $d) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 41, 1, 42),
             Statement::Function(
                 Function {
@@ -632,7 +632,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -641,7 +641,7 @@ mod tests {
     #[test]
     fn case_variadic_function_arity_many() {
         let input  = Span::new(b"function f($a, I\\J $b, int &...$c) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 37, 1, 38),
             Statement::Function(
                 Function {
@@ -667,7 +667,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -676,7 +676,7 @@ mod tests {
     #[test]
     fn case_function_output_by_none_copy() {
         let input  = Span::new(b"function f() {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 15, 1, 16),
             Statement::Function(
                 Function {
@@ -686,7 +686,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -695,7 +695,7 @@ mod tests {
     #[test]
     fn case_function_output_by_some_copy() {
         let input  = Span::new(b"function f(): \\O {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 19, 1, 20),
             Statement::Function(
                 Function {
@@ -705,7 +705,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -714,7 +714,7 @@ mod tests {
     #[test]
     fn case_function_output_by_nullable_copy() {
         let input  = Span::new(b"function f(): ?\\O {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 20, 1, 21),
             Statement::Function(
                 Function {
@@ -724,7 +724,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -733,7 +733,7 @@ mod tests {
     #[test]
     fn case_function_output_by_none_reference() {
         let input  = Span::new(b"function &f() {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 16, 1, 17),
             Statement::Function(
                 Function {
@@ -743,7 +743,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -752,7 +752,7 @@ mod tests {
     #[test]
     fn case_function_output_by_some_reference() {
         let input  = Span::new(b"function &f(): int {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Statement::Function(
                 Function {
@@ -762,7 +762,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -771,7 +771,7 @@ mod tests {
     #[test]
     fn case_function_output_by_nullable_reference() {
         let input  = Span::new(b"function &f(): ?int {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 22, 1, 23),
             Statement::Function(
                 Function {
@@ -781,7 +781,7 @@ mod tests {
                     body  : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(function(input), output);
         assert_eq!(statement(input), output);
@@ -791,14 +791,14 @@ mod tests {
     fn case_invalid_variadic_function_parameter_position() {
         let input = Span::new(b"function f(...$x, $y) {}");
 
-        assert_eq!(function(input),  Result::Error(Error::Position(ErrorKind::MapRes, Span::new_at(b"(...$x, $y) {}", 10, 1, 11))));
-        assert_eq!(statement(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
+        assert_eq!(function(input),  Err(Error::Error(Context::Code(Span::new_at(b"(...$x, $y) {}", 10, 1, 11), ErrorKind::MapRes))));
+        assert_eq!(statement(input), Err(Error::Error(Context::Code(input, ErrorKind::Alt))));
     }
 
     #[test]
     fn case_parameters_one_by_none_copy() {
         let input  = Span::new(b"($x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Arity::Finite(vec![
                 Parameter {
@@ -807,7 +807,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -815,7 +815,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_some_copy() {
         let input  = Span::new(b"(A\\B\\C $x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             Arity::Finite(vec![
                 Parameter {
@@ -824,7 +824,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -832,7 +832,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_nullable_copy() {
         let input  = Span::new(b"(?A\\B\\C $x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Arity::Finite(vec![
                 Parameter {
@@ -841,7 +841,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -849,7 +849,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_none_reference() {
         let input  = Span::new(b"(&$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 5, 1, 6),
             Arity::Finite(vec![
                 Parameter {
@@ -858,7 +858,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -866,7 +866,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_some_reference() {
         let input  = Span::new(b"(int &$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Arity::Finite(vec![
                 Parameter {
@@ -875,7 +875,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -883,7 +883,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_nullable_reference() {
         let input  = Span::new(b"(?int &$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             Arity::Finite(vec![
                 Parameter {
@@ -892,7 +892,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -900,7 +900,7 @@ mod tests {
     #[test]
     fn case_parameters_one_variadic_by_none_copy() {
         let input  = Span::new(b"(...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Arity::Infinite(vec![
                 Parameter {
@@ -909,7 +909,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -917,7 +917,7 @@ mod tests {
     #[test]
     fn case_parameters_one_variadic_by_some_reference() {
         let input  = Span::new(b"(I &...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             Arity::Infinite(vec![
                 Parameter {
@@ -926,7 +926,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -934,7 +934,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_none_copy_with_a_default_value() {
         let input  = Span::new(b"($x = 42)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Arity::Finite(vec![
                 Parameter {
@@ -943,7 +943,7 @@ mod tests {
                     value: Some(Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 6, 1, 7)))))
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -951,7 +951,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_some_copy_and_a_default_value() {
         let input  = Span::new(b"(float $x = 4.2)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 16, 1, 17),
             Arity::Finite(vec![
                 Parameter {
@@ -960,7 +960,7 @@ mod tests {
                     value: Some(Expression::Literal(Literal::Real(Token::new(4.2f64, Span::new_at(b"4.2", 12, 1, 13)))))
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -968,7 +968,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_nullable_copy_and_a_default_value() {
         let input  = Span::new(b"(?float $x = 4.2)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 17, 1, 18),
             Arity::Finite(vec![
                 Parameter {
@@ -977,7 +977,7 @@ mod tests {
                     value: Some(Expression::Literal(Literal::Real(Token::new(4.2f64, Span::new_at(b"4.2", 13, 1, 14)))))
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -985,7 +985,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_none_reference_with_a_default_value() {
         let input  = Span::new(b"(&$x = 'foo')");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 13, 1, 14),
             Arity::Finite(vec![
                 Parameter {
@@ -994,7 +994,7 @@ mod tests {
                     value: Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 7, 1, 8)))))
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1002,7 +1002,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_some_reference_and_a_default_value() {
         let input  = Span::new(b"(array &$x = ['foo' => true])");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 29, 1, 30),
             Arity::Finite(vec![
                 Parameter {
@@ -1018,7 +1018,7 @@ mod tests {
                     )
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1026,7 +1026,7 @@ mod tests {
     #[test]
     fn case_parameters_one_by_nullable_reference_with_a_default_value() {
         let input  = Span::new(b"(?string &$x = 'foo')");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Arity::Finite(vec![
                 Parameter {
@@ -1035,7 +1035,7 @@ mod tests {
                     value: Some(Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 15, 1, 16)))))
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1043,7 +1043,7 @@ mod tests {
     #[test]
     fn case_parameters_variadic_arity_one_by_none_copy() {
         let input  = Span::new(b"(...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Arity::Infinite(vec![
                 Parameter {
@@ -1052,7 +1052,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1060,7 +1060,7 @@ mod tests {
     #[test]
     fn case_parameters_variadic_arity_one_by_some_copy() {
         let input  = Span::new(b"(A\\B\\C ...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 13, 1, 14),
             Arity::Infinite(vec![
                 Parameter {
@@ -1069,7 +1069,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1077,7 +1077,7 @@ mod tests {
     #[test]
     fn case_parameters_variadic_arity_one_by_nullable_copy() {
         let input  = Span::new(b"(?A\\B\\C ...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 14, 1, 15),
             Arity::Infinite(vec![
                 Parameter {
@@ -1086,7 +1086,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1094,7 +1094,7 @@ mod tests {
     #[test]
     fn case_parameters_variadic_arity_one_by_none_reference() {
         let input  = Span::new(b"(&...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 8, 1, 9),
             Arity::Infinite(vec![
                 Parameter {
@@ -1103,7 +1103,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1111,7 +1111,7 @@ mod tests {
     #[test]
     fn case_parameters_variadic_arity_one_by_some_reference() {
         let input  = Span::new(b"(int &...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 12, 1, 13),
             Arity::Infinite(vec![
                 Parameter {
@@ -1120,7 +1120,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1128,7 +1128,7 @@ mod tests {
     #[test]
     fn case_parameters_variadic_arity_one_by_nullable_reference() {
         let input  = Span::new(b"(?int &...$x)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 13, 1, 14),
             Arity::Infinite(vec![
                 Parameter {
@@ -1137,7 +1137,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1145,7 +1145,7 @@ mod tests {
     #[test]
     fn case_parameters_many() {
         let input  = Span::new(b"(&$x, int $y, I\\J $z)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Arity::Finite(vec![
                 Parameter {
@@ -1164,7 +1164,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1172,7 +1172,7 @@ mod tests {
     #[test]
     fn case_parameters_many_variadic() {
         let input  = Span::new(b"(&$x, int $y, I\\J ...$z)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 24, 1, 25),
             Arity::Infinite(vec![
                 Parameter {
@@ -1191,7 +1191,7 @@ mod tests {
                     value: None
                 }
             ])
-        );
+        ));
 
         assert_eq!(parameters(input), output);
     }
@@ -1199,7 +1199,7 @@ mod tests {
     #[test]
     fn case_invalid_parameters_variadic_position() {
         let input  = Span::new(b"(...$x, $y)");
-        let output = Result::Error(Error::Position(ErrorKind::MapRes, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::MapRes)));
 
         assert_eq!(parameters(input), output);
     }
@@ -1207,7 +1207,7 @@ mod tests {
     #[test]
     fn case_invalid_parameters_two_not_unique() {
         let input  = Span::new(b"($x, $x)");
-        let output = Result::Error(Error::Position(ErrorKind::MapRes, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::MapRes)));
 
         assert_eq!(parameters(input), output);
     }
@@ -1215,7 +1215,7 @@ mod tests {
     #[test]
     fn case_invalid_parameters_many_not_unique() {
         let input  = Span::new(b"($x, $y, $x, $z)");
-        let output = Result::Error(Error::Position(ErrorKind::MapRes, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::MapRes)));
 
         assert_eq!(parameters(input), output);
     }
@@ -1225,10 +1225,10 @@ mod tests {
             #[test]
             fn $test() {
                 let input  = Span::new($name);
-                let output = Result::Done(
+                let output = Ok((
                     Span::new_at(b"", $name.len(), 1, $name.len() as u32 + 1),
                     Name::FullyQualified(smallvec![input])
-                );
+                ));
 
                 assert_eq!(native_type(input), output);
             }

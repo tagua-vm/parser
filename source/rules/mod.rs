@@ -71,7 +71,7 @@ use super::tokens::Span;
 /// ```
 pub fn root(input: Span) -> Expression {
     match expressions::expression(input) {
-        Result::Done(_, ast) => ast,
+        Ok((_, ast)) => ast,
         _ => panic!("Youhouuu")
     }
 }

@@ -58,10 +58,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             variable(Span::new(b\"$foo\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 4, 1, 5),
                 Variable(Span::new_at(b\"foo\", 1, 1, 2))
-            )
+            ))
         );
         # }
         ```
@@ -102,14 +102,14 @@ named_attr!(
         # fn main () {
         assert_eq!(
             qualified_name(Span::new(b\"Foo\\\\Bar\\\\Baz\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 11, 1, 12),
                 Name::Qualified(smallvec![
                     Span::new_at(b\"Foo\", 0, 1, 1),
                     Span::new_at(b\"Bar\", 4, 1, 5),
                     Span::new_at(b\"Baz\", 8, 1, 9)
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -177,10 +177,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             name(Span::new(b\"foo\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 3, 1, 4),
                 Span::new(b\"foo\")
-            )
+            ))
         );
         # }
         ```
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn case_variable() {
         let input  = Span::new(b"$foo");
-        let output = Result::Done(Span::new_at(b"", 4, 1, 5), Variable(input.slice(1..)));
+        let output = Ok((Span::new_at(b"", 4, 1, 5), Variable(input.slice(1..))));
 
         assert_eq!(variable(input), output);
     }
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn case_variable_shortest() {
         let input  = Span::new(b"$x");
-        let output = Result::Done(Span::new_at(b"", 2, 1, 3), Variable(input.slice(1..)));
+        let output = Ok((Span::new_at(b"", 2, 1, 3), Variable(input.slice(1..))));
 
         assert_eq!(variable(input), output);
     }
@@ -230,20 +230,20 @@ mod tests {
     fn case_invalid_variable_prefix() {
         let input = Span::new(b"x");
 
-        assert_eq!(variable(input), Result::Error(Error::Position(ErrorKind::Tag, input)));
+        assert_eq!(variable(input), Err(Error::Error(Context::Code(input, ErrorKind::Tag))));
     }
 
     #[test]
     fn case_invalid_variable_name() {
         let input = Span::new(b"$0");
 
-        assert_eq!(variable(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(variable(input), Err(Error::Error(Context::Code(, input, ErrorKind::RegexpFind))));
     }
 
     #[test]
     fn case_unqualified_name() {
         let input  = Span::new(b"Foo");
-        let output = Result::Done(Span::new_at(b"", 3, 1, 4), Name::Unqualified(input));
+        let output = Ok((Span::new_at(b"", 3, 1, 4), Name::Unqualified(input)));
 
         assert_eq!(qualified_name(input), output);
     }
@@ -253,28 +253,28 @@ mod tests {
         let input1 = Span::new(b"class");
         let input2 = Span::new(b"ClAsS");
 
-        assert_eq!(qualified_name(input1), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input1)));
-        assert_eq!(qualified_name(input2), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input2)));
+        assert_eq!(qualified_name(input1), Err(Error::Error(Context::Code(input, ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
+        assert_eq!(qualified_name(input2), Err(Error::Error(Context::Code(input, ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
     fn case_qualified_name() {
         let input  = Span::new(b"Foo\\Bar\\Baz");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Name::Qualified(smallvec![
                 Span::new(b"Foo"),
                 Span::new_at(b"Bar", 4, 1, 5),
                 Span::new_at(b"Baz", 8, 1, 9)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_qualified_name_vector_capacity() {
-        if let Result::Done(_, Name::Qualified(vector)) = qualified_name(Span::new(b"Foo\\Bar\\Baz")) {
+        if let Ok((_, Name::Qualified(vector))) = qualified_name(Span::new(b"Foo\\Bar\\Baz")) {
             assert_eq!(vector.capacity(), 5);
             assert_eq!(vector.len(), 3);
         } else {
@@ -285,13 +285,13 @@ mod tests {
     #[test]
     fn case_qualified_name_with_skip_tokens() {
         let input  = Span::new(b"Foo\n/* baz */ \\ Bar /* qux */\\");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b" /* qux */\\", 19, 2, 16),
             Name::Qualified(smallvec![
                 Span::new(b"Foo"),
                 Span::new_at(b"Bar", 16, 2, 13)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
@@ -300,38 +300,38 @@ mod tests {
     fn case_invalid_qualified_name() {
         assert_eq!(
             qualified_name(Span::new(b"Foo\\class\\Baz")),
-            Result::Done(
+            Ok((
                 Span::new_at(b"\\class\\Baz", 3, 1, 4),
                 Name::Unqualified(Span::new(b"Foo"))
-            )
+            ))
         );
         assert_eq!(
             qualified_name(Span::new(b"Foo\\ClAsS\\Baz")),
-            Result::Done(
+            Ok((
                 Span::new_at(b"\\ClAsS\\Baz", 3, 1, 4),
                 Name::Unqualified(Span::new(b"Foo"))
-            )
+            ))
         );
     }
 
     #[test]
     fn case_relative_qualified_name() {
         let input  = Span::new(b"namespace\\Foo\\Bar\\Baz");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Name::RelativeQualified(smallvec![
                 Span::new_at(b"Foo", 10, 1, 11),
                 Span::new_at(b"Bar", 14, 1, 15),
                 Span::new_at(b"Baz", 18, 1, 19)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_relative_qualified_name_vector_capacity() {
-        if let Result::Done(_, Name::RelativeQualified(vector)) = qualified_name(Span::new(b"namespace\\Foo\\Bar\\Baz")) {
+        if let Ok((_, Name::RelativeQualified(vector))) = qualified_name(Span::new(b"namespace\\Foo\\Bar\\Baz")) {
             assert!(vector.capacity() >= vector.len());
             assert!(vector.len() >= 3);
         } else {
@@ -342,14 +342,14 @@ mod tests {
     #[test]
     fn case_relative_qualified_name_case_insensitive() {
         let input  = Span::new(b"NaMeSpAcE\\Foo\\Bar\\Baz");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Name::RelativeQualified(smallvec![
                 Span::new_at(b"Foo", 10, 1, 11),
                 Span::new_at(b"Bar", 14, 1, 15),
                 Span::new_at(b"Baz", 18, 1, 19)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
@@ -357,13 +357,13 @@ mod tests {
     #[test]
     fn case_relative_qualified_name_with_skip_tokens() {
         let input  = Span::new(b"namespace/* baz */ \\ Foo\n/* qux */ \\ Bar /* hello */\\");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b" /* hello */\\", 40, 2, 16),
             Name::RelativeQualified(smallvec![
                 Span::new_at(b"Foo", 21, 1, 22),
                 Span::new_at(b"Bar", 37, 2, 13)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
@@ -375,17 +375,17 @@ mod tests {
 
         assert_eq!(
             qualified_name(input1),
-            Result::Done(
+            Ok((
                 Span::new_at(b"\\namespace\\Baz", 13, 1, 14),
                 Name::RelativeQualified(smallvec![Span::new_at(b"Foo", 10, 1, 11)])
-            )
+            ))
         );
         assert_eq!(
             qualified_name(input2),
-            Result::Done(
+            Ok((
                 Span::new_at(b"\\NaMeSpAcE\\Baz", 13, 1, 14),
                 Name::RelativeQualified(smallvec![Span::new_at(b"Foo", 10, 1, 11)])
-            )
+            ))
         );
     }
 
@@ -394,28 +394,28 @@ mod tests {
         let input1 = Span::new(b"namespace\\class");
         let input2 = Span::new(b"namespace\\ClAsS");
 
-        assert_eq!(qualified_name(input1), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), Span::new_at(b"class", 10, 1, 11))));
-        assert_eq!(qualified_name(input2), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), Span::new_at(b"ClAsS", 10, 1, 11))));
+        assert_eq!(qualified_name(input1), Err(Error::Error(Context::Code(Span::new_at(b"class", 10, 1, 11), ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
+        assert_eq!(qualified_name(input2), Err(Error::Error(Context::Code(Span::new_at(b"ClAsS", 10, 1, 11), ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
     fn case_fully_qualified_name() {
         let input  = Span::new(b"\\Foo\\Bar\\Baz");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 12, 1, 13),
             Name::FullyQualified(smallvec![
                 Span::new_at(b"Foo", 1, 1, 2),
                 Span::new_at(b"Bar", 5, 1, 6),
                 Span::new_at(b"Baz", 9, 1, 10)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
 
     #[test]
     fn case_fully_qualified_name_vector_capacity() {
-        if let Result::Done(_, Name::FullyQualified(vector)) = qualified_name(Span::new(b"\\Foo\\Bar\\Baz")) {
+        if let Ok((_, Name::FullyQualified(vector))) = qualified_name(Span::new(b"\\Foo\\Bar\\Baz")) {
             assert_eq!(vector.capacity(), 5);
             assert_eq!(vector.len(), 3);
         } else {
@@ -426,10 +426,10 @@ mod tests {
     #[test]
     fn case_fully_qualified_shortest_name() {
         let input  = Span::new(b"\\Foo");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Name::FullyQualified(smallvec![Span::new_at(b"Foo", 1, 1, 2)])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
@@ -438,7 +438,7 @@ mod tests {
     fn case_invalid_fully_and_relative_qualified_name_with_namespace() {
         let input = Span::new(b"\\namespace\\Foo\\Bar");
 
-        assert_eq!(qualified_name(input), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input.slice(1..))));
+        assert_eq!(qualified_name(input), Err(Error::Error(Context::Code(input.slice(1..), ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
@@ -446,20 +446,20 @@ mod tests {
         let input1 = Span::new(b"\\class\\Foo\\Bar");
         let input2 = Span::new(b"\\ClAsS\\Foo\\Bar");
 
-        assert_eq!(qualified_name(input1), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input1.slice(1..))));
-        assert_eq!(qualified_name(input2), Result::Error(Error::Position(ErrorKind::Custom(ErrorKindCustom::Exclude as u32), input2.slice(1..))));
+        assert_eq!(qualified_name(input1), Err(Error::Error(Context::Code(input1.slice(1..), ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
+        assert_eq!(qualified_name(input2), Err(Error::Error(Context::Code(input2.slice(1..), ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
     fn case_invalid_qualified_name_ending_with_a_separator() {
         let input  = Span::new(b"Foo\\Bar\\");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"\\", 7, 1, 8),
             Name::Qualified(smallvec![
                 Span::new(b"Foo"),
                 Span::new_at(b"Bar", 4, 1, 5)
             ])
-        );
+        ));
 
         assert_eq!(qualified_name(input), output);
     }
@@ -467,7 +467,7 @@ mod tests {
     #[test]
     fn case_name() {
         let input  = Span::new(b"_fooBar42");
-        let output = Result::Done(Span::new_at(b"", 9, 1, 10), input);
+        let output = Ok((Span::new_at(b"", 9, 1, 10), input));
 
         assert_eq!(name(input), output);
     }
@@ -475,7 +475,7 @@ mod tests {
     #[test]
     fn case_name_shortest() {
         let input  = Span::new(b"x");
-        let output = Result::Done(Span::new_at(b"", 1, 1, 2), input);
+        let output = Ok((Span::new_at(b"", 1, 1, 2), input));
 
         assert_eq!(name(input), output);
     }
@@ -483,7 +483,7 @@ mod tests {
     #[test]
     fn case_name_only_head() {
         let input  = Span::new(b"aB_\x80");
-        let output = Result::Done(Span::new_at(b"", 4, 1, 5), input);
+        let output = Ok((Span::new_at(b"", 4, 1, 5), input));
 
         assert_eq!(name(input), output);
     }
@@ -491,7 +491,7 @@ mod tests {
     #[test]
     fn case_name_head_and_tail() {
         let input  = Span::new(b"aB_\x80aB7\xff");
-        let output = Result::Done(Span::new_at(b"", 8, 1, 9), input);
+        let output = Ok((Span::new_at(b"", 8, 1, 9), input));
 
         assert_eq!(name(input), output);
     }
@@ -500,7 +500,7 @@ mod tests {
     fn case_name_copyright() {
         // © = 0xa9
         let input  = Span::new(b"\xa9");
-        let output = Result::Done(Span::new_at(b"", 1, 1, 2), input);
+        let output = Ok((Span::new_at(b"", 1, 1, 2), input));
 
         assert_eq!(name(input), output);
     }
@@ -509,13 +509,13 @@ mod tests {
     fn case_name_non_breaking_space() {
         //   = 0xa0
         let input  = Span::new(b"\xa0");
-        let output = Result::Done(Span::new_at(b"", 1, 1, 2), input);
+        let output = Ok((Span::new_at(b"", 1, 1, 2), input));
 
         assert_eq!(name(input), output);
     }
 
     #[test]
     fn case_invalid_name() {
-        assert_eq!(name(Span::new(b"0x")), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(name(Span::new(b"0x")), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
     }
 }

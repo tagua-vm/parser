@@ -61,7 +61,7 @@ named_attr!(
         # fn main () {
         assert_eq!(
             expression(Span::new(b\"echo 'Hello, World!'\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 20, 1, 21),
                 Expression::Echo(vec![
                     Expression::Literal(
@@ -73,7 +73,7 @@ named_attr!(
                         )
                     )
                 ])
-            )
+            ))
         );
         # }
         ```

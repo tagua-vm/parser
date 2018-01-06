@@ -107,7 +107,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             primary(Span::new(b\"echo 'Hello, World!'\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 20, 1, 21),
                 Expression::Echo(vec![
                     Expression::Literal(
@@ -119,7 +119,7 @@ named_attr!(
                         )
                     )
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -269,10 +269,10 @@ named_attr!(
         # fn main() {
         assert_eq!(
             relative_scope(Span::new(b\"self\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 4, 1, 5),
                 RelativeScope::ToSelf
-            )
+            ))
         );
         # }
         ```
@@ -304,7 +304,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             array(Span::new(b\"[42, 'foo' => $bar]\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 19, 1, 20),
                 Expression::Array(vec![
                     (
@@ -316,7 +316,7 @@ named_attr!(
                         Expression::Variable(Variable(Span::new_at(b\"bar\", 15, 1, 16)))
                     )
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -431,7 +431,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic(Span::new(b\"echo 'Hello, World!'\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 20, 1, 21),
                 Expression::Echo(vec![
                     Expression::Literal(
@@ -443,7 +443,7 @@ named_attr!(
                         )
                     )
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -494,13 +494,13 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_echo(Span::new(b\"echo 'Hello,', ' World!'\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 24, 1, 25),
                 Expression::Echo(vec![
                     Expression::Literal(Literal::String(Token::new(Cow::from(&b\"Hello,\"[..]), Span::new_at(b\"'Hello,'\", 5, 1, 6)))),
                     Expression::Literal(Literal::String(Token::new(Cow::from(&b\" World!\"[..]), Span::new_at(b\"' World!'\", 15, 1, 16))))
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -554,7 +554,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_list(Span::new(b\"list('foo' => $foo, 'bar' => $bar)\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 34, 1, 35),
                 Expression::List(vec![
                     Some((
@@ -566,7 +566,7 @@ named_attr!(
                         Expression::Variable(Variable(Span::new_at(b\"bar\", 30, 1, 31)))
                     ))
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -690,13 +690,13 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_unset(Span::new(b\"unset($foo, $bar)\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 17, 1, 18),
                 Expression::Unset(smallvec![
                     Variable(Span::new_at(b\"foo\", 7, 1, 8)),
                     Variable(Span::new_at(b\"bar\", 13, 1, 14))
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -756,7 +756,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_empty(Span::new(b\"empty('foo')\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 12, 1, 13),
                 Expression::Empty(
                     Box::new(
@@ -767,7 +767,7 @@ named_attr!(
                         )
                     )
                 )
-            )
+            ))
         );
         # }
         ```
@@ -812,7 +812,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_eval(Span::new(b\"eval('1 + 2')\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 13, 1, 14),
                 Expression::Eval(
                     Box::new(
@@ -821,7 +821,7 @@ named_attr!(
                         )
                     )
                 )
-            )
+            ))
         );
         # }
         ```
@@ -865,7 +865,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_exit(Span::new(b\"exit(7)\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 7, 1, 8),
                 Expression::Exit(
                     Some(
@@ -876,7 +876,7 @@ named_attr!(
                         )
                     )
                 )
-            )
+            ))
         );
         # }
         ```
@@ -944,13 +944,13 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_isset(Span::new(b\"isset($foo, $bar)\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 17, 1, 18),
                 Expression::Isset(smallvec![
                     Variable(Span::new_at(b\"foo\", 7, 1, 8)),
                     Variable(Span::new_at(b\"bar\", 13, 1, 14))
                 ])
-            )
+            ))
         );
         # }
         ```
@@ -1005,7 +1005,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             intrinsic_print(Span::new(b\"print('Hello, World!')\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 22, 1, 23),
                 Expression::Print(
                     Box::new(
@@ -1016,7 +1016,7 @@ named_attr!(
                         )
                     )
                 )
-            )
+            ))
         );
         # }
         ```
@@ -1067,7 +1067,7 @@ named_attr!(
         # fn main() {
         assert_eq!(
             anonymous_function(Span::new(b\"function &($x, \\\\I\\\\J $y, int &$z) use ($a, &$b): O { return; }\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 61, 1, 62),
                 Expression::AnonymousFunction(
                     AnonymousFunction {
@@ -1101,7 +1101,7 @@ named_attr!(
                         body: vec![Statement::Return]
                     }
                 )
-            )
+            ))
         );
         # }
         ```
@@ -1289,13 +1289,13 @@ mod tests {
     #[test]
     fn case_class_constant_access_relative_self() {
         let input  = Span::new(b"self::FOO");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Expression::ClassConstantAccess(
                 ScopeResolver::ByRelative(RelativeScope::ToSelf),
                 Span::new_at(b"FOO", 6, 1, 7)
             )
-        );
+        ));
 
         assert_eq!(class_constant_access(input), output);
         assert_eq!(primary(input), output);
@@ -1305,13 +1305,13 @@ mod tests {
     #[test]
     fn case_class_constant_access_relative_parent() {
         let input  = Span::new(b"parent::FOO");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Expression::ClassConstantAccess(
                 ScopeResolver::ByRelative(RelativeScope::ToParent),
                 Span::new_at(b"FOO", 8, 1, 9)
             )
-        );
+        ));
 
         assert_eq!(class_constant_access(input), output);
         assert_eq!(primary(input), output);
@@ -1321,13 +1321,13 @@ mod tests {
     #[test]
     fn case_class_constant_access_relative_static() {
         let input  = Span::new(b"static::FOO");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Expression::ClassConstantAccess(
                 ScopeResolver::ByRelative(RelativeScope::ToStatic),
                 Span::new_at(b"FOO", 8, 1, 9)
             )
-        );
+        ));
 
         assert_eq!(class_constant_access(input), output);
         assert_eq!(primary(input), output);
@@ -1337,7 +1337,7 @@ mod tests {
     #[test]
     fn case_class_constant_access_qualified_name() {
         let input  = Span::new(b"Foo\\Bar::BAZ");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 12, 1, 13),
             Expression::ClassConstantAccess(
                 ScopeResolver::ByName(
@@ -1348,7 +1348,7 @@ mod tests {
                 ),
                 Span::new_at(b"BAZ", 9, 1, 10)
             )
-        );
+        ));
 
         assert_eq!(class_constant_access(input), output);
         assert_eq!(primary(input), output);
@@ -1358,7 +1358,7 @@ mod tests {
     #[test]
     fn case_class_constant_access_dereferencable_expression() {
         let input  = Span::new(b"$this::FOO");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             Expression::ClassConstantAccess(
                 ScopeResolver::ByExpression(
@@ -1368,7 +1368,7 @@ mod tests {
                 ),
                 Span::new_at(b"FOO", 7, 1, 8),
             )
-        );
+        ));
 
         assert_eq!(class_constant_access(input), output);
         assert_eq!(primary(input), output);
@@ -1378,10 +1378,10 @@ mod tests {
     #[test]
     fn case_scope_resolution_qualifier_by_relative() {
         let input  = Span::new(b"self");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             ScopeResolver::ByRelative(RelativeScope::ToSelf)
-        );
+        ));
 
         assert_eq!(scope_resolution_qualifier(input), output);
     }
@@ -1389,10 +1389,10 @@ mod tests {
     #[test]
     fn case_scope_resolution_qualifier_by_name() {
         let input  = Span::new(b"Foo");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 3, 1, 4),
             ScopeResolver::ByName(Name::Unqualified(Span::new(b"Foo")))
-        );
+        ));
 
         assert_eq!(scope_resolution_qualifier(input), output);
     }
@@ -1400,7 +1400,7 @@ mod tests {
     #[test]
     fn case_scope_resolution_qualifier_by_dereferencable_expression() {
         let input  = Span::new(b"$foo");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             ScopeResolver::ByExpression(
                 DereferencableExpression::Variable(
@@ -1409,7 +1409,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(scope_resolution_qualifier(input), output);
     }
@@ -1417,14 +1417,14 @@ mod tests {
     #[test]
     fn case_dereferencable_expression_variable() {
         let input  = Span::new(b"$foo");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             DereferencableExpression::Variable(
                 Variable(
                     Span::new_at(b"foo", 1, 1, 2)
                 )
             )
-        );
+        ));
 
         assert_eq!(dereferencable_expression(input), output);
     }
@@ -1432,7 +1432,7 @@ mod tests {
     #[test]
     fn case_dereferencable_expression_sub_expression() {
         let input  = Span::new(b"($foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 6, 1, 7),
             DereferencableExpression::Expression(
                 Box::new(
@@ -1443,7 +1443,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(dereferencable_expression(input), output);
     }
@@ -1451,7 +1451,7 @@ mod tests {
     #[test]
     fn case_dereferencable_expression_array() {
         let input  = Span::new(b"['C', 'f']");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             DereferencableExpression::Array(
                 Box::new(
@@ -1475,7 +1475,7 @@ mod tests {
                     ])
                 )
             )
-        );
+        ));
 
         assert_eq!(dereferencable_expression(input), output);
     }
@@ -1483,14 +1483,14 @@ mod tests {
     #[test]
     fn case_dereferencable_expression_string() {
         let input  = Span::new(b"'C'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 3, 1, 4),
             DereferencableExpression::String(
                 Literal::String(
                     Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 0, 1, 1))
                 )
             )
-        );
+        ));
 
         assert_eq!(dereferencable_expression(input), output);
     }
@@ -1498,7 +1498,7 @@ mod tests {
     #[test]
     fn case_relative_scope_self() {
         let input  = Span::new(b"self");
-        let output = Result::Done(Span::new_at(b"", 4, 1, 5), RelativeScope::ToSelf);
+        let output = Ok((Span::new_at(b"", 4, 1, 5), RelativeScope::ToSelf));
 
         assert_eq!(relative_scope(input), output);
     }
@@ -1506,7 +1506,7 @@ mod tests {
     #[test]
     fn case_relative_scope_parent() {
         let input  = Span::new(b"parent");
-        let output = Result::Done(Span::new_at(b"", 6, 1, 7), RelativeScope::ToParent);
+        let output = Ok((Span::new_at(b"", 6, 1, 7), RelativeScope::ToParent));
 
         assert_eq!(relative_scope(input), output);
     }
@@ -1514,7 +1514,7 @@ mod tests {
     #[test]
     fn case_relative_scope_static() {
         let input  = Span::new(b"static");
-        let output = Result::Done(Span::new_at(b"", 6, 1, 7), RelativeScope::ToStatic);
+        let output = Ok((Span::new_at(b"", 6, 1, 7), RelativeScope::ToStatic));
 
         assert_eq!(relative_scope(input), output);
     }
@@ -1522,7 +1522,7 @@ mod tests {
     #[test]
     fn case_array_empty() {
         let input  = Span::new(b"[ /* foo */ ]");
-        let output = Result::Done(Span::new_at(b"", 13, 1, 14), Expression::Array(vec![]));
+        let output = Ok((Span::new_at(b"", 13, 1, 14), Expression::Array(vec![])));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1532,7 +1532,7 @@ mod tests {
     #[test]
     fn case_array_one_value() {
         let input  = Span::new(b"['foo']");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Expression::Array(vec![
                 (
@@ -1544,7 +1544,7 @@ mod tests {
                     )
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1554,7 +1554,7 @@ mod tests {
     #[test]
     fn case_array_one_pair() {
         let input  = Span::new(b"[42 => 'foo']");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 13, 1, 14),
             Expression::Array(vec![
                 (
@@ -1562,7 +1562,7 @@ mod tests {
                     Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 7, 1, 8))))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1572,7 +1572,7 @@ mod tests {
     #[test]
     fn case_array_many_pairs() {
         let input  = Span::new(b"['foo', 42 => 'bar', 'baz' => $qux]");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 35, 1, 36),
             Expression::Array(vec![
                 (
@@ -1588,7 +1588,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"qux", 31, 1, 32)))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1597,7 +1597,7 @@ mod tests {
 
     #[test]
     fn case_array_vector_capacity() {
-        if let Result::Done(_, Expression::Array(vector)) = array(Span::new(b"[1, 2, 3]")) {
+        if let Ok((_, Expression::Array(vector))) = array(Span::new(b"[1, 2, 3]")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1608,7 +1608,7 @@ mod tests {
     #[test]
     fn case_array_trailing_comma() {
         let input  = Span::new(b"[1, 2, 3, /* foo */]");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 20, 1, 21),
             Expression::Array(vec![
                 (
@@ -1624,7 +1624,7 @@ mod tests {
                     Expression::Literal(Literal::Integer(Token::new(3i64, Span::new_at(b"3", 7, 1, 8))))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1634,7 +1634,7 @@ mod tests {
     #[test]
     fn case_array_recursive() {
         let input  = Span::new(b"['foo', 42 => [3 => 5, 7 => [11 => '13']], 'baz' => $qux]");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 57, 1, 58),
             Expression::Array(vec![
                 (
@@ -1664,7 +1664,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"qux", 53, 1, 54)))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1674,7 +1674,7 @@ mod tests {
     #[test]
     fn case_array_value_by_reference() {
         let input  = Span::new(b"[7 => &$foo, 42 => $bar]");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 24, 1, 25),
             Expression::Array(vec![
                 (
@@ -1688,7 +1688,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"bar", 20, 1, 21)))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1698,9 +1698,9 @@ mod tests {
     #[test]
     fn case_invalid_array_trailing_commas() {
         let input  = Span::new(b"[1, 2, 3,,]");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(array(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
+        assert_eq!(array(input), Err(Error::Error(Context::Code(input, ErrorKind::Alt))));
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
@@ -1708,9 +1708,9 @@ mod tests {
     #[test]
     fn case_invalid_array_empty_trailing_comma() {
         let input  = Span::new(b"[,]");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(array(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
+        assert_eq!(array(input), Err(Error::Error(Context::Code(input, ErrorKind::Alt))));
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
     }
@@ -1718,7 +1718,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_empty() {
         let input  = Span::new(b"array ( /* foo */ )");
-        let output = Result::Done(Span::new_at(b"", 19, 1, 20), Expression::Array(vec![]));
+        let output = Ok((Span::new_at(b"", 19, 1, 20), Expression::Array(vec![])));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1728,7 +1728,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_one_value() {
         let input  = Span::new(b"array('foo')");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 12, 1, 13),
             Expression::Array(vec![
                 (
@@ -1740,7 +1740,7 @@ mod tests {
                     )
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1750,7 +1750,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_one_pair() {
         let input  = Span::new(b"array(42 => 'foo')");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 18, 1, 19),
             Expression::Array(vec![
                 (
@@ -1758,7 +1758,7 @@ mod tests {
                     Expression::Literal(Literal::String(Token::new(Cow::from(&b"foo"[..]), Span::new_at(b"'foo'", 12, 1, 13))))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1768,7 +1768,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_many_pairs() {
         let input  = Span::new(b"array('foo', 42 => 'bar', 'baz' => $qux)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 40, 1, 41),
             Expression::Array(vec![
                 (
@@ -1784,7 +1784,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"qux", 36, 1, 37)))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1794,7 +1794,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_trailing_comma() {
         let input  = Span::new(b"array(1, 2, 3, /* foo */)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 25, 1, 26),
             Expression::Array(vec![
                 (
@@ -1810,7 +1810,7 @@ mod tests {
                     Expression::Literal(Literal::Integer(Token::new(3i64, Span::new_at(b"3", 12, 1, 13))))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1820,7 +1820,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_recursive() {
         let input  = Span::new(b"array('foo', 42 => array(3 => 5, 7 => array(11 => '13')), 'baz' => $qux)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 72, 1, 73),
             Expression::Array(vec![
                 (
@@ -1850,7 +1850,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"qux", 68, 1, 69)))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1860,7 +1860,7 @@ mod tests {
     #[test]
     fn case_array_long_syntax_value_by_reference() {
         let input  = Span::new(b"array(7 => &$foo, 42 => $bar)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 29, 1, 30),
             Expression::Array(vec![
                 (
@@ -1874,7 +1874,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"bar", 25, 1, 26)))
                 )
             ])
-        );
+        ));
 
         assert_eq!(array(input), output);
         assert_eq!(primary(input), output);
@@ -1884,10 +1884,10 @@ mod tests {
     #[test]
     fn case_variable() {
         let input  = Span::new(b"$foo");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Expression::Variable(Variable(Span::new_at(b"foo", 1, 1, 2)))
-        );
+        ));
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
@@ -1896,7 +1896,7 @@ mod tests {
     #[test]
     fn case_qualified_name() {
         let input  = Span::new(b"Foo\\Bar");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Expression::Name(
                 Name::Qualified(smallvec![
@@ -1904,7 +1904,7 @@ mod tests {
                     Span::new_at(b"Bar", 4, 1, 5)
                 ])
             )
-        );
+        ));
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
@@ -1913,14 +1913,14 @@ mod tests {
     #[test]
     fn case_literal() {
         let input  = Span::new(b"'Hello, World!'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 15, 1, 16),
             Expression::Literal(
                 Literal::String(
                     Token::new(Cow::from(&b"Hello, World!"[..]), input)
                 )
             )
-        );
+        ));
 
         assert_eq!(primary(input), output);
         assert_eq!(expression(input), output);
@@ -1929,12 +1929,12 @@ mod tests {
     #[test]
     fn case_intrinsic_echo_one_expression() {
         let input  = Span::new(b"echo /* baz */ 'foobar'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 23, 1, 24),
             Expression::Echo(vec![
                 Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 15, 1, 16))))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_echo(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -1946,14 +1946,14 @@ mod tests {
     #[test]
     fn case_intrinsic_echo_many_expressions() {
         let input  = Span::new(b"echo /* baz */ 'foobar',\t $bazqux, \n  42");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 40, 2, 5),
             Expression::Echo(vec![
                 Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 15, 1, 16)))),
                 Expression::Variable(Variable(Span::new_at(b"bazqux", 27, 1, 28))),
                 Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 38, 2, 3))))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_echo(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -1964,7 +1964,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_echo_vector_capacity() {
-        if let Result::Done(_, Expression::Echo(vector)) = intrinsic_echo(Span::new(b"echo 'foobar', $bazqux, 42")) {
+        if let Ok((_, Expression::Echo(vector))) = intrinsic_echo(Span::new(b"echo 'foobar', $bazqux, 42")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -1975,9 +1975,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_echo_expression_missing() {
         let input  = Span::new(b"echo;");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_echo(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b";", 4, 1, 5))));
+        assert_eq!(intrinsic_echo(input), Err(Error::Error(Context::Code(Span::new_at(b";", 4, 1, 5), ErrorKind::Alt, ))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -1987,7 +1987,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_keyed_one_pattern() {
         let input  = Span::new(b"list('foo' => $foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 19, 1, 20),
             Expression::List(vec![
                 Some((
@@ -1995,7 +1995,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"foo", 15, 1, 16)))
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2007,7 +2007,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_keyed_many_patterns() {
         let input  = Span::new(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 49, 1, 50),
             Expression::List(vec![
                 Some((
@@ -2023,7 +2023,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"baz", 45, 1, 46)))
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2034,7 +2034,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_keyed_vector_capacity() {
-        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(Span::new(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)")) {
+        if let Ok((_, Expression::List(vector))) = intrinsic_list(Span::new(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -2045,7 +2045,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_keyed_trailing_comma() {
         let input  = Span::new(b"list('foo' => $foo, 'bar' => $bar,)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 35, 1, 36),
             Expression::List(vec![
                 Some((
@@ -2057,7 +2057,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"bar", 30, 1, 31)))
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2069,7 +2069,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_keyed_recursive() {
         let input  = Span::new(b"list('foo' => list('bar' => $bar), 'baz' => list(, $qux))");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 57, 1, 58),
             Expression::List(vec![
                 Some((
@@ -2092,7 +2092,7 @@ mod tests {
                     ])
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2104,7 +2104,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_unkeyed_one_pattern() {
         let input  = Span::new(b"list($foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             Expression::List(vec![
                 Some((
@@ -2112,7 +2112,7 @@ mod tests {
                 Expression::Variable(Variable(Span::new_at(b"foo", 6, 1, 7)))
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2124,7 +2124,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_unkeyed_many_patterns() {
         let input  = Span::new(b"list($foo, $bar, $baz)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 22, 1, 23),
             Expression::List(vec![
                 Some((
@@ -2140,7 +2140,7 @@ mod tests {
                     Expression::Variable(Variable(Span::new_at(b"baz", 18, 1, 19)))
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2151,7 +2151,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_list_unkeyed_vector_capacity() {
-        if let Result::Done(_, Expression::List(vector)) = intrinsic_list(Span::new(b"list($foo, $bar, $baz)")) {
+        if let Ok((_, Expression::List(vector))) = intrinsic_list(Span::new(b"list($foo, $bar, $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -2162,7 +2162,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_unkeyed_free_patterns() {
         let input  = Span::new(b"list($foo, , $bar, , , $baz,)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 29, 1, 30),
             Expression::List(vec![
                 Some((
@@ -2182,7 +2182,7 @@ mod tests {
                 )),
                 None
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2194,7 +2194,7 @@ mod tests {
     #[test]
     fn case_intrinsic_list_unkeyed_recursive() {
         let input  = Span::new(b"list($foo, list($bar), list('baz' => $baz))");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 43, 1, 44),
             Expression::List(vec![
                 Some((
@@ -2220,7 +2220,7 @@ mod tests {
                     ])
                 ))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_list(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2232,9 +2232,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_list_mixed_pairs() {
         let input  = Span::new(b"list('foo' => $foo, $bar)");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::Tag, Span::new_at(b"$bar)", 20, 1, 21))));
+        assert_eq!(intrinsic_list(input), Err(Error::Error(Context::Code(Span::new_at(b"$bar)", 20, 1, 21), ErrorKind::Tag))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2244,9 +2244,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_list_empty() {
         let input  = Span::new(b"list()");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(intrinsic_list(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2256,9 +2256,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_list_only_free_patterns() {
         let input  = Span::new(b"list(,,,)");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_list(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(intrinsic_list(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2268,12 +2268,12 @@ mod tests {
     #[test]
     fn case_intrinsic_unset_one_variable() {
         let input  = Span::new(b"unset($foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Expression::Unset(smallvec![
                 Variable(Span::new_at(b"foo", 7, 1, 8))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_unset(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2285,14 +2285,14 @@ mod tests {
     #[test]
     fn case_intrinsic_unset_many_variables() {
         let input  = Span::new(b"unset($foo, $bar, $baz)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 23, 1, 24),
             Expression::Unset(smallvec![
                 Variable(Span::new_at(b"foo", 7, 1, 8)),
                 Variable(Span::new_at(b"bar", 13, 1, 14)),
                 Variable(Span::new_at(b"baz", 19, 1, 20))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_unset(input), output);
         assert_eq!(intrinsic_construct(input), output);
@@ -2303,7 +2303,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_unset_vector_capacity() {
-        if let Result::Done(_, Expression::Unset(vector)) = intrinsic_unset(Span::new(b"unset($foo, $bar, $baz)")) {
+        if let Ok((_, Expression::Unset(vector))) = intrinsic_unset(Span::new(b"unset($foo, $bar, $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -2314,9 +2314,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_unset_zero_variable() {
         let input  = Span::new(b"unset()");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_unset(input), Result::Error(Error::Position(ErrorKind::Tag, Span::new_at(b")", 6, 1, 7))));
+        assert_eq!(intrinsic_unset(input), Err(Error::Error(Context::Code(Span::new_at(b")", 6, 1, 7), ErrorKind::Tag))));
         assert_eq!(intrinsic_construct(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2326,7 +2326,7 @@ mod tests {
     #[test]
     fn case_intrinsic_empty_string() {
         let input  = Span::new(b"empty('foo')");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 12, 1, 13),
             Expression::Empty(
                 Box::new(
@@ -2335,7 +2335,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_empty(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2347,7 +2347,7 @@ mod tests {
     #[test]
     fn case_intrinsic_empty_integer() {
         let input  = Span::new(b"empty(42)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Expression::Empty(
                 Box::new(
@@ -2356,7 +2356,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_empty(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2368,9 +2368,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_empty_expression_missing() {
         let input  = Span::new(b"empty()");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_empty(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 6, 1, 7))));
+        assert_eq!(intrinsic_empty(input), Err(Error::Error(Context::Code(Span::new_at(b")", 6, 1, 7), ErrorKind::Alt))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2380,7 +2380,7 @@ mod tests {
     #[test]
     fn case_intrinsic_eval() {
         let input  = Span::new(b"eval('1 + 2;')");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 14, 1, 15),
             Expression::Eval(
                 Box::new(
@@ -2389,7 +2389,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_eval(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2401,9 +2401,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_eval_expression_missing() {
         let input  = Span::new(b"eval()");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_eval(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b")", 5, 1, 6))));
+        assert_eq!(intrinsic_eval(input), Err(Error::Error(Context::Code(Span::new_at(b")", 5, 1, 6), ErrorKind::Alt))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2413,7 +2413,7 @@ mod tests {
     #[test]
     fn case_intrinsic_exit() {
         let input  = Span::new(b"exit(42)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 8, 1, 9),
             Expression::Exit(
                 Some(
@@ -2424,7 +2424,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2436,7 +2436,7 @@ mod tests {
     #[test]
     fn case_intrinsic_exit_with_no_argument() {
         let input  = Span::new(b"exit 42");
-        let output = Result::Done(Span::new_at(b" 42", 4, 1, 5), Expression::Exit(None));
+        let output = Ok((Span::new_at(b" 42", 4, 1, 5), Expression::Exit(None)));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2448,7 +2448,7 @@ mod tests {
     #[test]
     fn case_intrinsic_exit_with_a_variable() {
         let input  = Span::new(b"exit($foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 10, 1, 11),
             Expression::Exit(
                 Some(
@@ -2459,7 +2459,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2471,9 +2471,9 @@ mod tests {
     #[test]
     fn case_invalid_exit_with_reserved_code_255() {
         let input  = Span::new(b"exit(255)");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(intrinsic_exit(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2483,9 +2483,9 @@ mod tests {
     #[test]
     fn case_invalid_exit_with_out_of_range_code() {
         let input  = Span::new(b"exit(256)");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(intrinsic_exit(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2495,7 +2495,7 @@ mod tests {
     #[test]
     fn case_intrinsic_die() {
         let input  = Span::new(b"die(42)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Expression::Exit(
                 Some(
@@ -2506,7 +2506,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2518,7 +2518,7 @@ mod tests {
     #[test]
     fn case_intrinsic_die_with_no_parenthesis() {
         let input  = Span::new(b"die 42");
-        let output = Result::Done(Span::new_at(b" 42", 3, 1, 4), Expression::Exit(None));
+        let output = Ok((Span::new_at(b" 42", 3, 1, 4), Expression::Exit(None)));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2530,7 +2530,7 @@ mod tests {
     #[test]
     fn case_intrinsic_die_with_a_variable() {
         let input  = Span::new(b"die($foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Expression::Exit(
                 Some(
@@ -2541,7 +2541,7 @@ mod tests {
                     )
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_exit(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2553,9 +2553,9 @@ mod tests {
     #[test]
     fn case_invalid_die_with_reserved_code_255() {
         let input  = Span::new(b"die(255)");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(intrinsic_exit(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2565,9 +2565,9 @@ mod tests {
     #[test]
     fn case_invalid_die_with_out_of_range_code() {
         let input  = Span::new(b"die(256)");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_exit(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(intrinsic_exit(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2577,12 +2577,12 @@ mod tests {
     #[test]
     fn case_intrinsic_isset_one_variable() {
         let input  = Span::new(b"isset($foo)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Expression::Isset(smallvec![
                 Variable(Span::new_at(b"foo", 7, 1, 8))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_isset(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2594,14 +2594,14 @@ mod tests {
     #[test]
     fn case_intrinsic_isset_many_variables() {
         let input  = Span::new(b"isset($foo, $bar, $baz)");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 23, 1, 24),
             Expression::Isset(smallvec![
                 Variable(Span::new_at(b"foo", 7, 1, 8)),
                 Variable(Span::new_at(b"bar", 13, 1, 14)),
                 Variable(Span::new_at(b"baz", 19, 1, 20))
             ])
-        );
+        ));
 
         assert_eq!(intrinsic_isset(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2612,7 +2612,7 @@ mod tests {
 
     #[test]
     fn case_intrinsic_isset_vector_capacity() {
-        if let Result::Done(_, Expression::Isset(vector)) = intrinsic_isset(Span::new(b"isset($foo, $bar, $baz)")) {
+        if let Ok((_, Expression::Isset(vector))) = intrinsic_isset(Span::new(b"isset($foo, $bar, $baz)")) {
             assert_eq!(vector.capacity(), vector.len());
             assert_eq!(vector.len(), 3);
         } else {
@@ -2623,9 +2623,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_isset_zero_variable() {
         let input  = Span::new(b"isset()");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_isset(input), Result::Error(Error::Position(ErrorKind::Tag, Span::new_at(b")", 6, 1, 7))));
+        assert_eq!(intrinsic_isset(input), Err(Error::Error(Context::Error(Span::new_at(b")", 6, 1, 7), ErrorKind::Tag))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2635,14 +2635,14 @@ mod tests {
     #[test]
     fn case_intrinsic_print() {
         let input  = Span::new(b"print /* baz */ 'foobar'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 24, 1, 25),
             Expression::Print(
                 Box::new(
                     Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 16, 1, 17))))
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_print(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2654,9 +2654,9 @@ mod tests {
     #[test]
     fn case_invalid_intrinsic_print_expression_missing() {
         let input  = Span::new(b"print;");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_print(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new_at(b";", 5, 1, 6))));
+        assert_eq!(intrinsic_print(input), Err(Error::Error(Context::Code(Span::new_at(b";", 5, 1, 6), ErrorKind::Alt))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);
@@ -2666,14 +2666,14 @@ mod tests {
     #[test]
     fn case_grouped_by_parenthesis() {
         let input  = Span::new(b"print (((('foobar'))))");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 22, 1, 23),
             Expression::Print(
                 Box::new(
                     Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 10, 1, 11))))
                 )
             )
-        );
+        ));
 
         assert_eq!(intrinsic_print(input), output);
         assert_eq!(intrinsic_operator(input), output);
@@ -2685,7 +2685,7 @@ mod tests {
     #[test]
     fn case_anonymous_function() {
         let input  = Span::new(b"function (I $x, J &$y) use ($z): O { return; }");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 46, 1, 47),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2707,7 +2707,7 @@ mod tests {
                     body           : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2717,7 +2717,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_arity_zero() {
         let input  = Span::new(b"function () {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 14, 1, 15),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2728,7 +2728,7 @@ mod tests {
                     body             : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2738,7 +2738,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_arity_one_by_copy() {
         let input  = Span::new(b"function ($x) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 16, 1, 17),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2755,7 +2755,7 @@ mod tests {
                     body           : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2765,7 +2765,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_arity_one_by_reference() {
         let input  = Span::new(b"function (&$x) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 17, 1, 18),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2782,7 +2782,7 @@ mod tests {
                     body           : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2792,7 +2792,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_arity_one_with_a_copy_type() {
         let input  = Span::new(b"function (A\\B\\C $x) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 22, 1, 23),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2809,7 +2809,7 @@ mod tests {
                     body             : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2819,7 +2819,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_arity_one_with_a_reference_type() {
         let input  = Span::new(b"function (int &$x) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2836,7 +2836,7 @@ mod tests {
                     body           : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2846,7 +2846,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_arity_many() {
         let input  = Span::new(b"function ($a, I\\J $b, int &$c, \\K $d) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 40, 1, 41),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2878,7 +2878,7 @@ mod tests {
                     body           : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2888,7 +2888,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_output_by_copy() {
         let input  = Span::new(b"function (): \\O {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 18, 1, 19),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2899,7 +2899,7 @@ mod tests {
                     body             : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2909,7 +2909,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_output_by_reference() {
         let input  = Span::new(b"function &(): int {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 20, 1, 21),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2920,7 +2920,7 @@ mod tests {
                     body             : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2930,7 +2930,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_empty_enclosing_scope() {
         let input  = Span::new(b"function () use () {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2941,7 +2941,7 @@ mod tests {
                     body             : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2951,7 +2951,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_one_enclosed_variable_by_copy() {
         let input  = Span::new(b"function () use ($x) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 23, 1, 24),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2964,7 +2964,7 @@ mod tests {
                     body: vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -2974,7 +2974,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_one_enclosed_variable_by_reference() {
         let input  = Span::new(b"function () use (&$x) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 24, 1, 25),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -2991,7 +2991,7 @@ mod tests {
                     body: vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -3001,7 +3001,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_many_enclosed_variables() {
         let input  = Span::new(b"function () use ($x, &$y, $z) {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 32, 1, 33),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -3020,7 +3020,7 @@ mod tests {
                     body: vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);
@@ -3030,7 +3030,7 @@ mod tests {
     #[test]
     fn case_anonymous_function_static_scope() {
         let input  = Span::new(b"static function () {}");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 21, 1, 22),
             Expression::AnonymousFunction(
                 AnonymousFunction {
@@ -3041,7 +3041,7 @@ mod tests {
                     body             : vec![Statement::Return]
                 }
             )
-        );
+        ));
 
         assert_eq!(anonymous_function(input), output);
         assert_eq!(primary(input), output);

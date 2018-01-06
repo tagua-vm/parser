@@ -79,10 +79,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             literal(Span::new(b\"0x2a\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 4, 1, 5),
                 Literal::Integer(Token::new(42i64, Span::new(b\"0x2a\")))
-            )
+            ))
         );
         # }
         ```
@@ -115,10 +115,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             integer(Span::new(b\"0b101010\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 8, 1, 9),
                 Literal::Integer(Token::new(42i64, Span::new(b\"0b101010\")))
-            )
+            ))
         );
         # }
         ```
@@ -150,10 +150,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             binary(Span::new(b\"0b101010\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 8, 1, 9),
                 Literal::Integer(Token::new(42i64, Span::new(b\"0b101010\")))
-            )
+            ))
         );
         # }
         ```
@@ -197,10 +197,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             octal(Span::new(b\"052\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 3, 1, 4),
                 Literal::Integer(Token::new(42i64, Span::new(b\"052\")))
-            )
+            ))
         );
         # }
         ```
@@ -250,10 +250,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             decimal(Span::new(b\"42\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 2, 1, 3),
                 Literal::Integer(Token::new(42i64, Span::new(b\"42\")))
-            )
+            ))
         );
         # }
         ```
@@ -307,10 +307,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             decimal(Span::new(b\"42\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 2, 1, 3),
                 Literal::Integer(Token::new(42i64, Span::new(b\"42\")))
-            )
+            ))
         );
         # }
         ```
@@ -354,10 +354,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             exponential(Span::new(b\"123.456e+78\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 11, 1, 12),
                 Literal::Real(Token::new(123.456e78f64, Span::new(b\"123.456e+78\")))
-            )
+            ))
         );
         # }
         ```
@@ -417,10 +417,10 @@ named_attr!(
         # fn main () {
         assert_eq!(
             string(Span::new(b\"'foobar'\")),
-            Result::Done(
+            Ok((
                 Span::new_at(b\"\", 8, 1, 9),
                 Literal::String(Token::new(Cow::from(&b\"foobar\"[..]), Span::new(b\"'foobar'\")))
-            )
+            ))
         );
         # }
         ```
@@ -440,19 +440,19 @@ pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
     let input_length = span.input_len();
 
     if input_length < 2 {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
+        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
     }
 
     if input[0] == b'b' || input[0] == b'B' {
         if input_length < 3 {
-            return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
+            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
         } else if input[1] != b'\'' {
-            return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         } else {
             return string_single_quoted(span.slice(1..));
         }
     } else if input[0] != b'\'' {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
     }
 
     let mut output: Option<Cow<[u8]>> = None;
@@ -476,7 +476,7 @@ pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
                     offset = next_index + 1;
                 }
             } else {
-                return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+                return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
         } else if *item == b'\'' {
             range = offset..index + 1;
@@ -487,14 +487,14 @@ pub fn string_single_quoted(span: Span) -> Result<Span, Literal> {
                 data.to_mut().extend(&input[range]);
             }
 
-            return Result::Done(
+            return Ok((
                 span.slice(index + 2..),
                 Literal::String(Token::new(output.unwrap(), span.slice(..index + 2)))
-            );
+            ));
         }
     }
 
-    Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
+    Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))))
 }
 
 const STRING_NOWDOC_OPENING: &'static [u8] = &[b'<', b'<', b'<'];
@@ -505,19 +505,19 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 
     // `<<<'A'\nA\n` is the shortest datum.
     if input_length < 9 {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
+        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
     }
 
     if input[0] == b'b' || input[0] == b'B' {
         if input_length < 10 {
-            return Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32)));
+            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32))));
         } else if !input[1..].starts_with(STRING_NOWDOC_OPENING) {
-            return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         } else {
             return string_nowdoc(span.slice(1..));
         }
     } else if !input.starts_with(STRING_NOWDOC_OPENING) {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
     }
 
     let mut offset = 3;
@@ -531,7 +531,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
     }
 
     if input[offset] != b'\'' {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
     }
 
     offset += 1;
@@ -539,11 +539,11 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
     let name_span;
     let next_span;
 
-    if let Result::Done(i, n) = tokens::name(span.slice(offset..)) {
+    if let Ok((i, n)) = tokens::name(span.slice(offset..)) {
         name_span = n;
         next_span = i;
     } else {
-        return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32)))
+        return Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))))
     }
 
     let name              = name_span.as_slice();
@@ -553,7 +553,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 
     if next_input_length < 3 + name_length || next_input[0] != b'\'' || next_input[1] != b'\n' {
         if next_input[1] != b'\r' || next_input[2] != b'\n' {
-            return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)));
+            return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         }
     }
 
@@ -576,7 +576,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
             let mut lookahead_offset = offset + index + name_length + 1;
 
             if lookahead_offset >= next_input_length {
-                return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+                return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
 
             if next_input[lookahead_offset] == b';' {
@@ -584,14 +584,14 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
             }
 
             if lookahead_offset >= next_input_length {
-                return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+                return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
 
             let mut ending_offset = 0;
 
             if next_input[lookahead_offset] == b'\r' {
                 if lookahead_offset + 1 >= next_input_length {
-                    return Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)));
+                    return Err(Error::Error(Context::Code(next_input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
                 }
 
                 ending_offset     = 1;
@@ -600,7 +600,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 
             if next_input[lookahead_offset] == b'\n' {
                 if index == 0 {
-                    return Result::Done(
+                    return Ok((
                         next_span.slice(lookahead_offset + 1..),
                         Literal::String(
                             Token::new(
@@ -608,10 +608,10 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                                 span.slice(..span_offset + lookahead_offset - ending_offset)
                             )
                         )
-                    );
+                    ));
                 }
 
-                return Result::Done(
+                return Ok((
                     next_span.slice(lookahead_offset + 1..),
                     Literal::String(
                         Token::new(
@@ -619,12 +619,12 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
                             span.slice(..span_offset + lookahead_offset - ending_offset)
                         )
                     )
-                );
+                ));
             }
         }
     }
 
-    Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))
+    Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))))
 }
 
 
@@ -659,10 +659,10 @@ mod tests {
     #[test]
     fn case_binary_lowercase_b() {
         let input  = Span::new(b"0b101010");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 8, 1, 9),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(binary(input),  output);
         assert_eq!(integer(input), output);
@@ -672,10 +672,10 @@ mod tests {
     #[test]
     fn case_binary_uppercase_b() {
         let input  = Span::new(b"0B101010");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 8, 1, 9),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(binary(input), output);
         assert_eq!(integer(input), output);
@@ -685,10 +685,10 @@ mod tests {
     #[test]
     fn case_binary_maximum_integer_value() {
         let input  = Span::new(b"0b111111111111111111111111111111111111111111111111111111111111111");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 65, 1, 66),
             Literal::Integer(Token::new(::std::i64::MAX, input))
-        );
+        ));
 
         assert_eq!(binary(input), output);
         assert_eq!(integer(input), output);
@@ -698,12 +698,12 @@ mod tests {
     #[test]
     fn case_invalid_binary_overflow() {
         let input  = Span::new(b"0b1000000000000000000000000000000000000000000000000000000000000000");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"b1000000000000000000000000000000000000000000000000000000000000000", 1, 1, 2),
             Literal::Integer(Token::new(0i64, Span::new(b"0")))
-        );
+        ));
 
-        assert_eq!(binary(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(binary(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -711,12 +711,12 @@ mod tests {
     #[test]
     fn case_invalid_binary_no_number() {
         let input  = Span::new(b"0b");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"b", 1, 1, 2),
             Literal::Integer(Token::new(0i64, Span::new(b"0")))
-        );
+        ));
 
-        assert_eq!(binary(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(binary(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -724,12 +724,12 @@ mod tests {
     #[test]
     fn case_invalid_binary_not_starting_by_zero_b() {
         let input  = Span::new(b"1");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 1, 1, 2),
             Literal::Integer(Token::new(1i64, input))
-        );
+        ));
 
-        assert_eq!(binary(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(binary(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -737,10 +737,10 @@ mod tests {
     #[test]
     fn case_invalid_binary_not_in_base() {
         let input  = Span::new(b"0b120");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"20", 3, 1, 4),
             Literal::Integer(Token::new(1i64, Span::new(b"0b1")))
-        );
+        ));
 
         assert_eq!(binary(input),  output);
         assert_eq!(integer(input), output);
@@ -750,10 +750,10 @@ mod tests {
     #[test]
     fn case_octal() {
         let input  = Span::new(b"052");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 3, 1, 4),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(octal(input), output);
         assert_eq!(integer(input), output);
@@ -763,10 +763,10 @@ mod tests {
     #[test]
     fn case_octal_zero() {
         let input  = Span::new(b"0");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 1, 1, 2),
             Literal::Integer(Token::new(0i64, input))
-        );
+        ));
 
         assert_eq!(octal(input), output);
         assert_eq!(integer(input), output);
@@ -776,10 +776,10 @@ mod tests {
     #[test]
     fn case_octal_maximum_integer_value() {
         let input  = Span::new(b"0777777777777777777777");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 22, 1, 23),
             Literal::Integer(Token::new(::std::i64::MAX, input))
-        );
+        ));
 
         assert_eq!(octal(input), output);
         assert_eq!(integer(input), output);
@@ -789,9 +789,9 @@ mod tests {
     #[test]
     fn case_invalid_octal_overflow() {
         let input  = Span::new(b"01000000000000000000000");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(octal(input), Result::Error(Error::Position(ErrorKind::MapRes, input)));
+        assert_eq!(octal(input), Err(Error::Error(Context::Code(input, ErrorKind::MapRes))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -799,12 +799,12 @@ mod tests {
     #[test]
     fn case_invalid_octal_not_starting_by_zero() {
         let input  = Span::new(b"7");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 1, 1, 2),
             Literal::Integer(Token::new(7i64, input))
-        );
+        ));
 
-        assert_eq!(octal(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(octal(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -812,12 +812,12 @@ mod tests {
     #[test]
     fn case_invalid_octal_not_in_base() {
         let input  = Span::new(b"8");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 1, 1, 2),
             Literal::Integer(Token::new(8i64, input))
-        );
+        ));
 
-        assert_eq!(octal(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(octal(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -825,10 +825,10 @@ mod tests {
     #[test]
     fn case_decimal_one_digit() {
         let input  = Span::new(b"7");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 1, 1, 2),
             Literal::Integer(Token::new(7i64, input))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -838,10 +838,10 @@ mod tests {
     #[test]
     fn case_decimal_many_digits() {
         let input  = Span::new(b"42");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 2, 1, 3),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -854,7 +854,7 @@ mod tests {
             let string = input.to_string();
 
             match decimal(Span::new(string.as_bytes())) {
-                Result::Done(_, Literal::Integer(Token { value: output, .. })) => {
+                Ok((_, Literal::Integer(Token { value: output, .. }))) => {
                     input == output as u32
                 },
 
@@ -868,10 +868,10 @@ mod tests {
     #[test]
     fn case_decimal_plus() {
         let input  = Span::new(b"42+");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"+", 2, 1, 3),
             Literal::Integer(Token::new(42i64, Span::new(b"42")))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -881,10 +881,10 @@ mod tests {
     #[test]
     fn case_decimal_maximum_integer_value() {
         let input  = Span::new(b"9223372036854775807");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 19, 1, 20),
             Literal::Integer(Token::new(::std::i64::MAX, input))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -894,10 +894,10 @@ mod tests {
     #[test]
     fn case_decimal_overflow_to_real() {
         let input  = Span::new(b"9223372036854775808");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 19, 1, 20),
             Literal::Real(Token::new(9223372036854775808f64, input))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -907,10 +907,10 @@ mod tests {
     #[test]
     fn case_decimal_maximum_real_value() {
         let input  = Span::new(b"179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 309, 1, 310),
             Literal::Real(Token::new(::std::f64::MAX, input))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -920,10 +920,10 @@ mod tests {
     #[test]
     fn case_invalid_decimal_overflow_to_infinity() {
         let input  = Span::new(b"1797693134862315700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 310, 1, 311),
             Literal::Real(Token::new(::std::f64::INFINITY, input))
-        );
+        ));
 
         assert_eq!(decimal(input), output);
         assert_eq!(integer(input), output);
@@ -933,10 +933,10 @@ mod tests {
     #[test]
     fn case_hexadecimal_lowercase_x() {
         let input  = Span::new(b"0x2a");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -946,10 +946,10 @@ mod tests {
     #[test]
     fn case_hexadecimal_uppercase_x() {
         let input  = Span::new(b"0X2a");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -959,10 +959,10 @@ mod tests {
     #[test]
     fn case_hexadecimal_uppercase_alpha() {
         let input  = Span::new(b"0x2A");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Literal::Integer(Token::new(42i64, input))
-        );
+        ));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -972,12 +972,12 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_no_number() {
         let input  = Span::new(b"0x");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"x", 1, 1, 2),
             Literal::Integer(Token::new(0i64, Span::new(b"0")))
-        );
+        ));
 
-        assert_eq!(hexadecimal(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(hexadecimal(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -985,12 +985,12 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_not_in_base() {
         let input  = Span::new(b"0xg");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"xg", 1, 1, 2),
             Literal::Integer(Token::new(0i64, Span::new(b"0")))
-        );
+        ));
 
-        assert_eq!(hexadecimal(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
+        assert_eq!(hexadecimal(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -998,10 +998,10 @@ mod tests {
     #[test]
     fn case_hexadecimal_maximum_integer_value() {
         let input  = Span::new(b"0x7fffffffffffffff");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 18, 1, 19),
             Literal::Integer(Token::new(::std::i64::MAX, input))
-        );
+        ));
 
         assert_eq!(hexadecimal(input), output);
         assert_eq!(integer(input), output);
@@ -1011,12 +1011,12 @@ mod tests {
     #[test]
     fn case_invalid_hexadecimal_overflow() {
         let input  = Span::new(b"0x8000000000000000");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"x8000000000000000", 1, 1, 2),
             Literal::Integer(Token::new(0i64, Span::new(b"0")))
-        );
+        ));
 
-        assert_eq!(hexadecimal(input), Result::Error(Error::Position(ErrorKind::MapRes, Span::new(b"0x8000000000000000"))));
+        assert_eq!(hexadecimal(input), Err(Error::Error(Context::Code(Span::new(b"0x8000000000000000"), ErrorKind::MapRes))));
         assert_eq!(integer(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1024,10 +1024,10 @@ mod tests {
     #[test]
     fn case_exponential() {
         let input  = Span::new(b"123.456e+78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 11, 1, 12),
             Literal::Real(Token::new(123.456e78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1036,10 +1036,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_fractional_part() {
         let input  = Span::new(b"123.456");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Literal::Real(Token::new(123.456f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1048,10 +1048,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_part() {
         let input  = Span::new(b"123.");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Literal::Real(Token::new(123.0f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1060,10 +1060,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_fractional_part() {
         let input  = Span::new(b".456");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 4, 1, 5),
             Literal::Real(Token::new(0.456f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1072,10 +1072,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_lowercase_e() {
         let input  = Span::new(b"123.e78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Literal::Real(Token::new(123e78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1084,10 +1084,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_integer_rational_and_exponent_part() {
         let input  = Span::new(b"123e78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 6, 1, 7),
             Literal::Real(Token::new(123e78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1096,10 +1096,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_exponent_part_with_uppercase_e() {
         let input  = Span::new(b"123.E78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Literal::Real(Token::new(123e78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1108,10 +1108,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_unsigned_exponent_part() {
         let input  = Span::new(b"123.e78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Literal::Real(Token::new(123e78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1120,10 +1120,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_positive_exponent_part() {
         let input  = Span::new(b"123.e+78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 8, 1, 9),
             Literal::Real(Token::new(123e78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1132,10 +1132,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_negative_exponent_part() {
         let input  = Span::new(b"123.e-78");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 8, 1, 9),
             Literal::Real(Token::new(123e-78f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1144,10 +1144,10 @@ mod tests {
     #[test]
     fn case_exponential_only_with_rational_and_negative_zero_exponent_part() {
         let input  = Span::new(b"123.e-0");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 7, 1, 8),
             Literal::Real(Token::new(123f64, input))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1156,10 +1156,10 @@ mod tests {
     #[test]
     fn case_exponential_missing_exponent_part() {
         let input  = Span::new(b".7e");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"e", 2, 1, 3),
             Literal::Real(Token::new(0.7f64, Span::new(b".7")))
-        );
+        ));
 
         assert_eq!(exponential(input), output);
         assert_eq!(literal(input), output);
@@ -1169,14 +1169,14 @@ mod tests {
     fn case_invalid_exponential_only_the_dot() {
         let input = Span::new(b".");
 
-        assert_eq!(exponential(input), Result::Error(Error::Code(ErrorKind::RegexpFind)));
-        assert_eq!(literal(input), Result::Error(Error::Position(ErrorKind::Alt, Span::new(b"."))));
+        assert_eq!(exponential(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
+        assert_eq!(literal(input), Err(Error::Error(Context::Code(Span::new(b"."), ErrorKind::Alt))));
     }
 
     #[test]
     fn case_string_single_quoted() {
         let input  = Span::new(b"'foobar'tail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 8, 1, 9),
             Literal::String(
                 Token::new(
@@ -1184,7 +1184,7 @@ mod tests {
                     Span::new(b"'foobar'")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1196,12 +1196,12 @@ mod tests {
         let input = Span::new(b"'foobar'tail");
 
         match string_single_quoted(input) {
-            Result::Done(
+            Ok((
                 Span { .. },
                 Literal::String(
                     Token { value: Cow::Borrowed(..), .. }
                 )
-            ) => {
+            )) => {
                 assert!(true);
             },
 
@@ -1214,7 +1214,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_quote() {
         let input  = Span::new(b"'foo\\'bar'tail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
@@ -1222,7 +1222,7 @@ mod tests {
                     Span::new(b"'foo\\'bar'")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1234,12 +1234,12 @@ mod tests {
         let input = Span::new(b"'foo\\'bar'tail");
 
         match string_single_quoted(input) {
-            Result::Done(
+            Ok((
                 Span { .. },
                 Literal::String(
                     Token { value: Cow::Owned(..), .. }
                 )
-            ) => {
+            )) => {
                 assert!(true);
             },
 
@@ -1252,7 +1252,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_backslash() {
         let input  = Span::new(b"'foo\\\\bar'tail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
@@ -1260,7 +1260,7 @@ mod tests {
                     Span::new(b"'foo\\\\bar'")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1272,12 +1272,12 @@ mod tests {
         let input = Span::new(b"'foo\\\\bar'tail");
 
         match string_single_quoted(input) {
-            Result::Done(
+            Ok((
                 Span { .. },
                 Literal::String(
                     Token { value: Cow::Owned(..), .. }
                 )
-            ) => {
+            )) => {
                 assert!(true);
             },
 
@@ -1290,7 +1290,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_any() {
         let input  = Span::new(b"'foo\\nbar'tail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 10, 1, 11),
             Literal::String(
                 Token::new(
@@ -1298,7 +1298,7 @@ mod tests {
                     Span::new(b"'foo\\nbar'")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1310,12 +1310,12 @@ mod tests {
         let input = Span::new(b"'foo\\nbar'tail");
 
         match string_single_quoted(input) {
-            Result::Done(
+            Ok((
                 Span { .. },
                 Literal::String(
                     Token { value: Cow::Borrowed(..), .. }
                 )
-            ) => {
+            )) => {
                 assert!(true);
             },
 
@@ -1328,7 +1328,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_escaped_many() {
         let input  = Span::new(b"'\\'f\\oo\\\\bar\\\\'tail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 15, 1, 16),
             Literal::String(
                 Token::new(
@@ -1336,7 +1336,7 @@ mod tests {
                     Span::new(b"'\\'f\\oo\\\\bar\\\\'")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1346,7 +1346,7 @@ mod tests {
     #[test]
     fn case_string_single_quoted_empty() {
         let input  = Span::new(b"''tail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 2, 1, 3),
             Literal::String(
                 Token::new(
@@ -1354,7 +1354,7 @@ mod tests {
                     Span::new(b"''")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1366,12 +1366,12 @@ mod tests {
         let input = Span::new(b"''tail");
 
         match string_single_quoted(input) {
-            Result::Done(
+            Ok((
                 Span { .. },
                 Literal::String(
                     Token { value: Cow::Borrowed(..), .. }
                 )
-            ) => {
+            )) => {
                 assert!(true);
             },
 
@@ -1384,10 +1384,10 @@ mod tests {
     #[test]
     fn case_string_binary_single_quoted() {
         let input  = Span::new(b"b'foobar'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Literal::String(Token::new(Cow::from(&b"foobar"[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1397,10 +1397,10 @@ mod tests {
     #[test]
     fn case_string_binary_uppercase_single_quoted() {
         let input  = Span::new(b"B'foobar'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 9, 1, 10),
             Literal::String(Token::new(Cow::from(&b"foobar"[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1410,10 +1410,10 @@ mod tests {
     #[test]
     fn case_string_binary_single_quoted_escaped_many() {
         let input  = Span::new(b"b'\\'f\\oo\\\\bar'");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 14, 1, 15),
             Literal::String(Token::new(Cow::from(&b"'f\\oo\\bar"[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_single_quoted(input), output);
         assert_eq!(string(input), output);
@@ -1423,9 +1423,9 @@ mod tests {
     #[test]
     fn case_invalid_string_single_quoted_too_short() {
         let input  = Span::new(b"'");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1433,9 +1433,9 @@ mod tests {
     #[test]
     fn case_invalid_string_single_quoted_opening_character() {
         let input  = Span::new(b"foobar'");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1443,9 +1443,9 @@ mod tests {
     #[test]
     fn case_invalid_string_single_quoted_closing_character() {
         let input  = Span::new(b"'foobar");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1453,9 +1453,9 @@ mod tests {
     #[test]
     fn case_invalid_string_single_quoted_closing_character_is_a_backslash() {
         let input  = Span::new(b"'foobar\\");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1463,9 +1463,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_single_quoted_too_short() {
         let input  = Span::new(b"b'");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1473,9 +1473,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_uppercase_single_quoted_too_short() {
         let input  = Span::new(b"B'");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1483,9 +1483,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_single_quoted_opening_character() {
         let input  = Span::new(b"bb'");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_single_quoted(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_single_quoted(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1493,7 +1493,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc() {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 30, 5, 1),
             Literal::String(
                 Token::new(
@@ -1501,7 +1501,7 @@ mod tests {
                     Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1513,12 +1513,12 @@ mod tests {
         let input = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;\ntail");
 
         match string_nowdoc(input) {
-            Result::Done(
+            Ok((
                 Span { .. },
                 Literal::String(
                     Token { value: Cow::Borrowed(..), .. }
                 )
-            ) => {
+            )) => {
                 assert!(true);
             },
 
@@ -1531,7 +1531,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 34, 5, 1),
             Literal::String(
                 Token::new(
@@ -1539,7 +1539,7 @@ mod tests {
                     Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;\r\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1549,7 +1549,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_without_semi_colon() {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 29, 5, 1),
             Literal::String(
                 Token::new(
@@ -1557,7 +1557,7 @@ mod tests {
                     Span::new(b"<<<'FOO'\nhello \n  world \nFOO\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1567,7 +1567,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_without_semi_colon_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 33, 5, 1),
             Literal::String(
                 Token::new(
@@ -1575,7 +1575,7 @@ mod tests {
                     Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1585,7 +1585,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_empty() {
         let input  = Span::new(b"<<<'FOO'\nFOO\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 13, 3, 1),
             Literal::String(
                 Token::new(
@@ -1593,7 +1593,7 @@ mod tests {
                     Span::new(b"<<<'FOO'\nFOO\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1603,7 +1603,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_empty_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nFOO\r\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 15, 3, 1),
             Literal::String(
                 Token::new(
@@ -1611,7 +1611,7 @@ mod tests {
                     Span::new(b"<<<'FOO'\r\nFOO\r\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1621,7 +1621,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_with_whitespaces_before_identifier() {
         let input  = Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 35, 5, 1),
             Literal::String(
                 Token::new(
@@ -1629,7 +1629,7 @@ mod tests {
                     Span::new(b"<<<   \t  'FOO'\nhello \n  world \nFOO\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1639,7 +1639,7 @@ mod tests {
     #[test]
     fn case_string_nowdoc_with_whitespaces_before_identifier_crlf() {
         let input  = Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\ntail");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"tail", 39, 5, 1),
             Literal::String(
                 Token::new(
@@ -1647,7 +1647,7 @@ mod tests {
                     Span::new(b"<<<   \t  'FOO'\r\nhello \r\n  world \r\nFOO\r\n")
                 )
             )
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1657,10 +1657,10 @@ mod tests {
     #[test]
     fn case_string_binary_nowdoc() {
         let input  = Span::new(b"b<<<'FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 30, 5, 1),
             Literal::String(Token::new(Cow::from(&b"hello \n  world "[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1670,10 +1670,10 @@ mod tests {
     #[test]
     fn case_string_binary_nowdoc_crlf() {
         let input  = Span::new(b"b<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 34, 5, 1),
             Literal::String(Token::new(Cow::from(&b"hello \r\n  world "[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1683,10 +1683,10 @@ mod tests {
     #[test]
     fn case_string_binary_uppercase_nowdoc() {
         let input  = Span::new(b"B<<<'FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 30, 5, 1),
             Literal::String(Token::new(Cow::from(&b"hello \n  world "[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1696,10 +1696,10 @@ mod tests {
     #[test]
     fn case_string_binary_uppercase_nowdoc_crlf() {
         let input  = Span::new(b"B<<<'FOO'\r\nhello \r\n  world \r\nFOO\r\n");
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b"", 34, 5, 1),
             Literal::String(Token::new(Cow::from(&b"hello \r\n  world "[..]), input.slice(1..)))
-        );
+        ));
 
         assert_eq!(string_nowdoc(input), output);
         assert_eq!(string(input), output);
@@ -1709,9 +1709,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_too_short() {
         let input  = Span::new(b"<<<'A'\nA");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1719,9 +1719,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_opening_character() {
         let input  = Span::new(b"<<FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1729,9 +1729,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_first_quote() {
         let input  = Span::new(b"<<<FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1739,9 +1739,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_second_quote() {
         let input  = Span::new(b"<<<'FOO\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1749,9 +1749,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_invalid_identifier() {
         let input  = Span::new(b"<<<'42'\nhello \n  world \n42\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1759,9 +1759,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_partially_invalid_identifier() {
         let input  = Span::new(b"<<<'F O O'\nhello \n  world \nF O O\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1769,9 +1769,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_opening_character_missing_newline() {
         let input  = Span::new(b"<<<'FOO'hello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1779,9 +1779,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character() {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFO;\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1789,9 +1789,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character_no_semi_colon_no_newline() {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1799,9 +1799,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character_no_semi_colon_no_newline_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1809,9 +1809,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character_no_newline() {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1819,9 +1819,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character_no_newline_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1829,9 +1829,9 @@ mod tests {
     #[test]
     fn case_invalid_string_nowdoc_closing_character_missing_lf_in_crlf() {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1839,9 +1839,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_nowdoc_too_short() {
         let input  = Span::new(b"b<<<'A'\nA");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1849,9 +1849,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_nowdoc_opening_character() {
         let input  = Span::new(b"b<<FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1859,9 +1859,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_nowdoc_opening_character_missing_first_quote() {
         let input  = Span::new(b"b<<<FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1869,9 +1869,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_nowdoc_opening_character_missing_second_quote() {
         let input  = Span::new(b"b<<<'FOO\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1879,9 +1879,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_uppercase_nowdoc_too_short() {
         let input  = Span::new(b"B<<<'A'\nA");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::TooShort as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::TooShort as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1889,9 +1889,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_uppercase_nowdoc_opening_character() {
         let input  = Span::new(b"B<<FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1899,9 +1899,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_uppercase_nowdoc_opening_character_missing_first_quote() {
         let input  = Span::new(b"B<<<FOO'\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1909,9 +1909,9 @@ mod tests {
     #[test]
     fn case_invalid_string_binary_uppercase_nowdoc_opening_character_missing_second_quote() {
         let input  = Span::new(b"B<<<'FOO\nhello \n  world \nFOO\n");
-        let output = Result::Error(Error::Position(ErrorKind::Alt, input));
+        let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Result::Error(Error::Code(ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }

@@ -668,10 +668,10 @@ named_attr!(
         use tagua_parser::tokens::Span;
 
         # fn main () {
-        let output = Result::Done(
+        let output = Ok((
             Span::new_at(b\"\", 4, 1, 5),
             Span::new(tokens::ECHO)
-        );
+        ));
 
         assert_eq!(tokens::keywords(Span::new(b\"echo\")), output);
         assert_eq!(tokens::keywords(Span::new(b\"ECHO\")), output);
@@ -1242,7 +1242,7 @@ mod tests {
         ($test_case_name:ident: ($string:expr, $expect:expr)) => (
             #[test]
             fn $test_case_name() {
-                let output     = Result::Done(Span::new_at(b"", $string.len(), 1, $string.len() as u32 + 1), Span::new($expect));
+                let output     = Ok((Span::new_at(b"", $string.len(), 1, $string.len() as u32 + 1), Span::new($expect)));
                 let uppercased = str::from_utf8($string).unwrap().to_ascii_uppercase();
 
                 assert_eq!(keywords(Span::new($string)), output);
@@ -1327,8 +1327,8 @@ mod tests {
     #[test]
     fn case_keyword_yield_from_with_many_whitespaces() {
         let input      = b"yield  \t \t \n \n \r \r  fromabc";
-        let output1    = Result::Done(Span::new_at(b"abc", 24, 3, 11), Span::new(super::YIELD_FROM));
-        let output2    = Result::Done(Span::new_at(b"ABC", 24, 3, 11), Span::new(super::YIELD_FROM));
+        let output1    = Ok((Span::new_at(b"abc", 24, 3, 11), Span::new(super::YIELD_FROM)));
+        let output2    = Ok((Span::new_at(b"ABC", 24, 3, 11), Span::new(super::YIELD_FROM)));
         let uppercased = str::from_utf8(input).unwrap().to_ascii_uppercase();
 
         assert_eq!(keywords(Span::new(input)), output1);
@@ -1339,7 +1339,7 @@ mod tests {
     fn case_invalid_keyword() {
         let input = Span::new(b"hello");
 
-        assert_eq!(keywords(input), Result::Error(Error::Position(ErrorKind::Alt, input)));
+        assert_eq!(keywords(input), Err(Error::Error(Context::Code(input, ErrorKind::Alt))));
     }
 
     #[test]
@@ -1683,7 +1683,7 @@ mod tests {
         );
 
         let input = b"foo bar\nbaz\n \n  baz   qux";
-        let output = Result::Done(
+        let output = Ok((
             Span {
                 offset: 25,
                 line  : 4,
@@ -1722,7 +1722,7 @@ mod tests {
                     slice : &b"qux"[..],
                 }
             ]
-        );
+        ));
 
         assert_eq!(test(Span::new(input)), output);
     }

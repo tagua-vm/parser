@@ -34,13 +34,15 @@
 use smallvec::VecLike;
 
 /// Contain the error that a parser can return.
-pub use nom::Err as Error;
+pub use nom::Err as Error; // OK
 
 /// Indicate which parser has returned an error.
 pub use nom::ErrorKind;
 
+pub use nom::Context;
+
 /// Hold the result of a parser.
-pub use nom::IResult as Result;
+pub use nom::IResult as Result; // OK
 
 /// Contain information on needed data if a parser returned `Incomplete`.
 pub use nom::Needed;
@@ -74,7 +76,7 @@ pub type Input<'a> = &'a [InputElement];
 ///     )
 /// );
 ///
-/// assert_eq!(test(&b"abcabc"[..]), Result::Done(&b""[..], vec![&b"abc"[..], &b"abc"[..]]));
+/// assert_eq!(test(&b"abcabc"[..]), Ok((&b""[..], vec![&b"abc"[..], &b"abc"[..]])));
 /// # }
 /// ```
 pub fn fold_into_vector<I, V: VecLike<I>>(mut accumulator: V, item: I) -> V {
