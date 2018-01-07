@@ -342,6 +342,44 @@ macro_rules! regex (
     )
 );
 
+#[macro_export]
+macro_rules! map_res_and_input (
+    // Internal parser, do not use directly
+    (__impl $i:expr, $submacro:ident!( $($arguments:tt)* ), $submacro2:ident!( $($arguments2:tt)* )) => (
+        {
+            use ::std::result::Result::*;
+            use $crate::Error;
+
+            let i_ = $i.clone();
+            ($submacro!(i_, $($arguments)*)).and_then(|(i,o)| {
+                match $submacro2!(o, $($arguments2)*) {
+                    Ok(output) => {
+                        Ok((i, output))
+                    },
+
+                    Err(_) => {
+                        let e = $crate::ErrorKind::MapRes;
+
+                        Err(Error::Error(error_position!($i, e)))
+                    },
+                }
+            })
+        }
+    );
+    ($i:expr, $submacro:ident!( $($arguments:tt)* ), $g:expr) => (
+        map_res_and_input!(__impl $i, $submacro!($($arguments)*), call!($g, $i));
+    );
+    ($i:expr, $submacro:ident!( $($arguments:tt)* ), $submacro2:ident!( $($arguments2:tt)* )) => (
+        map_res_and_input!(__impl $i, $submacro!($($arguments)*), $submacro2!($i, $($arguments2)*));
+    );
+    ($i:expr, $f:expr, $g:expr) => (
+        map_res_and_input!(__impl $i, call!($f), call!($g, $i));
+    );
+    ($i:expr, $f:expr, $submacro:ident!( $($arguments:tt)* )) => (
+        map_res_and_input!(__impl $i, call!($f), $submacro!($i, $($arguments)*));
+    );
+);
+
 /// Create a `SmallVec` and push items into it.
 ///
 /// This macro almost works like `vec![]`. It allows to create a
@@ -402,7 +440,6 @@ macro_rules! regex (
 /// let handle = smallvec![1i32, 2, 3];
 /// # }
 /// ```
-
 #[macro_export]
 macro_rules! smallvec [
     ($($e:expr),+) => ({
