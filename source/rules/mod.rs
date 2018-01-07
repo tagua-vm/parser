@@ -42,7 +42,6 @@ pub mod tokens;
 pub mod whitespaces;
 
 use super::ast::Expression;
-use super::internal::*;
 use super::tokens::Span;
 
 /// The `root` parser is the axiom of the grammar, i.e. the entry

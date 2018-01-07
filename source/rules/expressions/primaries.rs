@@ -67,6 +67,7 @@ use super::super::super::ast::{
     Variable
 };
 use super::super::super::internal::{
+    Context,
     Error,
     ErrorKind
 };
@@ -572,7 +573,7 @@ named_attr!(
         ```
     "],
     pub intrinsic_list<Span, Expression>,
-    map_res!(
+    map_res_and_input!(
         preceded!(
             preceded!(
                 keyword!(tokens::LIST),
@@ -653,13 +654,13 @@ fn into_list<'a>(expressions: Vec<Option<(Option<Expression<'a>>, Expression<'a>
 }
 
 #[inline]
-fn intrinsic_list_mapper(expression: Expression) -> StdResult<Expression, Error<ErrorKind>> {
+fn intrinsic_list_mapper<'a, 'b>(expression: Expression<'a>, input: Span<'b>) -> StdResult<Expression<'a>, Error<Span<'b>>> {
     match expression {
         Expression::List(items) => {
             if items.iter().any(|item| item.is_some()) {
                 Ok(Expression::List(items))
             } else {
-                Err(Error::Code(ErrorKind::Custom(IntrinsicError::ListIsEmpty as u32)))
+                Err(Error::Error(Context::Code(input, ErrorKind::Custom(IntrinsicError::ListIsEmpty as u32))))
             }
         },
 
@@ -882,7 +883,7 @@ named_attr!(
         ```
     "],
     pub intrinsic_exit<Span, Expression>,
-    map_res!(
+    map_res_and_input!(
         preceded!(
             alt!(
                 keyword!(tokens::EXIT)
@@ -903,14 +904,14 @@ named_attr!(
 );
 
 #[inline]
-fn exit_mapper(expression: Option<Expression>) -> StdResult<Expression, Error<ErrorKind>> {
+fn exit_mapper<'a, 'b>(expression: Option<Expression<'a>>, input: Span<'b>) -> StdResult<Expression<'a>, Error<Span<'b>>> {
     match expression {
         Some(expression) => {
             if let Expression::Literal(Literal::Integer(Token { value: code, .. })) = expression {
                 if code == 255 {
-                    return Err(Error::Code(ErrorKind::Custom(IntrinsicError::ReservedExitCode as u32)));
+                    return Err(Error::Error(Context::Code(input, ErrorKind::Custom(IntrinsicError::ReservedExitCode as u32))));
                 } else if code > 255 {
-                    return Err(Error::Code(ErrorKind::Custom(IntrinsicError::OutOfRangeExitCode as u32)));
+                    return Err(Error::Error(Context::Code(input, ErrorKind::Custom(IntrinsicError::OutOfRangeExitCode as u32))));
                 }
             }
 

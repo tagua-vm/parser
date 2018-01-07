@@ -54,6 +54,7 @@ use super::super::super::ast::{
     Variable
 };
 use super::super::super::internal::{
+    Context,
     Error,
     ErrorKind
 };
@@ -291,7 +292,7 @@ named_attr!(
         ```
     "],
     pub parameters<Span, Arity>,
-    map_res!(
+    map_res_and_input!(
         terminated!(
             preceded!(
                 tag!(tokens::LEFT_PARENTHESIS),
@@ -319,7 +320,7 @@ named_attr!(
 );
 
 #[inline]
-fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult<Arity, Error<ErrorKind>> {
+fn parameters_mapper<'a, 'b>(pairs: Option<Vec<(Parameter<'a>, bool)>>, input: Span<'b>) -> StdResult<Arity<'a>, Error<Span<'b>>> {
     let mut pairs = match pairs {
         Some(pairs) => {
             pairs
@@ -335,11 +336,11 @@ fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult
 
     for (parameter, is_variadic) in pairs {
         if is_variadic {
-            return Err(Error::Code(ErrorKind::Custom(FunctionError::InvalidVariadicParameterPosition as u32)));
+            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(FunctionError::InvalidVariadicParameterPosition as u32))));
         }
 
         if parameters.iter().any(|p: &Parameter<'a>| p.name == parameter.name) {
-            return Err(Error::Code(ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32)));
+            return Err(Error::Error(Context::Code(input, ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32))));
         }
 
         parameters.push(parameter);
@@ -348,7 +349,7 @@ fn parameters_mapper<'a>(pairs: Option<Vec<(Parameter<'a>, bool)>>) -> StdResult
     match last_pair {
         Some((last_parameter, is_variadic)) => {
             if parameters.iter().any(|p: &Parameter<'a>| p.name == last_parameter.name) {
-                return Err(Error::Code(ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32)));
+                return Err(Error::Error(Context::Code(input, ErrorKind::Custom(FunctionError::MultipleParametersWithSameName as u32))));
             }
 
             parameters.push(last_parameter);
