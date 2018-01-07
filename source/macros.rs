@@ -342,15 +342,22 @@ macro_rules! regex (
     )
 );
 
+/// `map_res_and_input!(I -> IResult<I,O>, O -> Result<P>) => I -> IResult<I, P>`
+/// Map a function returning a `Result` on the output of a parser. The
+/// original parser input is accessible as the last argument of the
+/// mapper.
+///
+/// This is exactly like `map_res!` from nom, except that the input is
+/// passed.
 #[macro_export]
 macro_rules! map_res_and_input (
     // Internal parser, do not use directly
-    (__impl $i:expr, $submacro:ident!( $($arguments:tt)* ), $submacro2:ident!( $($arguments2:tt)* )) => (
+    (__impl $input:expr, $submacro:ident!($($arguments:tt)*), $submacro2:ident!($($arguments2:tt)*)) => (
         {
             use ::std::result::Result::*;
             use $crate::Error;
 
-            let i_ = $i.clone();
+            let i_ = $input.clone();
             ($submacro!(i_, $($arguments)*)).and_then(|(i,o)| {
                 match $submacro2!(o, $($arguments2)*) {
                     Ok(output) => {
@@ -360,23 +367,23 @@ macro_rules! map_res_and_input (
                     Err(_) => {
                         let e = $crate::ErrorKind::MapRes;
 
-                        Err(Error::Error(error_position!($i, e)))
+                        Err(Error::Error(error_position!($input, e)))
                     },
                 }
             })
         }
     );
-    ($i:expr, $submacro:ident!( $($arguments:tt)* ), $g:expr) => (
-        map_res_and_input!(__impl $i, $submacro!($($arguments)*), call!($g, $i));
+    ($input:expr, $submacro:ident!($($arguments:tt)* ), $mapper:expr) => (
+        map_res_and_input!(__impl $input, $submacro!($($arguments)*), call!($mapper, $input));
     );
-    ($i:expr, $submacro:ident!( $($arguments:tt)* ), $submacro2:ident!( $($arguments2:tt)* )) => (
-        map_res_and_input!(__impl $i, $submacro!($($arguments)*), $submacro2!($i, $($arguments2)*));
+    ($input:expr, $submacro:ident!($($arguments:tt)*), $submacro2:ident!($($arguments2:tt)*)) => (
+        map_res_and_input!(__impl $input, $submacro!($($arguments)*), $submacro2!($input, $($arguments2)*));
     );
-    ($i:expr, $f:expr, $g:expr) => (
-        map_res_and_input!(__impl $i, call!($f), call!($g, $i));
+    ($input:expr, $parser:expr, $mapper:expr) => (
+        map_res_and_input!(__impl $input, call!($parser), call!($mapper, $input));
     );
-    ($i:expr, $f:expr, $submacro:ident!( $($arguments:tt)* )) => (
-        map_res_and_input!(__impl $i, call!($f), $submacro!($i, $($arguments)*));
+    ($input:expr, $parser:expr, $submacro:ident!($($arguments:tt)*)) => (
+        map_res_and_input!(__impl $input, call!($parser), $submacro!($input, $($arguments)*));
     );
 );
 
