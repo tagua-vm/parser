@@ -541,9 +541,9 @@ mod tests {
         Variable
     };
     use super::super::super::super::internal::{
+        Context,
         Error,
-        ErrorKind,
-        Result
+        ErrorKind
     };
     use super::super::super::super::tokens::{
         Span,

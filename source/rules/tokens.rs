@@ -203,9 +203,9 @@ mod tests {
         Variable
     };
     use super::super::super::internal::{
+        Context,
         Error,
-        ErrorKind,
-        Result
+        ErrorKind
     };
     use super::super::super::macros::ErrorKindCustom;
     use super::super::super::tokens::Span;
@@ -237,7 +237,7 @@ mod tests {
     fn case_invalid_variable_name() {
         let input = Span::new(b"$0");
 
-        assert_eq!(variable(input), Err(Error::Error(Context::Code(, input, ErrorKind::RegexpFind))));
+        assert_eq!(variable(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
     }
 
     #[test]
@@ -253,8 +253,8 @@ mod tests {
         let input1 = Span::new(b"class");
         let input2 = Span::new(b"ClAsS");
 
-        assert_eq!(qualified_name(input1), Err(Error::Error(Context::Code(input, ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
-        assert_eq!(qualified_name(input2), Err(Error::Error(Context::Code(input, ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
+        assert_eq!(qualified_name(input1), Err(Error::Error(Context::Code(input1, ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
+        assert_eq!(qualified_name(input2), Err(Error::Error(Context::Code(input2, ErrorKind::Custom(ErrorKindCustom::Exclude as u32)))));
     }
 
     #[test]
@@ -516,6 +516,8 @@ mod tests {
 
     #[test]
     fn case_invalid_name() {
-        assert_eq!(name(Span::new(b"0x")), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
+        let input = Span::new(b"0x");
+
+        assert_eq!(name(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
     }
 }

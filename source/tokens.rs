@@ -1232,9 +1232,9 @@ mod tests {
     use super::Span;
     use super::keywords;
     use super::super::internal::{
+        Context,
         Error,
-        ErrorKind,
-        Result
+        ErrorKind
     };
     use nom::{
         Compare,

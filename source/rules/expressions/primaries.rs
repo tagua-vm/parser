@@ -1278,9 +1278,9 @@ mod tests {
         Variable
     };
     use super::super::super::super::internal::{
+        Context,
         Error,
-        ErrorKind,
-        Result
+        ErrorKind
     };
     use super::super::super::super::tokens::{
         Span,
@@ -2626,7 +2626,7 @@ mod tests {
         let input  = Span::new(b"isset()");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(intrinsic_isset(input), Err(Error::Error(Context::Error(Span::new_at(b")", 6, 1, 7), ErrorKind::Tag))));
+        assert_eq!(intrinsic_isset(input), Err(Error::Error(Context::Code(Span::new_at(b")", 6, 1, 7), ErrorKind::Tag))));
         assert_eq!(intrinsic_operator(input), output);
         assert_eq!(intrinsic(input), output);
         assert_eq!(primary(input), output);

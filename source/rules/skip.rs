@@ -80,7 +80,6 @@ named_attr!(
 #[cfg(test)]
 mod tests {
     use super::skip;
-    use super::super::super::internal::Result;
     use super::super::super::tokens::Span;
 
     #[test]

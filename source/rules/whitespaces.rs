@@ -66,9 +66,9 @@ named_attr!(
 #[cfg(test)]
 mod tests {
     use super::super::super::internal::{
+        Context,
         Error,
-        ErrorKind,
-        Result
+        ErrorKind
     };
     use super::super::super::tokens::Span;
     use super::whitespace;

@@ -311,7 +311,6 @@ mod tests {
         TernaryOperator,
         Variable
     };
-    use super::super::super::super::internal::Result;
     use super::super::super::super::tokens::{
         Span,
         Token

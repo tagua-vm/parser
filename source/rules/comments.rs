@@ -94,9 +94,9 @@ mod tests {
         comment_single_line
     };
     use super::super::super::internal::{
+        Context,
         Error,
         ErrorKind,
-        Result
     };
     use super::super::super::tokens::Span;
 

@@ -467,10 +467,10 @@ mod tests {
     use smallvec::SmallVec;
     use super::ErrorKindCustom;
     use super::super::internal::{
+        Context,
         Error,
         ErrorKind,
-        Needed,
-        Result
+        Needed
     };
     use super::super::tokens::Span;
 
@@ -535,7 +535,7 @@ mod tests {
             )
         );
 
-        assert_eq!(test(&b"a"[..]), Err(Err::Incomplete(Needed::Size(3))));
+        assert_eq!(test(&b"a"[..]), Err(Error::Incomplete(Needed::Size(3))));
     }
 
     #[test]
@@ -607,7 +607,7 @@ mod tests {
         named!(test2<Span, Span>, itag!(b"FoObAR"));
 
         let input  = Span::new(&b"FoOb"[..]);
-        let output = Err(Err::Incomplete(Needed::Size(6)));
+        let output = Err(Error::Incomplete(Needed::Size(6)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
@@ -638,7 +638,7 @@ mod tests {
         named!(test2<Span, Span>, keyword!(b"FoObAR"));
 
         let input  = Span::new(b"FoOb");
-        let output = Err(Err::Incomplete(Needed::Size(6)));
+        let output = Err(Error::Incomplete(Needed::Size(6)));
 
         assert_eq!(test1(input), output);
         assert_eq!(test2(input), output);
