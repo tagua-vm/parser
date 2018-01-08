@@ -544,7 +544,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
         name_span = n;
         next_span = i;
     } else {
-        return Err(Error::Error(Context::Code(span, ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))))
+        return Err(Error::Error(Context::Code(span.slice(offset..), ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32))))
     }
 
     let name              = name_span.as_slice();
@@ -554,7 +554,7 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
 
     if next_input_length < 3 + name_length || next_input[0] != b'\'' || next_input[1] != b'\n' {
         if next_input[1] != b'\r' || next_input[2] != b'\n' {
-            return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
+            return Err(Error::Error(Context::Code(span.slice(offset..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32))));
         }
     }
 
@@ -577,22 +577,25 @@ fn string_nowdoc(span: Span) -> Result<Span, Literal> {
             let mut lookahead_offset = offset + index + name_length + 1;
 
             if lookahead_offset >= next_input_length {
-                return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                return Err(Error::Error(Context::Code(next_span.slice(lookahead_offset - name_length..), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
 
+            let mut semicolon_offset_adjustment = 0;
+
             if next_input[lookahead_offset] == b';' {
-                lookahead_offset += 1;
+                lookahead_offset            += 1;
+                semicolon_offset_adjustment  = 1;
             }
 
             if lookahead_offset >= next_input_length {
-                return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                return Err(Error::Error(Context::Code(next_span.slice(lookahead_offset - name_length - semicolon_offset_adjustment..), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
             }
 
             let mut ending_offset = 0;
 
             if next_input[lookahead_offset] == b'\r' {
                 if lookahead_offset + 1 >= next_input_length {
-                    return Err(Error::Error(Context::Code(next_span, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
+                    return Err(Error::Error(Context::Code(next_span.slice(lookahead_offset - name_length - semicolon_offset_adjustment..), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32))));
                 }
 
                 ending_offset     = 1;
@@ -1742,7 +1745,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO\nhello \n  world \nFOO\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(4..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1752,7 +1755,7 @@ mod tests {
         let input  = Span::new(b"<<<'42'\nhello \n  world \n42\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(4..), ErrorKind::Custom(StringError::InvalidDelimiterIdentifier as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1762,7 +1765,7 @@ mod tests {
         let input  = Span::new(b"<<<'F O O'\nhello \n  world \nF O O\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(4..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1772,7 +1775,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO'hello \n  world \nFOO\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(4..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1792,7 +1795,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(Span::new_at(b"FOO", 25, 4, 1), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1802,7 +1805,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(Span::new_at(b"FOO", 28, 4, 1), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1812,7 +1815,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO'\nhello \n  world \nFOO;");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(Span::new_at(b"FOO;", 25, 4, 1), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1822,7 +1825,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO;");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(Span::new_at(b"FOO;", 28, 4, 1), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1832,7 +1835,7 @@ mod tests {
         let input  = Span::new(b"<<<'FOO'\r\nhello \r\n  world \r\nFOO\r");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(Span::new_at(b"FOO\r", 28, 4, 1), ErrorKind::Custom(StringError::InvalidClosingCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1862,7 +1865,7 @@ mod tests {
         let input  = Span::new(b"b<<<FOO'\nhello \n  world \nFOO\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(1..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1872,7 +1875,7 @@ mod tests {
         let input  = Span::new(b"b<<<'FOO\nhello \n  world \nFOO\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(5..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1902,7 +1905,7 @@ mod tests {
         let input  = Span::new(b"B<<<FOO'\nhello \n  world \nFOO\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(1..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }
@@ -1912,7 +1915,7 @@ mod tests {
         let input  = Span::new(b"B<<<'FOO\nhello \n  world \nFOO\n");
         let output = Err(Error::Error(Context::Code(input, ErrorKind::Alt)));
 
-        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input, ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
+        assert_eq!(string_nowdoc(input), Err(Error::Error(Context::Code(input.slice(5..), ErrorKind::Custom(StringError::InvalidOpeningCharacter as u32)))));
         assert_eq!(string(input), output);
         assert_eq!(literal(input), output);
     }

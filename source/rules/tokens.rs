@@ -237,7 +237,7 @@ mod tests {
     fn case_invalid_variable_name() {
         let input = Span::new(b"$0");
 
-        assert_eq!(variable(input), Err(Error::Error(Context::Code(input, ErrorKind::RegexpFind))));
+        assert_eq!(variable(input), Err(Error::Error(Context::Code(Span::new_at(b"0", 1, 1, 2), ErrorKind::RegexpFind))));
     }
 
     #[test]
