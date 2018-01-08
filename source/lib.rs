@@ -70,6 +70,9 @@ extern crate smallvec;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
 
 pub mod internal;
 #[macro_use]

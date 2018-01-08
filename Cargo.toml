@@ -67,3 +67,4 @@ features = ["regexp", "regexp_macros", "verbose-errors"]
 
 [dev-dependencies]
 quickcheck = "~0.3"
+pretty_assertions = "~0.4"
