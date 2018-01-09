@@ -938,6 +938,11 @@ impl<'a> InputLength for Span<'a> {
     }
 }
 
+/// Implement `AtEof` from nom to be able to use the `Span` structure
+/// as an input of the parsers.
+///
+/// This trait aims at determining whether the current span is at the
+/// end of the input.
 impl<'a> AtEof for Span<'a> {
     fn at_eof(&self) -> bool {
         self.slice.at_eof()
