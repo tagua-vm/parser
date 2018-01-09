@@ -54,13 +54,13 @@ simd = ["bytecount/simd-accel"]
 avx  = ["bytecount/avx-accel"]
 
 [dependencies]
-bytecount   = "~0.1"
-lazy_static = "~0.2"
-memchr      = "~1.0"
-regex       = "~0.2"
-smallvec    = "~0.4"
+bytecount   = "^0.1"
+lazy_static = "^0.2"
+memchr      = "^1.0"
+regex       = "^0.2"
+smallvec    = "^0.4"
 nom         = {"git" = "https://github.com/Geal/nom", "branch" = "master", "features" = ["regexp", "regexp_macros", "verbose-errors"]}
 
 [dev-dependencies]
-quickcheck = "~0.3"
-pretty_assertions = "~0.4"
+quickcheck        = "^0.3"
+pretty_assertions = "^0.4"
