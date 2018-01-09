@@ -2,16 +2,6 @@ language: rust
 
 matrix:
   include:
-    - rust: 1.21.0
-      os: linux
-      dist: trusty
-    - rust: 1.21.0
-      os: osx
-    - rust: 1.22.0
-      os: linux
-      dist: trusty
-    - rust: 1.22.0
-      os: osx
     - rust: stable
       os: linux
       dist: trusty
