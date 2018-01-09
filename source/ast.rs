@@ -47,7 +47,6 @@ pub enum Literal<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     /// use tagua_parser::tokens::{
@@ -58,31 +57,31 @@ pub enum Literal<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     literal(Span::new(b"0b101010")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 8, 1, 9),
     ///         Literal::Integer(Token::new(42, Span::new(b"0b101010")))
-    ///     )
+    ///     ))
     /// );
     /// assert_eq!(
     ///     literal(Span::new(b"052")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 3, 1, 4),
     ///         Literal::Integer(Token::new(42, Span::new(b"052")))
-    ///     )
+    ///     ))
     /// );
     /// assert_eq!(
     ///     literal(Span::new(b"42")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 2, 1, 3),
     ///         Literal::Integer(Token::new(42, Span::new(b"42")))
-    ///     )
+    ///     ))
     /// );
     /// assert_eq!(
     ///     literal(Span::new(b"0x2a")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 4, 1, 5),
     ///         Literal::Integer(Token::new(42, Span::new(b"0x2a")))
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -94,7 +93,6 @@ pub enum Literal<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     /// use tagua_parser::tokens::{
@@ -105,24 +103,24 @@ pub enum Literal<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     literal(Span::new(b"4.2")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 3, 1, 4),
     ///         Literal::Real(Token::new(4.2f64, Span::new(b"4.2")))
-    ///     )
+    ///     ))
     /// );
     /// assert_eq!(
     ///     literal(Span::new(b".42e1")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 5, 1, 6),
     ///         Literal::Real(Token::new(4.2f64, Span::new(b".42e1")))
-    ///     )
+    ///     ))
     /// );
     /// assert_eq!(
     ///     literal(Span::new(b"420e-2")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 6, 1, 7),
     ///         Literal::Real(Token::new(4.2f64, Span::new(b"420e-2")))
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -141,7 +139,6 @@ pub enum Literal<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Literal;
     /// use tagua_parser::rules::literals::literal;
     /// use tagua_parser::tokens::{
@@ -152,10 +149,10 @@ pub enum Literal<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     literal(Span::new(b"'foobar'")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 8, 1, 9),
     ///         Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new(b"'foobar'")))
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -168,7 +165,6 @@ pub enum Literal<'a> {
 ///
 /// ```
 /// # extern crate tagua_parser;
-/// use tagua_parser::Result;
 /// use tagua_parser::ast::Variable;
 /// use tagua_parser::rules::tokens::variable;
 /// use tagua_parser::tokens::{
@@ -179,10 +175,10 @@ pub enum Literal<'a> {
 /// # fn main() {
 /// assert_eq!(
 ///     variable(Span::new(b"$foo")),
-///     Result::Done(
+///     Ok((
 ///         Span::new_at(b"", 4, 1, 5),
 ///         Variable(Span::new_at(b"foo", 1, 1, 2))
-///     )
+///     ))
 /// );
 /// # }
 /// ```
@@ -225,7 +221,6 @@ pub enum Name<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     /// use tagua_parser::tokens::{
@@ -236,10 +231,10 @@ pub enum Name<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(Span::new(b"Bar")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 3, 1, 4),
     ///         Name::Unqualified(Span::new(b"Bar"))
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -254,7 +249,6 @@ pub enum Name<'a> {
     /// # extern crate smallvec;
     /// # #[macro_use]
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     /// use tagua_parser::tokens::{
@@ -265,13 +259,13 @@ pub enum Name<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(Span::new(b"Foo\\Bar")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 7, 1, 8),
     ///         Name::Qualified(smallvec![
     ///             Span::new(b"Foo"),
     ///             Span::new_at(b"Bar", 4, 1, 5)
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -286,7 +280,6 @@ pub enum Name<'a> {
     /// # extern crate smallvec;
     /// # #[macro_use]
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     /// use tagua_parser::tokens::{
@@ -297,13 +290,13 @@ pub enum Name<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(Span::new(b"namespace\\Foo\\Bar")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 17, 1, 18),
     ///         Name::RelativeQualified(smallvec![
     ///             Span::new_at(b"Foo", 10, 1, 11),
     ///             Span::new_at(b"Bar", 14, 1, 15)
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -319,7 +312,6 @@ pub enum Name<'a> {
     /// # extern crate smallvec;
     /// # #[macro_use]
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Name;
     /// use tagua_parser::rules::tokens::qualified_name;
     /// use tagua_parser::tokens::{
@@ -330,13 +322,13 @@ pub enum Name<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     qualified_name(Span::new(b"\\Foo\\Bar")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 8, 1, 9),
     ///         Name::FullyQualified(smallvec![
     ///             Span::new_at(b"Foo", 1, 1, 2),
     ///             Span::new_at(b"Bar", 5, 1, 6)
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -355,7 +347,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     AnonymousFunction,
     ///     Arity,
@@ -376,7 +367,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"function (I $x, J &$y) use ($z): O { return; }")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 46, 1, 47),
     ///         Expression::AnonymousFunction(
     ///             AnonymousFunction {
@@ -398,7 +389,7 @@ pub enum Expression<'a> {
     ///                 body           : vec![Statement::Return]
     ///             }
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -412,7 +403,6 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal,
@@ -427,7 +417,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"['foo', 42 => 'bar', 'baz' => $qux]")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 35, 1, 36),
     ///         Expression::Array(vec![
     ///             (
@@ -443,7 +433,7 @@ pub enum Expression<'a> {
     ///                 Expression::Variable(Variable(Span::new_at(b"qux", 31, 1, 32)))
     ///             )
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -456,7 +446,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     RelativeScope,
@@ -468,13 +457,13 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"self::FOO")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 9, 1, 10),
     ///         Expression::ClassConstantAccess(
     ///             ScopeResolver::ByRelative(RelativeScope::ToSelf),
     ///             Span::new_at(b"FOO", 6, 1, 7)
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -489,7 +478,6 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal,
@@ -504,14 +492,14 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"echo 'foobar', $bazqux, 42")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 26, 1, 27),
     ///         Expression::Echo(vec![
     ///             Expression::Literal(Literal::String(Token::new(Cow::from(&b"foobar"[..]), Span::new_at(b"'foobar'", 5, 1, 6)))),
     ///             Expression::Variable(Variable(Span::new_at(b"bazqux", 16, 1, 17))),
     ///             Expression::Literal(Literal::Integer(Token::new(42i64, Span::new_at(b"42", 24, 1, 25))))
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -525,7 +513,6 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal
@@ -539,7 +526,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"empty('')")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 9, 1, 10),
     ///         Expression::Empty(
     ///             Box::new(
@@ -548,7 +535,7 @@ pub enum Expression<'a> {
     ///                 )
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -561,7 +548,6 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal
@@ -575,7 +561,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"eval('1 + 2;')")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 14, 1, 15),
     ///         Expression::Eval(
     ///             Box::new(
@@ -584,7 +570,7 @@ pub enum Expression<'a> {
     ///                 )
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -596,7 +582,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{Expression, Literal};
     /// use tagua_parser::rules::expressions::expression;
     /// use tagua_parser::tokens::{
@@ -607,7 +592,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"exit(42)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 8, 1, 9),
     ///         Expression::Exit(
     ///             Some(
@@ -618,7 +603,7 @@ pub enum Expression<'a> {
     ///                 )
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -633,7 +618,6 @@ pub enum Expression<'a> {
     /// # extern crate smallvec;
     /// # #[macro_use]
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Variable
@@ -647,13 +631,13 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"isset($foo, $bar)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 17, 1, 18),
     ///         Expression::Isset(smallvec![
     ///             Variable(Span::new_at(b"foo", 7, 1, 8)),
     ///             Variable(Span::new_at(b"bar", 13, 1, 14))
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -669,7 +653,6 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal,
@@ -684,7 +667,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"list('foo' => $foo, 'bar' => $bar, 'baz' => $baz)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 49, 1, 50),
     ///         Expression::List(vec![
     ///             Some((
@@ -700,7 +683,7 @@ pub enum Expression<'a> {
     ///                 Expression::Variable(Variable(Span::new_at(b"baz", 45, 1, 46)))
     ///             ))
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -708,7 +691,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Variable
@@ -722,7 +704,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"list($foo, , , $bar, $baz)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 26, 1, 27),
     ///         Expression::List(vec![
     ///             Some((
@@ -740,7 +722,7 @@ pub enum Expression<'a> {
     ///                 Expression::Variable(Variable(Span::new_at(b"baz", 22, 1, 23)))
     ///             ))
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -753,7 +735,6 @@ pub enum Expression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal
@@ -767,10 +748,10 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"'Hello, World!'")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 15, 1, 16),
     ///         Expression::Literal(Literal::String(Token::new(Cow::from(&b"Hello, World!"[..]), Span::new(b"'Hello, World!'"))))
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -784,7 +765,6 @@ pub enum Expression<'a> {
     /// # extern crate smallvec;
     /// # #[macro_use]
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Name
@@ -798,7 +778,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"Foo\\Bar")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 7, 1, 8),
     ///         Expression::Name(
     ///             Name::Qualified(smallvec![
@@ -806,7 +786,7 @@ pub enum Expression<'a> {
     ///                 Span::new_at(b"Bar", 4, 1, 5)
     ///             ])
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -822,7 +802,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Variable
@@ -836,14 +815,14 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"print $foo")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 10, 1, 11),
     ///         Expression::Print(
     ///             Box::new(
     ///                 Expression::Variable(Variable(Span::new_at(b"foo", 7, 1, 8))),
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -855,7 +834,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Literal,
@@ -870,7 +848,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"[7 => &$foo]")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 12, 1, 13),
     ///         Expression::Array(vec![
     ///             (
@@ -880,7 +858,7 @@ pub enum Expression<'a> {
     ///                 )
     ///             )
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -894,7 +872,6 @@ pub enum Expression<'a> {
     /// # extern crate smallvec;
     /// # #[macro_use]
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Variable
@@ -908,13 +885,13 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"unset($foo, $bar)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 17, 1, 18),
     ///         Expression::Unset(smallvec![
     ///             Variable(Span::new_at(b"foo", 7, 1, 8)),
     ///             Variable(Span::new_at(b"bar", 13, 1, 14))
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -926,7 +903,6 @@ pub enum Expression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Expression,
     ///     Variable
@@ -940,7 +916,7 @@ pub enum Expression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     expression(Span::new(b"$foo")),
-    ///     Result::Done(Span::new_at(b"", 4, 1, 5), Expression::Variable(Variable(Span::new_at(b"foo", 1, 1, 2))))
+    ///     Ok((Span::new_at(b"", 4, 1, 5), Expression::Variable(Variable(Span::new_at(b"foo", 1, 1, 2)))))
     /// );
     /// # }
     /// ```
@@ -960,7 +936,6 @@ pub enum DereferencableExpression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     DereferencableExpression,
     ///     Variable
@@ -971,14 +946,14 @@ pub enum DereferencableExpression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     dereferencable_expression(Span::new(b"$foo")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 4, 1, 5),
     ///         DereferencableExpression::Variable(
     ///             Variable(
     ///                 Span::new_at(b"foo", 1, 1, 2)
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -990,7 +965,6 @@ pub enum DereferencableExpression<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     DereferencableExpression,
     ///     Expression,
@@ -1002,7 +976,7 @@ pub enum DereferencableExpression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     dereferencable_expression(Span::new(b"($foo)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 6, 1, 7),
     ///         DereferencableExpression::Expression(
     ///             Box::new(
@@ -1013,7 +987,7 @@ pub enum DereferencableExpression<'a> {
     ///                 )
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1026,7 +1000,6 @@ pub enum DereferencableExpression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     DereferencableExpression,
     ///     Expression,
@@ -1041,7 +1014,7 @@ pub enum DereferencableExpression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     dereferencable_expression(Span::new(b"['C', 'f']")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 10, 1, 11),
     ///         DereferencableExpression::Array(
     ///             Box::new(
@@ -1065,7 +1038,7 @@ pub enum DereferencableExpression<'a> {
     ///                 ])
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1078,7 +1051,6 @@ pub enum DereferencableExpression<'a> {
     /// ```
     /// # extern crate tagua_parser;
     /// use std::borrow::Cow;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     DereferencableExpression,
     ///     Literal
@@ -1092,14 +1064,14 @@ pub enum DereferencableExpression<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     dereferencable_expression(Span::new(b"'C'")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 3, 1, 4),
     ///         DereferencableExpression::String(
     ///             Literal::String(
     ///                 Token::new(Cow::from(&b"C"[..]), Span::new_at(b"'C'", 0, 1, 1))
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1131,7 +1103,6 @@ pub enum Ty<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Arity,
     ///     Name,
@@ -1148,7 +1119,7 @@ pub enum Ty<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"(I $x)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 6, 1, 7),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1157,7 +1128,7 @@ pub enum Ty<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1166,7 +1137,6 @@ pub enum Ty<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// # use tagua_parser::Result;
     /// # use tagua_parser::ast::{
     /// #     Arity,
     /// #     Parameter,
@@ -1179,7 +1149,7 @@ pub enum Ty<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"($x)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 4, 1, 5),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1188,7 +1158,7 @@ pub enum Ty<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1205,7 +1175,6 @@ pub enum Ty<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Arity,
     ///     Name,
@@ -1222,7 +1191,7 @@ pub enum Ty<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"(?I $x)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 7, 1, 8),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1231,7 +1200,7 @@ pub enum Ty<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1247,7 +1216,6 @@ pub enum Ty<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Arity,
     ///     Name,
@@ -1264,7 +1232,7 @@ pub enum Ty<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"(I &$x)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 7, 1, 8),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1273,7 +1241,7 @@ pub enum Ty<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1282,7 +1250,6 @@ pub enum Ty<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// # use tagua_parser::Result;
     /// # use tagua_parser::ast::{
     /// #     Arity,
     /// #     Parameter,
@@ -1295,7 +1262,7 @@ pub enum Ty<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"(&$x)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 5, 1, 6),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1304,7 +1271,7 @@ pub enum Ty<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1320,7 +1287,6 @@ pub enum Ty<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Arity,
     ///     Name,
@@ -1337,7 +1303,7 @@ pub enum Ty<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"(?I &$x)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 8, 1, 9),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1346,7 +1312,7 @@ pub enum Ty<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1364,7 +1330,6 @@ pub enum Ty<'a> {
 /// # Examples
 ///
 /// ```
-/// use tagua_parser::Result;
 /// use tagua_parser::ast::{
 ///     Arity,
 ///     Expression,
@@ -1383,7 +1348,7 @@ pub enum Ty<'a> {
 /// # fn main() {
 /// assert_eq!(
 ///     parameters(Span::new(b"($x = 42, I &$y)")),
-///     Result::Done(
+///     Ok((
 ///         Span::new_at(b"", 16, 1, 17),
 ///         Arity::Finite(vec![
 ///             Parameter {
@@ -1397,7 +1362,7 @@ pub enum Ty<'a> {
 ///                 value: None
 ///             }
 ///         ])
-///     )
+///     ))
 /// );
 /// # }
 /// ```
@@ -1422,7 +1387,6 @@ pub enum Arity<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::Arity;
     /// use tagua_parser::rules::statements::function::parameters;
     /// use tagua_parser::tokens::{
@@ -1433,7 +1397,7 @@ pub enum Arity<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"()")),
-    ///     Result::Done(Span::new_at(b"", 2, 1, 3), Arity::Constant)
+    ///     Ok((Span::new_at(b"", 2, 1, 3), Arity::Constant))
     /// );
     /// # }
     /// ```
@@ -1445,7 +1409,6 @@ pub enum Arity<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Arity,
     ///     Parameter,
@@ -1461,7 +1424,7 @@ pub enum Arity<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"($x, $y)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 8, 1, 9),
     ///         Arity::Finite(vec![
     ///             Parameter {
@@ -1475,7 +1438,7 @@ pub enum Arity<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1487,7 +1450,6 @@ pub enum Arity<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Arity,
     ///     Parameter,
@@ -1503,7 +1465,7 @@ pub enum Arity<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     parameters(Span::new(b"($x, ...$y)")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 11, 1, 12),
     ///         Arity::Infinite(vec![
     ///             Parameter {
@@ -1517,7 +1479,7 @@ pub enum Arity<'a> {
     ///                 value: None
     ///             }
     ///         ])
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1529,7 +1491,6 @@ pub enum Arity<'a> {
 /// # Examples
 ///
 /// ```
-/// use tagua_parser::Result;
 /// use tagua_parser::ast::{
 ///     Arity,
 ///     Function,
@@ -1548,7 +1509,7 @@ pub enum Arity<'a> {
 /// # fn main() {
 /// assert_eq!(
 ///     function(Span::new(b"function f(I $x): O { return; }")),
-///     Result::Done(
+///     Ok((
 ///         Span::new_at(b"", 31, 1, 32),
 ///         Statement::Function(
 ///             Function {
@@ -1564,7 +1525,7 @@ pub enum Arity<'a> {
 ///                 body  : vec![Statement::Return]
 ///             }
 ///         )
-///     )
+///     ))
 /// );
 /// # }
 /// ```
@@ -1593,7 +1554,6 @@ pub struct Function<'a> {
 ///
 /// ```
 /// # extern crate tagua_parser;
-/// use tagua_parser::Result;
 /// use tagua_parser::ast::{
 ///     AnonymousFunction,
 ///     Arity,
@@ -1614,7 +1574,7 @@ pub struct Function<'a> {
 /// # fn main() {
 /// assert_eq!(
 ///     anonymous_function(Span::new(b"static function &(I ...$x) use (&$y, $z): O { return; }")),
-///     Result::Done(
+///     Ok((
 ///         Span::new_at(b"", 55, 1, 56),
 ///         Expression::AnonymousFunction(
 ///             AnonymousFunction {
@@ -1638,7 +1598,7 @@ pub struct Function<'a> {
 ///                 body: vec![Statement::Return]
 ///             }
 ///         )
-///     )
+///     ))
 /// );
 /// # }
 /// ```
@@ -1895,7 +1855,6 @@ pub enum ScopeResolver<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     RelativeScope,
     ///     ScopeResolver
@@ -1906,10 +1865,10 @@ pub enum ScopeResolver<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     scope_resolution_qualifier(Span::new(b"self")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 4, 1, 5),
     ///         ScopeResolver::ByRelative(RelativeScope::ToSelf)
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1921,7 +1880,6 @@ pub enum ScopeResolver<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     Name,
     ///     ScopeResolver
@@ -1932,10 +1890,10 @@ pub enum ScopeResolver<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     scope_resolution_qualifier(Span::new(b"Foo")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 3, 1, 4),
     ///         ScopeResolver::ByName(Name::Unqualified(Span::new(b"Foo")))
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```
@@ -1947,7 +1905,6 @@ pub enum ScopeResolver<'a> {
     ///
     /// ```
     /// # extern crate tagua_parser;
-    /// use tagua_parser::Result;
     /// use tagua_parser::ast::{
     ///     DereferencableExpression,
     ///     ScopeResolver,
@@ -1959,7 +1916,7 @@ pub enum ScopeResolver<'a> {
     /// # fn main() {
     /// assert_eq!(
     ///     scope_resolution_qualifier(Span::new(b"$foo")),
-    ///     Result::Done(
+    ///     Ok((
     ///         Span::new_at(b"", 4, 1, 5),
     ///         ScopeResolver::ByExpression(
     ///             DereferencableExpression::Variable(
@@ -1968,7 +1925,7 @@ pub enum ScopeResolver<'a> {
     ///                 )
     ///             )
     ///         )
-    ///     )
+    ///     ))
     /// );
     /// # }
     /// ```

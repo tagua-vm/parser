@@ -54,6 +54,7 @@ pub enum ErrorKindCustom {
 /// # #[macro_use]
 /// # extern crate tagua_parser;
 /// use tagua_parser::{
+///     Context,
 ///     Error,
 ///     ErrorKind,
 ///     Result

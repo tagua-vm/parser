@@ -33,16 +33,17 @@
 
 use smallvec::VecLike;
 
+/// Hold the result of a parser.
+pub use nom::IResult as Result;
+
 /// Contain the error that a parser can return.
-pub use nom::Err as Error; // OK
+pub use nom::Err as Error;
 
 /// Indicate which parser has returned an error.
 pub use nom::ErrorKind;
 
+/// Indicate the context of an error.
 pub use nom::Context;
-
-/// Hold the result of a parser.
-pub use nom::IResult as Result; // OK
 
 /// Contain information on needed data if a parser returned `Incomplete`.
 pub use nom::Needed;

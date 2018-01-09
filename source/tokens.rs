@@ -1227,7 +1227,6 @@ impl_slice_for_range!(RangeFull);
 
 #[cfg(test)]
 mod tests {
-    use std::ascii::AsciiExt;
     use std::str;
     use super::Span;
     use super::keywords;
