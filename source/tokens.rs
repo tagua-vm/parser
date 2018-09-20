@@ -50,6 +50,7 @@ use nom::{
     FindSubstring,
     InputIter,
     InputLength,
+    InputTake,
     Offset,
     Slice
 };
@@ -822,6 +823,36 @@ pub struct Span<'a> {
 
     /// The slice that is spanned.
     slice: Input<'a>
+}
+
+impl<'a> InputTake for Span<'a> {
+    fn take(&self, count: usize) -> Self {
+        Span {
+            offset: self.offset,
+            line: self.line,
+            column: self.column,
+            slice: self.slice.take(count),
+        }
+    }
+
+    fn take_split(&self, count: usize) -> (Self, Self) {
+        let (left, right) = self.slice.take_split(count);
+
+        (
+          Span {
+            offset: self.offset,
+            line: self.line,
+            column: self.column,
+            slice: left,
+          },
+          Span {
+            offset: self.offset,
+            line: self.line,
+            column: self.column,
+            slice: right,
+          },
+        )
+    }
 }
 
 impl<'a> Span<'a> {
@@ -1622,7 +1653,7 @@ mod tests {
     fn case_span_slice_with_range() {
         let range  = 2..5;
         let input  = b"foobar";
-        let output = Span { 
+        let output = Span {
             offset: 2,
             line  : 1,
             column: 3,
@@ -1636,7 +1667,7 @@ mod tests {
     fn case_span_slice_with_range_to() {
         let range  = 2..;
         let input  = b"foobar";
-        let output = Span { 
+        let output = Span {
             offset: 2,
             line  : 1,
             column: 3,
@@ -1650,7 +1681,7 @@ mod tests {
     fn case_span_slice_with_range_from() {
         let range  = ..3;
         let input  = b"foobar";
-        let output = Span { 
+        let output = Span {
             offset: 0,
             line  : 1,
             column: 1,
@@ -1664,7 +1695,7 @@ mod tests {
     fn case_span_slice_with_range_full() {
         let range  = ..;
         let input  = b"foobar";
-        let output = Span { 
+        let output = Span {
             offset: 0,
             line  : 1,
             column: 1,
