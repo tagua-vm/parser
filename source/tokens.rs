@@ -51,6 +51,12 @@ use nom::{
     InputIter,
     InputLength,
     InputTake,
+    InputTakeAtPosition,
+    IResult,
+    Err,
+    Needed,
+    Context,
+    ErrorKind,
     Offset,
     Slice
 };
@@ -825,32 +831,42 @@ pub struct Span<'a> {
     slice: Input<'a>
 }
 
+impl<'a> InputTakeAtPosition for Span<'a> {
+  type Item = InputElement;
+
+  fn split_at_position<P>(&self, predicate: P) -> IResult<Self, Self, u32>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    match (0..self.slice.len()).find(|b| predicate(self.slice[*b])) {
+      Some(i) => Ok((self.slice(i..), self.slice(..i))),
+      None => Err(Err::Incomplete(Needed::Size(1))),
+    }
+  }
+
+  fn split_at_position1<P>(&self, predicate: P, e: ErrorKind<u32>) -> IResult<Self, Self, u32>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    match (0..self.slice.len()).find(|b| predicate(self.slice[*b])) {
+      Some(0) => Err(Err::Error(Context::Code(*self, e))),
+      Some(i) => {
+          Ok((self.slice(i..), self.slice(..i)))
+      },
+      None => Err(Err::Incomplete(Needed::Size(1))),
+    }
+  }
+}
+
 impl<'a> InputTake for Span<'a> {
     fn take(&self, count: usize) -> Self {
-        Span {
-            offset: self.offset,
-            line: self.line,
-            column: self.column,
-            slice: self.slice.take(count),
-        }
+        self.slice(..count)
     }
 
     fn take_split(&self, count: usize) -> (Self, Self) {
-        let (left, right) = self.slice.take_split(count);
-
         (
-          Span {
-            offset: self.offset,
-            line: self.line,
-            column: self.column,
-            slice: left,
-          },
-          Span {
-            offset: self.offset,
-            line: self.line,
-            column: self.column,
-            slice: right,
-          },
+            self.slice(count..),
+            self.slice(..count),
         )
     }
 }
